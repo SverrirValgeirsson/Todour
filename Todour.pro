@@ -20,7 +20,7 @@ win32 {
     RC_FILE = myresource.rc
 }
 
-include(QtAwesome/QtAwesome.pri)
+include(QtAwesome/QtAwesome/QtAwesome.pri)
 
 SOURCES += main.cpp\
         mainwindow.cpp \

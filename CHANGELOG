@@ -1,0 +1,44 @@
+
+
+* Removed Google Analytics tracking of usage. The only network access the application now makes is to check for new versions.
+* Colors and Fonts can be chosen for both active and inactive rows
+
+
+New in 2.07
+===========
+
+* Added an option to turn off live-search (for bigger files)
+* Fixed the layout of settings dialog that could be hard to read in Windows 10
+* Automatic scrolling added
+
+New in 2.06
+===========
+* Added support for multiple words in the search window (match all)
+* Added support for negative search with a "!" infront of the word to search for (will not be included in context lock)
+
+New in 2.05
+===========
+* Fixed an issue where sorting wouldn't work in all cases unless there was an inactive-list
+* Added a function for locking context (a lock symbol). This makes sure the searched context is added to all new lines
+
+New in 2.04
+===========
+* Alphabetic sorting added
+* Font awesome symbols added
+* Bugfix: An 'x' in the beginning of the first word would be intepreted as task complete
+* A newline in the input text will now be replaced with a space, creating only one row
+
+
+
+New in 2.03
+===========
+
+* The application now remembers it's position and size when shut down
+* Size of the table is always full width of the window (not the size of the contents!)
+* Tool tips show entire data in each field
+* Height of the rows is correct optimized for the font size
+* Ctrl-f will go to the search field (Cmd-f on Mac)
+* Ctrl-n will go to the edit field (Cmd-n on Mac)
+* Tab order put to a more natural order as it is on screen
+* Selections are remembered between refreshes in the table
+* Selections are remembered after edits in the table (press "enter" on a row to edit it or F2 on windows)

@@ -5,6 +5,11 @@ You can always download the latest release on [nerdur.com](https://nerdur.com/to
 
 The program uses QtAwesome for the icons. 
 
+# Downloading
+git clone ...
+git submodule init 
+git submodule update 
+
 
 ## Dependency to nerdur.com 
 Please note that there is a small part of the code that checks on nerdur.com if there is an update available. This should not be an issue, 

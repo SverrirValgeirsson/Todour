@@ -6,9 +6,11 @@ You can always download the latest release on [nerdur.com](https://nerdur.com/to
 The program uses QtAwesome for the icons. 
 
 # Downloading
-git clone ...
+```
+git clone https://github.com/SverrirValgeirsson/Todour.git
 git submodule init 
 git submodule update 
+```
 
 
 ## Dependency to nerdur.com 

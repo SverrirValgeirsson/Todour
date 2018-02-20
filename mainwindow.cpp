@@ -16,6 +16,7 @@
 #include <QShortcut>
 #include <QCloseEvent>
 #include <QtAwesome.h>
+#include <QDesktopWidget>
 
 QNetworkAccessManager *networkaccessmanager;
 TodoTableModel *model;
@@ -45,13 +46,28 @@ MainWindow::MainWindow(QWidget *parent) :
     this->setWindowTitle(title);
 
     // Restore the position of the window
+    auto rec = QApplication::desktop()->screenGeometry();
+    auto maxx = rec.height();
+    auto maxy = rec.width();
+    auto minx = rec.topLeft().x();
+    auto miny = rec.topLeft().y();
+
     QSettings settings;
     restoreGeometry(settings.value( "geometry", saveGeometry() ).toByteArray());
     restoreState(settings.value( "savestate", saveState() ).toByteArray());
-    move(settings.value( "pos", pos() ).toPoint());
+    auto p = settings.value("pos", pos()).toPoint();
+
+    if(p.x()>=maxx-100 || p.x()<minx){
+       p.setX(minx); // Set to minx for safety
+    }
+    if(p.y()>=maxy-100 || p.y()<miny ){
+        p.setY(miny); // Set to miny for safety
+    }
+    move(p);
     resize(settings.value( "size", size() ).toSize());
     if ( settings.value( "maximized", isMaximized() ).toBool() )
         showMaximized();
+
 
     // Fix some font-awesome stuff
     QtAwesome* awesome = new QtAwesome(qApp);

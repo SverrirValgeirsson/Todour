@@ -1,4 +1,8 @@
 
+* Ensure that the windows is shown on an existing screen when the application starts.
+
+New in 2.08
+===========
 
 * Removed Google Analytics tracking of usage. The only network access the application now makes is to check for new versions.
 * Colors and Fonts can be chosen for both active and inactive rows

@@ -56,8 +56,8 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue("liveSearch",ui->cb_liveSearch->isChecked());
     settings.setValue("inactivecolor",inactivecolor.rgba());
     settings.setValue("activecolor",activecolor.rgba());
-    settings.setValue("inactiveFont",inactivefont.toString());
-    settings.setValue("activeFont",activefont.toString());
+    settings.setValue("inactivefont",inactivefont.toString());
+    settings.setValue("activefont",activefont.toString());
     refresh=true;
     this->close();
 }

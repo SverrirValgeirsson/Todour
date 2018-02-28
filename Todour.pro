@@ -21,24 +21,29 @@ win32 {
 }
 
 include(QtAwesome/QtAwesome/QtAwesome.pri)
+include(UGlobalHotkey/uglobalhotkey.pri)
 
 SOURCES += main.cpp\
         mainwindow.cpp \
     todotxt.cpp \
     todotablemodel.cpp \
     settingsdialog.cpp \
-    aboutbox.cpp
+    aboutbox.cpp \
+    quickadddialog.cpp
 
 HEADERS  += mainwindow.h \
     todotxt.h \
     todotablemodel.h \
     settingsdialog.h \
     aboutbox.h \
-    globals.h
+    globals.h \
+    quickadddialog.h \
+    def.h
 
 FORMS    += mainwindow.ui \
     settingsdialog.ui \
-    aboutbox.ui
+    aboutbox.ui \
+    quickadddialog.ui
 
 OTHER_FILES += \
     version.pl \

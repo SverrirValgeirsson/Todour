@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QModelIndex>
+#include <uglobalhotkeys.h>
 
 namespace Ui {
 class MainWindow;
@@ -15,6 +16,7 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     void parse_todotxt();
+    void addTodo(QString &s);
     ~MainWindow();
     
 public slots:
@@ -43,6 +45,8 @@ private slots:
 
     void on_lineEdit_2_returnPressed();
 
+    void on_hotkey();
+
 private:
     void setFileWatch();
     void clearFileWatch();
@@ -51,6 +55,8 @@ private:
     void saveTableSelection();
     void resetTableSelection();
     void updateSearchResults();
+    UGlobalHotkeys *hotkey;
+    void setHotkey();
 };
 
 #endif // MAINWINDOW_H

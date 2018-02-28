@@ -1,3 +1,6 @@
 [submodule "QtAwesome"]
 	path = QtAwesome
 	url = https://github.com/gamecreature/QtAwesome.git
+[submodule "UGlobalHotkey"]
+	path = UGlobalHotkey
+	url = https://github.com/falceeffect/UGlobalHotkey.git

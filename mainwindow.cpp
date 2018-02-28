@@ -5,8 +5,10 @@
 
 #include "todotxt.h"
 #include "settingsdialog.h"
+#include "quickadddialog.h"
 #include "aboutbox.h"
 #include "globals.h"
+#include "def.h"
 
 #include <QSortFilterProxyModel>
 #include <QFileSystemWatcher>
@@ -44,6 +46,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     title.append(VER);
     this->setWindowTitle(title);
+    hotkey = new UGlobalHotkeys();
+    setHotkey();
+
+
 
     // Restore the position of the window
     auto rec = QApplication::desktop()->screenGeometry();
@@ -226,6 +232,23 @@ void MainWindow::on_lineEdit_2_returnPressed()
 
 }
 
+void MainWindow::on_hotkey(){
+    auto dlg = new QuickAddDialog();
+    dlg->setModal(true);
+    dlg->show();
+    dlg->exec();
+    if(dlg->accepted){
+        this->addTodo(dlg->text);
+    }
+}
+
+void MainWindow::setHotkey(){
+    QSettings settings;
+    hotkey->registerHotkey(settings.value(SETTINGS_HOTKEY,DEFAULT_HOTKEY).toString());
+    connect(hotkey,&UGlobalHotkeys::activated,[=](size_t id){
+        on_hotkey();
+    });
+}
 
 void MainWindow::on_actionAbout_triggered(){
     AboutBox d;
@@ -259,19 +282,24 @@ void MainWindow::on_actionSettings_triggered()
 void MainWindow::on_pushButton_clicked()
 {
     // Adding a new value into the model
-   QString txt = ui->lineEdit->text();
-   if(ui->context_lock->isChecked()){
-       // The line should have the context of the search field except any negative search
-       QStringList contexts = ui->lineEdit_2->text().split(QRegExp("\\s"));
-       for(QString context:contexts){
-        if(context.length()>0 && context.at(0)=='!') continue; // ignore this one
-        if(!txt.contains(context,Qt::CaseInsensitive)){
-            txt.append(" "+context);
-        }
-       }
-   }
-   model->add(txt);
+    QString txt = ui->lineEdit->text();
+   addTodo(txt);
    ui->lineEdit->clear();
+}
+
+void MainWindow::addTodo(QString &s){
+
+    if(ui->context_lock->isChecked()){
+        // The line should have the context of the search field except any negative search
+        QStringList contexts = ui->lineEdit_2->text().split(QRegExp("\\s"));
+        for(QString context:contexts){
+         if(context.length()>0 && context.at(0)=='!') continue; // ignore this one
+         if(!s.contains(context,Qt::CaseInsensitive)){
+             s.append(" "+context);
+         }
+        }
+    }
+    model->add(s);
 }
 
 void MainWindow::on_lineEdit_returnPressed()

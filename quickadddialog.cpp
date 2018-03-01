@@ -6,6 +6,7 @@ QuickAddDialog::QuickAddDialog(QWidget *parent) :
     ui(new Ui::QuickAddDialog)
 {
     ui->setupUi(this);
+    setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     accepted=false;
 }
 

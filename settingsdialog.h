@@ -36,6 +36,8 @@ private slots:
 
     void on_pb_colorDlgInactive_clicked();
 
+    void on_cb_hotKey_stateChanged(int arg1);
+
 private:
     Ui::SettingsDialog *ui;
     void updateFonts();

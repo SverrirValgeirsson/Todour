@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>529</width>
-    <height>350</height>
+    <width>535</width>
+    <height>399</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -157,6 +157,13 @@
     <widget class="QCheckBox" name="cb_liveSearch">
      <property name="text">
       <string>Live search</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="cb_hotKey">
+     <property name="text">
+      <string>Ctrl+Alt+t as Todo hotkey</string>
      </property>
     </widget>
    </item>

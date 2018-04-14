@@ -7,6 +7,7 @@
 #include "settingsdialog.h"
 #include "ui_settingsdialog.h"
 #include "globals.h"
+#include "def.h"
 
 #include <QSettings>
 
@@ -22,6 +23,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->cb_separate->setChecked(settings.value("separateinactive").toBool());
     ui->cb_dates->setChecked(settings.value("dates").toBool());
     ui->cb_liveSearch->setChecked(settings.value("liveSearch").toBool());
+    ui->cb_hotKey->setChecked(settings.value(SETTINGS_HOTKEY_ENABLE).toBool());
     // Handle the fonts
     activecolor=QColor::fromRgba(settings.value("activecolor",DEFAULT_ACTIVE_COLOR).toUInt());
     inactivecolor=QColor::fromRgba(settings.value("inactivecolor",DEFAULT_INACTIVE_COLOR).toUInt());
@@ -58,6 +60,7 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue("activecolor",activecolor.rgba());
     settings.setValue("inactivefont",inactivefont.toString());
     settings.setValue("activefont",activefont.toString());
+    settings.setValue(SETTINGS_HOTKEY_ENABLE,ui->cb_hotKey->isChecked());
     refresh=true;
     this->close();
 }
@@ -102,4 +105,9 @@ void SettingsDialog::on_pb_colorDlgInactive_clicked()
 {
     inactivecolor.setRgba(QColorDialog::getRgba());
     updateFonts();
+}
+
+void SettingsDialog::on_cb_hotKey_stateChanged(int arg1)
+{
+
 }

@@ -244,10 +244,12 @@ void MainWindow::on_hotkey(){
 
 void MainWindow::setHotkey(){
     QSettings settings;
-    hotkey->registerHotkey(settings.value(SETTINGS_HOTKEY,DEFAULT_HOTKEY).toString());
-    connect(hotkey,&UGlobalHotkeys::activated,[=](size_t id){
-        on_hotkey();
-    });
+    if(settings.value(SETTINGS_HOTKEY_ENABLE).toBool()){
+        hotkey->registerHotkey(settings.value(SETTINGS_HOTKEY,DEFAULT_HOTKEY).toString());
+        connect(hotkey,&UGlobalHotkeys::activated,[=](size_t id){
+            on_hotkey();
+        });
+    }
 }
 
 void MainWindow::on_actionAbout_triggered(){

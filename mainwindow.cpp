@@ -51,6 +51,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
+    // Check if we're supposed to have the settings from .ini file or not
+    if(QCoreApplication::arguments().contains("-useini")){
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+    }
+
     // Restore the position of the window
     auto rec = QApplication::desktop()->screenGeometry();
     auto maxx = rec.height();

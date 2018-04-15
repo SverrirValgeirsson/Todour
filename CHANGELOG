@@ -1,7 +1,13 @@
-2.09
+New in 2.10
 ===========
 
-* Added Global Hotkey support
+* Support for saving settings in an .ini file by sending "-useini" as argument to the application
+
+
+New in 2.09
+===========
+
+* Added Global Hotkey support (Ctrl-Alt-t)
 * Fixed a bug where the font change wasn't saved from preferences
 * Ensure that the windows is shown on an existing screen when the application starts.
 

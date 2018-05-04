@@ -19,6 +19,7 @@
 #include <QCloseEvent>
 #include <QtAwesome.h>
 #include <QDesktopWidget>
+#include <QDir>
 
 QNetworkAccessManager *networkaccessmanager;
 TodoTableModel *model;
@@ -52,8 +53,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     // Check if we're supposed to have the settings from .ini file or not
-    if(QCoreApplication::arguments().contains("-useini")){
+    if(QCoreApplication::arguments().contains("-portable")){
         QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,QDir::currentPath());
+        qDebug()<<"Setting ini file path to: "<<QDir::currentPath()<<endl;
     }
 
     // Restore the position of the window

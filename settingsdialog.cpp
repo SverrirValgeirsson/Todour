@@ -109,5 +109,5 @@ void SettingsDialog::on_pb_colorDlgInactive_clicked()
 
 void SettingsDialog::on_cb_hotKey_stateChanged(int arg1)
 {
-
+    Q_UNUSED(arg1);
 }

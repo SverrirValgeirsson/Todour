@@ -1,7 +1,7 @@
 New in 2.10
 ===========
 
-* Support for saving settings in an .ini file by sending "-useini" as argument to the application
+* Support for saving settings in an .ini file by sending "-portable" as argument to the application
 
 
 New in 2.09

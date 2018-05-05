@@ -255,6 +255,7 @@ void MainWindow::setHotkey(){
     if(settings.value(SETTINGS_HOTKEY_ENABLE).toBool()){
         hotkey->registerHotkey(settings.value(SETTINGS_HOTKEY,DEFAULT_HOTKEY).toString());
         connect(hotkey,&UGlobalHotkeys::activated,[=](size_t id){
+            Q_UNUSED(id);
             on_hotkey();
         });
     }

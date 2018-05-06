@@ -47,8 +47,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     title.append(VER);
     this->setWindowTitle(title);
-    hotkey = new UGlobalHotkeys();
-    setHotkey();
 
 
 
@@ -58,6 +56,9 @@ MainWindow::MainWindow(QWidget *parent) :
         QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,QDir::currentPath());
         qDebug()<<"Setting ini file path to: "<<QDir::currentPath()<<endl;
     }
+
+    hotkey = new UGlobalHotkeys();
+    setHotkey();
 
     // Restore the position of the window
     auto rec = QApplication::desktop()->screenGeometry();

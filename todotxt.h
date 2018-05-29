@@ -41,6 +41,18 @@ public:
     QString getToday();
     QString getTodoFile();
 
+    struct todoline{
+        QString createdDate;
+        QString closedDate;
+        bool checked;
+        QString priority;
+        QString text; // The rest of the text
+    };
+
+    static void String2Todo(QString &line,todoline &t);
+    static QString Todo2String(todoline &t);
+
+
 };
 
 #endif // TODOTXT_H

@@ -256,30 +256,20 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
     QString todofile = dir.append(TODOFILE);
     vector<QString> data;
     slurp(todofile,data);
-    if(row.isEmpty()){
 
+    if(row.isEmpty()){
+        todoline tl;
+        String2Todo(newrow,tl);
         // Add a date to the line if where doing dates
         if(settings.value("dates").toBool()){
-            QString today = getToday();
-            // The date should be after any ")" or as the first part of the line
-            if(newrow.at(0)=='(' && newrow.at(2)==')'){
-                QChar prio = newrow.at(1);
-                QString rest = newrow.mid(3);
-                newrow = '('+prio+") "+today+rest;
-            }
-            else {
-                newrow = today+" "+newrow;
-            }
+            QString today = getToday()+" ";
+            tl.createdDate = today;
         }
+
         // Just add the line
-        data.push_back(newrow);
+        data.push_back(Todo2String(tl));
 
     } else {
-
-        //Below are kept for reference. Should never be needed since we can always search for exact mathces
-        //QString reg = "(x\\s)?(\\d{4}-\\d{2}-\\d{2}){0,2}"+QRegExp::escape(row)+"$";
-        //QRegExp rowregex(reg);
-
         for(vector<QString>::iterator iter=data.begin();iter!=data.end();iter++){
             QString *r = &(*iter);
             if(!r->compare(row)){
@@ -291,47 +281,33 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
                 }
 
                 if(checked && !r->startsWith("x ")){
-                    // Here we need to handle dates
-
-                    /* This is the 2.01 version where I wrongly assumed the date should come after the prio
-                    QString prioanddate; // This will be prepended no matter what
-
-                    if(r->at(0)=='('&& r->at(2)==')'){
-                        prioanddate="("+QString(r->at(1))+") ";
-                        r->replace(prioanddate,""); // Remove the prio from the string for now
-                    }
-                    else{
-                        prioanddate="";
-                    }
-                    if(settings.value("dates").toBool()){
-                        prioanddate.append(getToday()+" ");
-                    }
-                    r->prepend("x "+prioanddate); */
+                    todoline tl;
+                    String2Todo(*r,tl);
+                    tl.checked=true;
 
                     QString date;
                     if(settings.value("dates").toBool()){
                             date.append(getToday()+" "); // Add a date if needed
                     }
-                    r->prepend("x "+date);
+                    tl.closedDate=date;
+                    *r=Todo2String(tl);
 
                 }
-                if(!checked && r->startsWith("x ")){
-                    // Here we must remove a date if there are two
-                    // 2.01 erronious behaviour QRegularExpression re("x\\s+(\\([A-Z]\\)\\s+)?(\\d\\d\\d\\d-\\d\\d-\\d\\d )\\d\\d\\d\\d-\\d\\d-\\d\\d ");
-                    QRegularExpression re("x\\s+(\\d\\d\\d\\d-\\d\\d-\\d\\d )(\\([A-Z]\\)\\s+)?\\d\\d\\d\\d-\\d\\d-\\d\\d ");
-
-                    QRegularExpressionMatch match = re.match(*r);
-                    if(match.hasMatch()){
-                        // Cool. There was a match. We need to remove one date
-                        //qDebug()<<"Match 1: "<<match.captured(1); // Detta ska vara prion eller tomt i 2.01 men i ny version ska denna vara datumet som ska bort
-                        //qDebug()<<"Match 2: "<<match.captured(2); // Detta är datumet som vi får ta bort
-                        QString repl = match.captured(1);
-                        r->replace(r->indexOf(repl),repl.size(),""); // r->replace(match.captured(2),""); would replace all occurences
-                    }
-                    QString exet("x ");
-                    r->replace(0,exet.size(),"");
+                else if(!checked && r->startsWith("x ")){
+                    todoline tl;
+                    String2Todo(*r,tl);
+                    tl.checked=false;
+                    tl.closedDate="";
+                    *r=Todo2String(tl);
+                } else {
+                    todoline tl;
+                    String2Todo(row,tl);
+                    todoline newtl;
+                    String2Todo(newrow,newtl);
+                    tl.priority=newtl.priority;
+                    tl.text=newtl.text;
+                    *r = Todo2String(tl);
                 }
-                r->replace(row,newrow);
                 break;
             }
         }
@@ -339,5 +315,51 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
 
     write(todofile,data);
     parse();
+}
 
+// A todo.txt line looks like this
+QRegularExpression todo_line("(x\\s+)?(\\([A-Z]\\)\\s+)?(\\d\\d\\d\\d-\\d\\d-\\d\\d\\s+)?(\\d\\d\\d\\d-\\d\\d-\\d\\d\\s+)?(.*)");
+
+void todotxt::String2Todo(QString &line,todoline &t){
+    QRegularExpressionMatch match = todo_line.match(line);
+    if(match.hasMatch() && match.lastCapturedIndex()==5){
+
+        if(match.captured(1).isEmpty()){
+            t.checked=false;
+        } else {
+            t.checked=true;
+        }
+
+        t.priority=match.captured(2);
+        t.closedDate=match.captured(3);
+        t.createdDate=match.captured(4);
+        t.text = match.captured(5);
+
+
+    } else {
+        t.checked=false;
+        t.priority="";
+        t.closedDate="";
+        t.createdDate="";
+        t.text="";
+    }
+
+}
+
+QString todotxt::Todo2String(todoline &t){
+    QString ret;
+
+    // Yep, an ugly side effect, but it make sure we're having the right format all the time
+    if(t.checked && t.createdDate.isEmpty()){
+        t.createdDate = t.closedDate;
+    }
+
+    if(t.checked){
+        ret.append("x ");
+    }
+    ret.append(t.priority);
+    ret.append(t.closedDate);
+    ret.append(t.createdDate);
+    ret.append(t.text);
+    return ret;
 }

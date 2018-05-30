@@ -22,6 +22,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->cb_autorefresh->setChecked(settings.value("autorefresh").toBool());
     ui->cb_separate->setChecked(settings.value("separateinactive").toBool());
     ui->cb_dates->setChecked(settings.value("dates").toBool());
+    ui->cb_showdates->setChecked(settings.value(SETTINGS_SHOW_DATES,DEFAULT_SHOW_DATES).toBool());
     ui->cb_liveSearch->setChecked(settings.value("liveSearch").toBool());
     ui->cb_hotKey->setChecked(settings.value(SETTINGS_HOTKEY_ENABLE).toBool());
     // Handle the fonts
@@ -55,6 +56,7 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue("autorefresh",ui->cb_autorefresh->isChecked());
     settings.setValue("separateinactive",ui->cb_separate->isChecked());
     settings.setValue("dates",ui->cb_dates->isChecked());
+    settings.setValue(SETTINGS_SHOW_DATES,ui->cb_showdates->isChecked());
     settings.setValue("liveSearch",ui->cb_liveSearch->isChecked());
     settings.setValue("inactivecolor",inactivecolor.rgba());
     settings.setValue("activecolor",activecolor.rgba());

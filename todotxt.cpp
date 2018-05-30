@@ -10,6 +10,7 @@
 #include <QSettings>
 #include <QRegularExpression>
 #include <QDebug>
+#include "def.h"
 
 todotxt::todotxt()
 {
@@ -153,40 +154,19 @@ QString todotxt::getToday(){
 }
 
 QString todotxt::prettyPrint(QString& row){
-    QString ret=row;
-
-    if(ret.length()>1 && ret.at(0) == 'x' && ret.at(1) == ' '){
-        ret.remove(0,1);
-    }
-
+    QString ret;
+    QSettings settings;
 
     // Remove dates
-    QStringList l = ret.split(" ",QString::SkipEmptyParts);
-    int lastdate =1; // The last part that could be a date
-    if(l.length()>=2){
-        for(int i=0;i<l.length();i++){
+    todoline tl;
+    String2Todo(row,tl);
 
-            // The first item can be a prio
-            if(l.at(i).at(0)=='(' && l.at(i).at(2)==')'){
-               if(i==0){
-                    lastdate = 2; // The last date increases by one as there was a prio
-                   continue; // Ok Just leave this
-               } else {
-                   break; // If it's not the first one then we're not removing anything more as the format is wrong
-               }
-            }
-
-            QDate d = QDate::fromString(l.at(i),"yyyy-MM-dd");
-            if(d.isValid()){
-                // This is a date. If it's at 0,1 or 2 then we remove it
-                if(i<=lastdate){
-                    ret.replace(ret.indexOf(l.at(i)),l.at(i).size()+1,"");
-                    //ret.replace(l.at(i),"");
-                }
-            }
-        }
-
+    ret = tl.priority;
+    if(settings.value(SETTINGS_SHOW_DATES).toBool()){
+        ret.append(tl.closedDate+tl.createdDate);
     }
+
+    ret.append(tl.text);
 
     // Remove all leading and trailing spaces
     return ret.trimmed();

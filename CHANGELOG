@@ -1,3 +1,14 @@
+New in 2.12
+===========
+
+* Bugfixes on how dates are handled in notes
+* Added support for displaying dates. Note that those can not be changed.
+
+New in 2.11
+===========
+
+* Bugfix for portable mode on windows
+
 New in 2.10
 ===========
 

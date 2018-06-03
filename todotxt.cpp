@@ -311,8 +311,12 @@ void todotxt::String2Todo(QString &line,todoline &t){
         }
 
         t.priority=match.captured(2);
-        t.closedDate=match.captured(3);
-        t.createdDate=match.captured(4);
+        if(t.checked){
+            t.closedDate=match.captured(3);
+            t.createdDate=match.captured(4);
+        } else {
+            t.createdDate=match.captured(3); // No closed date on a line that isn't closed.
+        }
         t.text = match.captured(5);
 
 

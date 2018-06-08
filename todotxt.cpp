@@ -197,6 +197,21 @@ void todotxt::write(QString& filename,vector<QString>&  content){
             out << content.at(i) << "\n";
 }
 
+void todotxt::remove(QString line){
+    // Remove the line, but perhaps saving it for later as well..
+    QSettings settings;
+    if(settings.value(SETTINGS_DELETED_FILE).toBool()){
+        QString dir = settings.value("directory").toString();
+        QString deletedfile = dir.append(DELETEDFILE);
+        vector<QString> deleteddata;
+        slurp(deletedfile,deleteddata);
+        deleteddata.push_back(line);
+        write(deletedfile,deleteddata);
+    }
+    QString tmp;
+    update(line,false,tmp);
+}
+
 
 void todotxt::archive(){
     // Slurp the files
@@ -222,7 +237,6 @@ void todotxt::archive(){
     write(todofile,tododata);
     write(donefile,donedata);
     parse();
-
 }
 
 void todotxt::refresh(){

@@ -8,6 +8,7 @@
 
 #define TODOFILE "todo.txt"
 #define DONEFILE "done.txt"
+#define DELETEDFILE "deleted.txt"
 
 #include <vector>
 #include <QString>
@@ -35,6 +36,7 @@ public:
     void update(QString& row,bool checked,QString& newrow);
     void write(QString& filename,vector<QString>&  content);
     void slurp(QString& filename,vector<QString>&  content);
+    void remove(QString line);
     void archive();
     void refresh();
     bool isInactive(QString& text);

@@ -144,8 +144,8 @@ void TodoTableModel::add(QString text){
 
 void TodoTableModel::remove(QString text){
     beginResetModel();
-    QString temp;
-    todo->update(text,false,temp); // Sending in an empty string = remove
+    todo->remove(text);
+    // Old way : QString temp;todo->update(text,false,temp); // Sending in an empty string = remove
     todo_data.clear();
     endResetModel();
 }

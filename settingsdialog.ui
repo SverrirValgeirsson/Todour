@@ -175,6 +175,16 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="cb_deletedfile">
+     <property name="toolTip">
+      <string>Save deleted items in deleted.txt</string>
+     </property>
+     <property name="text">
+      <string>Track delete</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

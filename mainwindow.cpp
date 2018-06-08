@@ -83,6 +83,8 @@ MainWindow::MainWindow(QWidget *parent) :
     if ( settings.value( "maximized", isMaximized() ).toBool() )
         showMaximized();
 
+    ui->lineEdit_2->setText(settings.value(SETTINGS_SEARCH_STRING,DEFAULT_SEARCH_STRING).toString());
+
 
     // Fix some font-awesome stuff
     QtAwesome* awesome = new QtAwesome(qApp);
@@ -118,6 +120,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Do this late as it triggers action using data
     ui->btn_Alphabetical->setChecked(settings.value("sort_alpha").toBool());
+    updateSearchResults(); // Since we may have set a value in the search window
 }
 
 // This method is for making sure we're re-selecting the item that has been edited
@@ -391,6 +394,7 @@ void MainWindow::closeEvent(QCloseEvent *ev){
         settings.setValue( "pos", pos() );
         settings.setValue( "size", size() );
     }
+    settings.setValue(SETTINGS_SEARCH_STRING,ui->lineEdit_2->text());
 
     ev->accept();
 }

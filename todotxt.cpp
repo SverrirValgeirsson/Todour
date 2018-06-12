@@ -167,6 +167,18 @@ QString todotxt::getToday(){
     return d.toString("yyyy-MM-dd");
 }
 
+QString todotxt::getRelativeDate(QString shortform){
+    QDate d = QDate::currentDate();
+    // The short form supported for now is +\\dd
+    QRegularExpression reldateregex("\\+(\\d+)d");
+    QRegularExpressionMatch m = reldateregex.match(shortform);
+    if(m.hasMatch()){
+        return d.addDays(m.captured(1).toInt()).toString("yyyy-MM-dd");
+    } else {
+        return shortform; // Don't know what to do.. so just put the string back
+    }
+}
+
 QString todotxt::prettyPrint(QString& row){
     QString ret;
     QSettings settings;
@@ -264,6 +276,15 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
     QString todofile = dir.append(TODOFILE);
     vector<QString> data;
     slurp(todofile,data);
+
+    // Preprocessing of the line
+    if(settings.value(SETTINGS_THRESHOLD).toBool()){
+        QRegularExpression threshold_shorthand("(t:\\+\\d+d)");
+        QRegularExpressionMatch m = threshold_shorthand.match(newrow);
+        if(m.hasMatch()){
+            newrow = newrow.replace(m.captured(1),"t:"+getRelativeDate(m.captured(1).mid(2)));
+        }
+    }
 
     if(row.isEmpty()){
         todoline tl;

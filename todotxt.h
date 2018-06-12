@@ -42,6 +42,7 @@ public:
     bool isInactive(QString& text);
     QString getToday();
     QString getTodoFile();
+    QString getRelativeDate(QString shortform);
 
     struct todoline{
         QString createdDate;

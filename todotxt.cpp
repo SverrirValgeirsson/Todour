@@ -75,6 +75,7 @@ bool todotxt::lessThan(QString &s1,QString &s2){
     return prettyPrint(s1).toLower() < prettyPrint(s2).toLower();
 }
 
+QRegularExpression threshold("t:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
 void todotxt::getAll(QString& filter,vector<QString> &output){
         // Vectors are probably not the best here...
     Q_UNUSED(filter);
@@ -103,6 +104,19 @@ void todotxt::getAll(QString& filter,vector<QString> &output){
                 if((*iter).contains(inactives[i])){
                     inact=true;
                     break;
+
+                }
+            }
+
+            // If we are respecting thresholds, we should check for that
+            if(settings.value(SETTINGS_THRESHOLD).toBool()){
+                QRegularExpressionMatch m=threshold.match((QString)(*iter));
+                if(m.hasMatch()){
+                    QString today = getToday();
+                    QString t = m.captured(1);
+                    if(t.compare(today)>0){
+                        continue; // Don't show this one since it's in the future
+                    }
 
                 }
             }

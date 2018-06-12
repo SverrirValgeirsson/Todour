@@ -22,6 +22,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->cb_autorefresh->setChecked(settings.value("autorefresh").toBool());
     ui->cb_separate->setChecked(settings.value("separateinactive").toBool());
     ui->cb_deletedfile->setChecked(settings.value(SETTINGS_DELETED_FILE,DEFAULT_DELETED_FILE).toBool());
+    ui->cb_threshold->setChecked(settings.value(SETTINGS_THRESHOLD,DEFAULT_THRESHOLD).toBool());
     ui->cb_dates->setChecked(settings.value("dates").toBool());
     ui->cb_showdates->setChecked(settings.value(SETTINGS_SHOW_DATES,DEFAULT_SHOW_DATES).toBool());
     ui->cb_liveSearch->setChecked(settings.value("liveSearch").toBool());
@@ -65,6 +66,7 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue("activefont",activefont.toString());
     settings.setValue(SETTINGS_HOTKEY_ENABLE,ui->cb_hotKey->isChecked());
     settings.setValue(SETTINGS_DELETED_FILE,ui->cb_deletedfile->isChecked());
+    settings.setValue(SETTINGS_THRESHOLD,ui->cb_threshold->isChecked());
     refresh=true;
     this->close();
 }

@@ -7,6 +7,7 @@
 #define DEFAULT_SHOW_DATES false
 #define DEFAULT_DELETED_FILE false
 #define DEFAULT_SEARCH_STRING ""
+#define DEFAULT_THRESHOLD false
 
 // Names of settings in QSettings
 #define SETTINGS_HOTKEY "hotkey"
@@ -14,5 +15,6 @@
 #define SETTINGS_SHOW_DATES "show_dates"
 #define SETTINGS_DELETED_FILE "deleted_file"
 #define SETTINGS_SEARCH_STRING "search_string"
+#define SETTINGS_THRESHOLD "threshold"
 
 #endif // DEF_H

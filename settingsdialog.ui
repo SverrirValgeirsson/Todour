@@ -185,6 +185,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="cb_threshold">
+     <property name="text">
+      <string>Respect threshold (t:xxxx-xx-xx)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

@@ -4,7 +4,7 @@ New in 2.13
 * Option to save deleted items in deleted.txt
 * Remember the content of search window if turned off
 * Support for the threshold (t:) tag
-* Threshold tag can take relative days as argument when threshold tags are active (example t:+2d will change to a date in 2 days)
+* Threshold tag can take relative days(d),weeks(w),months(m) or years(y) as argument when threshold tags are active (example t:+2d will change to a date in 2 days)
 
 New in 2.12
 ===========

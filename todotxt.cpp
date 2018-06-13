@@ -170,10 +170,19 @@ QString todotxt::getToday(){
 QString todotxt::getRelativeDate(QString shortform){
     QDate d = QDate::currentDate();
     // The short form supported for now is +\\dd
-    QRegularExpression reldateregex("\\+(\\d+)d");
+    QRegularExpression reldateregex("\\+(\\d+)([dwmy])");
     QRegularExpressionMatch m = reldateregex.match(shortform);
     if(m.hasMatch()){
-        return d.addDays(m.captured(1).toInt()).toString("yyyy-MM-dd");
+        if(m.captured(2).contains('d')){
+            d= d.addDays(m.captured(1).toInt());
+        } else if(m.captured(2).contains('w')){
+            d= d.addDays(m.captured(1).toInt()*7);
+        } else if(m.captured(2).contains('m')){
+            d= d.addMonths(m.captured(1).toInt());
+        } else {
+            d= d.addYears(m.captured(1).toInt());
+        }
+        return d.toString("yyyy-MM-dd");
     } else {
         return shortform; // Don't know what to do.. so just put the string back
     }
@@ -279,7 +288,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
 
     // Preprocessing of the line
     if(settings.value(SETTINGS_THRESHOLD).toBool()){
-        QRegularExpression threshold_shorthand("(t:\\+\\d+d)");
+        QRegularExpression threshold_shorthand("(t:\\+\\d+[dwmy])");
         QRegularExpressionMatch m = threshold_shorthand.match(newrow);
         if(m.hasMatch()){
             newrow = newrow.replace(m.captured(1),"t:"+getRelativeDate(m.captured(1).mid(2)));

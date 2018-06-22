@@ -68,9 +68,9 @@ MainWindow::MainWindow(QWidget *parent) :
     auto miny = rec.topLeft().y();
 
     QSettings settings;
-    restoreGeometry(settings.value( "geometry", saveGeometry() ).toByteArray());
-    restoreState(settings.value( "savestate", saveState() ).toByteArray());
-    auto p = settings.value("pos", pos()).toPoint();
+    restoreGeometry(settings.value( SETTINGS_GEOMETRY, saveGeometry() ).toByteArray());
+    restoreState(settings.value( SETTINGS_SAVESTATE, saveState() ).toByteArray());
+    auto p = settings.value(SETTINGS_POSITION, pos()).toPoint();
 
     if(p.x()>=maxx-100 || p.x()<minx){
        p.setX(minx); // Set to minx for safety
@@ -79,8 +79,8 @@ MainWindow::MainWindow(QWidget *parent) :
         p.setY(miny); // Set to miny for safety
     }
     move(p);
-    resize(settings.value( "size", size() ).toSize());
-    if ( settings.value( "maximized", isMaximized() ).toBool() )
+    resize(settings.value( SETTINGS_SIZE, size() ).toSize());
+    if ( settings.value( SETTINGS_MAXIMIZED, isMaximized() ).toBool() )
         showMaximized();
 
     ui->lineEdit_2->setText(settings.value(SETTINGS_SEARCH_STRING,DEFAULT_SEARCH_STRING).toString());
@@ -98,8 +98,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->context_lock->setIcon(awesome->icon(fa::lock));
 
     // Set some defaults if they dont exist
-    if(!settings.contains("liveSearch")){
-        settings.setValue("liveSearch",true);
+    if(!settings.contains(SETTINGS_LIVE_SEARCH)){
+        settings.setValue(SETTINGS_LIVE_SEARCH,DEFAULT_LIVE_SEARCH);
     }
 
     // Started. Lets open the todo.txt file, parse it and show it.
@@ -119,7 +119,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(model,SIGNAL(dataChanged (const QModelIndex , const QModelIndex )),this,SLOT(dataInModelChanged(QModelIndex,QModelIndex)));
 
     // Do this late as it triggers action using data
-    ui->btn_Alphabetical->setChecked(settings.value("sort_alpha").toBool());
+    ui->btn_Alphabetical->setChecked(settings.value(SETTINGS_SORT_ALPHA).toBool());
     updateSearchResults(); // Since we may have set a value in the search window
 }
 
@@ -173,7 +173,7 @@ void MainWindow::clearFileWatch(){
 
 void MainWindow::setFileWatch(){
     QSettings settings;
-    if(settings.value("autorefresh").toBool()==false)
+    if(settings.value(SETTINGS_AUTOREFRESH).toBool()==false)
            return;
 
     clearFileWatch();
@@ -207,7 +207,7 @@ void MainWindow::on_lineEdit_2_textEdited(const QString &arg1)
     Q_UNUSED(arg1);
     QSettings settings;
 
-    bool liveUpdate = settings.value("liveSearch").toBool();
+    bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
     if(liveUpdate){
         updateSearchResults();
     }
@@ -236,7 +236,7 @@ void MainWindow::updateSearchResults(){
 void MainWindow::on_lineEdit_2_returnPressed()
 {
     QSettings settings;
-    bool liveUpdate = settings.value("liveSearch").toBool();
+    bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
 
     if(!liveUpdate){
         updateSearchResults();
@@ -387,12 +387,12 @@ void MainWindow::closeEvent(QCloseEvent *ev){
 
     QSettings settings;
 
-    settings.setValue( "geometry", saveGeometry() );
-    settings.setValue( "savestate", saveState() );
-    settings.setValue( "maximized", isMaximized() );
+    settings.setValue( SETTINGS_GEOMETRY, saveGeometry() );
+    settings.setValue( SETTINGS_SAVESTATE, saveState() );
+    settings.setValue( SETTINGS_MAXIMIZED, isMaximized() );
     if ( !isMaximized() ) {
-        settings.setValue( "pos", pos() );
-        settings.setValue( "size", size() );
+        settings.setValue( SETTINGS_POSITION, pos() );
+        settings.setValue( SETTINGS_SIZE, size() );
     }
     settings.setValue(SETTINGS_SEARCH_STRING,ui->lineEdit_2->text());
 
@@ -402,6 +402,6 @@ void MainWindow::closeEvent(QCloseEvent *ev){
 void MainWindow::on_btn_Alphabetical_toggled(bool checked)
 {
     QSettings settings;
-    settings.setValue("sort_alpha",checked);
+    settings.setValue(SETTINGS_SORT_ALPHA,checked);
     on_pushButton_4_clicked(); // Refresh
 }

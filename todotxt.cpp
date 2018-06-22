@@ -40,7 +40,7 @@ void todotxt::parse(){
 
 QString todotxt::getTodoFile(){
     QSettings settings;
-    QString dir = settings.value("directory").toString();
+    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
     QString todofile = dir.append(TODOFILE);
     return todofile;
 }
@@ -58,7 +58,7 @@ void todotxt::getActive(QString& filter,vector<QString> &output){
 
 bool todotxt::isInactive(QString &text){
     QSettings settings;
-    QString t=settings.value("inactive").toString();
+    QString t=settings.value(SETTINGS_INACTIVE).toString();
     if(t.isEmpty())
         return false;
     QStringList inactives = t.split(";");
@@ -84,14 +84,14 @@ void todotxt::getAll(QString& filter,vector<QString> &output){
         vector<QString> done;
         vector<QString> inactive;
         QSettings settings;
-        QString t=settings.value("inactive").toString();
+        QString t=settings.value(SETTINGS_INACTIVE).toString();
         QStringList inactives = t.split(";");
         if(!t.contains(";")){
             // There is really nothing here but inactives will still have one item. Lets just remove it
             inactives.clear();
         }
 
-        bool separateinactives = settings.value("separateinactive").toBool();
+        bool separateinactives = settings.value(SETTINGS_SEPARATE_INACTIVES).toBool();
 
         for(vector<QString>::iterator iter=todo.begin();iter!=todo.end();iter++){
             QString line = (*iter); // For debugging
@@ -135,7 +135,7 @@ void todotxt::getAll(QString& filter,vector<QString> &output){
 
         // Sort the open and done sections alphabetically if needed
 
-        if(settings.value("sort_alpha").toBool()){
+        if(settings.value(SETTINGS_SORT_ALPHA).toBool()){
             qSort(open.begin(),open.end(),lessThan);
             qSort(inactive.begin(),inactive.end(),lessThan);
             qSort(done.begin(),done.end(),lessThan);
@@ -236,7 +236,7 @@ void todotxt::remove(QString line){
     // Remove the line, but perhaps saving it for later as well..
     QSettings settings;
     if(settings.value(SETTINGS_DELETED_FILE).toBool()){
-        QString dir = settings.value("directory").toString();
+        QString dir = settings.value(SETTINGS_DIRECTORY).toString();
         QString deletedfile = dir.append(DELETEDFILE);
         vector<QString> deleteddata;
         slurp(deletedfile,deleteddata);
@@ -251,9 +251,9 @@ void todotxt::remove(QString line){
 void todotxt::archive(){
     // Slurp the files
     QSettings settings;
-    QString dir = settings.value("directory").toString();
+    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
     QString todofile = dir.append(TODOFILE);
-    dir = settings.value("directory").toString();
+    dir = settings.value(SETTINGS_DIRECTORY).toString();
     QString donefile = dir.append(DONEFILE);
     vector<QString> tododata;
     vector<QString> donedata;
@@ -281,7 +281,7 @@ void todotxt::refresh(){
 void todotxt::update(QString &row, bool checked, QString &newrow){
     // First slurp the file.
     QSettings settings;
-    QString dir = settings.value("directory").toString();
+    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
     QString todofile = dir.append(TODOFILE);
     vector<QString> data;
     slurp(todofile,data);
@@ -299,7 +299,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
         todoline tl;
         String2Todo(newrow,tl);
         // Add a date to the line if where doing dates
-        if(settings.value("dates").toBool()){
+        if(settings.value(SETTINGS_DATES).toBool()){
             QString today = getToday()+" ";
             tl.createdDate = today;
         }
@@ -324,7 +324,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
                     tl.checked=true;
 
                     QString date;
-                    if(settings.value("dates").toBool()){
+                    if(settings.value(SETTINGS_DATES).toBool()){
                             date.append(getToday()+" "); // Add a date if needed
                     }
                     tl.closedDate=date;

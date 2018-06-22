@@ -1,6 +1,7 @@
 #include "todotablemodel.h"
 #include "todotxt.h"
 #include "globals.h"
+#include "def.h"
 #include <QFont>
 #include <QColor>
 #include <QSettings>
@@ -64,9 +65,9 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
         if(index.column()==1){
             QFont f;
             if(todo->isInactive(todo_data.at(index.row()))){
-                f.fromString(settings.value("inactivefont").toString());
+                f.fromString(settings.value(SETTINGS_INACTIVE_FONT).toString());
             } else {
-                f.fromString(settings.value("activefont").toString());
+                f.fromString(settings.value(SETTINGS_ACTIVE_FONT).toString());
             }
             f.setStrikeOut(todo->getState(todo_data.at(index.row()))); // Strike out if done
             return f;
@@ -75,9 +76,9 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
 
     if (role == Qt::TextColorRole) {
         if(todo->isInactive(todo_data.at(index.row()))){
-            return QVariant::fromValue(QColor::fromRgba(settings.value("inactivecolor",DEFAULT_INACTIVE_COLOR).toUInt()));
+            return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_INACTIVE_COLOR,DEFAULT_INACTIVE_COLOR).toUInt()));
         } else {
-            return QVariant::fromValue(QColor::fromRgba(settings.value("activecolor",DEFAULT_ACTIVE_COLOR).toUInt()));
+            return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_ACTIVE_COLOR,DEFAULT_ACTIVE_COLOR).toUInt()));
         }
     }
 

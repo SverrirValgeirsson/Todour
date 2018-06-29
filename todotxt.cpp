@@ -344,6 +344,8 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
                     String2Todo(newrow,newtl);
                     tl.priority=newtl.priority;
                     tl.text=newtl.text;
+                    tl.createdDate = newtl.createdDate;
+                    tl.closedDate = newtl.closedDate;
                     *r = Todo2String(tl);
                 }
                 break;

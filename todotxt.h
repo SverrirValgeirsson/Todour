@@ -11,6 +11,7 @@
 #define DELETEDFILE "deleted.txt"
 
 #include <vector>
+#include <set>
 #include <QString>
 
 using namespace std;
@@ -21,9 +22,10 @@ protected:
     QString filedirectory;
     vector<QString> todo;
     vector<QString> done;
-    vector<QString> projects;
-    vector<QString> contexts;
+    set<QString> active_projects;
+    set<QString> active_contexts;
     static bool lessThan(QString &,QString &);
+    bool threshold_hide(QString &);
 
 public:
     todotxt();

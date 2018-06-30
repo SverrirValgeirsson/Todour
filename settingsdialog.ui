@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>535</width>
-    <height>399</height>
+    <width>532</width>
+    <height>425</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -187,7 +187,21 @@
    <item>
     <widget class="QCheckBox" name="cb_threshold">
      <property name="text">
-      <string>Respect threshold (t:xxxx-xx-xx)</string>
+      <string>Respect threshold dates (t:xxxx-xx-xx)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="cb_threshold_label">
+     <property name="text">
+      <string>Respect threshold contexts and projecs (t:+project or t:@context)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="cb_threshold_inactive">
+     <property name="text">
+      <string>Treat threshold as inactive</string>
      </property>
     </widget>
    </item>

@@ -20,10 +20,16 @@ void todotxt::setdirectory(QString &dir){
     filedirectory=dir;
 }
 
+QRegularExpression regex_project("\\s(\\+[^\\s]+)");
+QRegularExpression regex_context("\\s(\\@[^\\s]+)");
+
 void todotxt::parse(){
+    QSettings settings;
     //qDebug()<<"todotxt::parse";
     // parse the files todo.txt and done.txt (for now only todo.txt)
     todo.clear();
+    active_contexts.clear();
+    active_projects.clear();
     QString todofile=getTodoFile();
     QFile file(todofile);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -36,6 +42,28 @@ void todotxt::parse(){
         todo.push_back(line);
      }
 
+
+      if(settings.value(SETTINGS_THRESHOLD_LABELS).toBool()){
+          // Get all active tags with either a @ or a + sign infront of them, as they can be used for thresholds
+          foreach (auto line, todo) {
+              if(line.startsWith("x ")){
+                  continue; // Inactive so we don't care
+              } else {
+                auto matches = regex_project.globalMatch(line);
+                while(matches.hasNext()){
+                    auto match = matches.next();
+                    auto project = match.captured(1);
+                    active_projects.insert(project);
+                }
+                matches = regex_context.globalMatch(line);
+                while(matches.hasNext()){
+                    auto match = matches.next();
+                    active_contexts.insert(match.captured(1));
+                }
+              }
+
+          }
+      }
 }
 
 QString todotxt::getTodoFile(){
@@ -67,6 +95,11 @@ bool todotxt::isInactive(QString &text){
             return true;
         }
     }
+
+    if(settings.value(SETTINGS_THRESHOLD_INACTIVE).toBool()){
+        return threshold_hide(text);
+    }
+
     return false;
 }
 
@@ -75,7 +108,44 @@ bool todotxt::lessThan(QString &s1,QString &s2){
     return prettyPrint(s1).toLower() < prettyPrint(s2).toLower();
 }
 
-QRegularExpression threshold("t:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
+QRegularExpression regex_threshold_date("t:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
+QRegularExpression regex_threshold_project("t:(\\+[^\\s]+)");
+QRegularExpression regex_threshold_context("t:(\\@[^\\s]+)");
+
+bool todotxt::threshold_hide(QString &t){
+    QSettings settings;
+    if(settings.value(SETTINGS_THRESHOLD).toBool()){
+        QRegularExpressionMatch m=regex_threshold_date.match(t);
+        if(m.hasMatch()){
+            QString today = getToday();
+            QString t = m.captured(1);
+            if(t.compare(today)>0){
+                return true; // Don't show this one since it's in the future
+            }
+
+        }
+    }
+
+
+    if(settings.value(SETTINGS_THRESHOLD_LABELS).toBool()){
+        auto matches=regex_threshold_project.globalMatch(t);
+        while(matches.hasNext()){
+            QString project = matches.next().captured(1);
+            if(active_projects.count(project)==1)
+                return true; // There is an active project with this name, so we skip this
+        }
+
+        matches=regex_threshold_context.globalMatch(t);
+        while(matches.hasNext()){
+            QString project = matches.next().captured(1);
+            if(active_contexts.count(project)==1)
+                return true; // There is an active project with this name, so we skip this
+        }
+    }
+    return false;
+}
+
+
 void todotxt::getAll(QString& filter,vector<QString> &output){
         // Vectors are probably not the best here...
     Q_UNUSED(filter);
@@ -109,17 +179,17 @@ void todotxt::getAll(QString& filter,vector<QString> &output){
             }
 
             // If we are respecting thresholds, we should check for that
-            if(settings.value(SETTINGS_THRESHOLD).toBool()){
-                QRegularExpressionMatch m=threshold.match((QString)(*iter));
-                if(m.hasMatch()){
-                    QString today = getToday();
-                    QString t = m.captured(1);
-                    if(t.compare(today)>0){
-                        continue; // Don't show this one since it's in the future
-                    }
+            bool no_show_threshold = threshold_hide((*iter));
 
+
+            if(no_show_threshold){
+                if(settings.value(SETTINGS_THRESHOLD_INACTIVE).toBool()){
+                    inact=true;
+                } else {
+                    continue;
                 }
             }
+
 
             if(!(inact&&separateinactives) && (*iter).at(0) == '(' && (*iter).at(2) == ')'){
                 prio.insert((*iter));

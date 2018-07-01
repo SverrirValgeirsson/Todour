@@ -18,6 +18,7 @@
 #define DEFAULT_ACTIVE_COLOR 0xFF000000
 #define DEFAULT_INACTIVE_COLOR 0xFF555555
 #define DEFAULT_DATES false
+#define DEFAULT_CONTEXT_LOCK false
 
 // Names of settings in QSettings
 #define SETTINGS_HOTKEY "hotkey"
@@ -44,5 +45,6 @@
 #define SETTINGS_ACTIVE_FONT "activefont"
 #define SETTINGS_INACTIVE_FONT "inactivefont"
 #define SETTINGS_DATES "dates"
+#define SETTINGS_CONTEXT_LOCK "context_lock"
 
 #endif // DEF_H

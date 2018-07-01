@@ -47,6 +47,8 @@ private slots:
 
     void on_hotkey();
 
+    void on_context_lock_toggled(bool checked);
+
 private:
     void setFileWatch();
     void clearFileWatch();

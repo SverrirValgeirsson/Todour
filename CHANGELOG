@@ -8,6 +8,7 @@ New in 2.13
 * Threshold can have a +project or @context - stays hidden while there is an active task with that +project or @context
 * Threshold task can be treated as inactives (thus not hidden, but displayed differently)
 * Changed behavior: When editing a line with dates, a change of the dates will be respected as well (before the original date would be kept)
+* Remember the state of the Context lock toggle button when closed
 
 
 New in 2.12

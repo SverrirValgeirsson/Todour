@@ -120,6 +120,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // Do this late as it triggers action using data
     ui->btn_Alphabetical->setChecked(settings.value(SETTINGS_SORT_ALPHA).toBool());
+    ui->context_lock->setChecked(settings.value(SETTINGS_CONTEXT_LOCK,DEFAULT_CONTEXT_LOCK).toBool());
     updateSearchResults(); // Since we may have set a value in the search window
 }
 
@@ -404,4 +405,10 @@ void MainWindow::on_btn_Alphabetical_toggled(bool checked)
     QSettings settings;
     settings.setValue(SETTINGS_SORT_ALPHA,checked);
     on_pushButton_4_clicked(); // Refresh
+}
+
+void MainWindow::on_context_lock_toggled(bool checked)
+{
+    QSettings settings;
+    settings.setValue(SETTINGS_CONTEXT_LOCK,checked);
 }

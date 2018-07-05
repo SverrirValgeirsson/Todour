@@ -42,6 +42,21 @@ void todotxt::parse(){
         todo.push_back(line);
      }
 
+    if(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool()){
+        // Donefile as well
+        QString donefile = getDoneFile();
+        QFile file2(donefile);
+        if (!file2.open(QIODevice::ReadOnly | QIODevice::Text))
+            return;
+
+        QTextStream in2(&file2);
+        in.setCodec("UTF-8");
+        while (!in2.atEnd()) {
+            QString line = in2.readLine();
+            todo.push_back(line);
+         }
+    }
+
 
       if(settings.value(SETTINGS_THRESHOLD_LABELS).toBool()){
           // Get all active tags with either a @ or a + sign infront of them, as they can be used for thresholds
@@ -73,6 +88,13 @@ QString todotxt::getTodoFile(){
     return todofile;
 }
 
+
+QString todotxt::getDoneFile(){
+    QSettings settings;
+    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
+    QString todofile = dir.append(DONEFILE);
+    return todofile;
+}
 void todotxt::getActive(QString& filter,vector<QString> &output){
         // Obsolete... remove?
     Q_UNUSED(filter);
@@ -321,10 +343,8 @@ void todotxt::remove(QString line){
 void todotxt::archive(){
     // Slurp the files
     QSettings settings;
-    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
-    QString todofile = dir.append(TODOFILE);
-    dir = settings.value(SETTINGS_DIRECTORY).toString();
-    QString donefile = dir.append(DONEFILE);
+    QString todofile = getTodoFile();
+    QString donefile = getDoneFile();
     vector<QString> tododata;
     vector<QString> donedata;
     slurp(todofile,tododata);
@@ -351,8 +371,7 @@ void todotxt::refresh(){
 void todotxt::update(QString &row, bool checked, QString &newrow){
     // First slurp the file.
     QSettings settings;
-    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
-    QString todofile = dir.append(TODOFILE);
+    QString todofile = getTodoFile();
     vector<QString> data;
     slurp(todofile,data);
 

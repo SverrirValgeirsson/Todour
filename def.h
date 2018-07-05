@@ -19,9 +19,14 @@
 #define DEFAULT_INACTIVE_COLOR 0xFF555555
 #define DEFAULT_DATES false
 #define DEFAULT_CONTEXT_LOCK false
+#define DEFAULT_TRAY_ENABLED false
+#define DEFAULT_SHOW_ALL false
+
 
 // Names of settings in QSettings
+#define SETTINGS_TRAY_ENABLED "tray_enabled"
 #define SETTINGS_HOTKEY "hotkey"
+#define SETTINGS_SHOW_ALL "show_all"
 #define SETTINGS_HOTKEY_ENABLE "hotkey_enable"
 #define SETTINGS_SHOW_DATES "show_dates"
 #define SETTINGS_DELETED_FILE "deleted_file"

@@ -44,6 +44,7 @@ public:
     bool isInactive(QString& text);
     QString getToday();
     QString getTodoFile();
+    QString getDoneFile();
     QString getRelativeDate(QString shortform);
 
     struct todoline{

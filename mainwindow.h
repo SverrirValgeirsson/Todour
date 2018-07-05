@@ -49,6 +49,8 @@ private slots:
 
     void on_context_lock_toggled(bool checked);
 
+    void on_cb_showaall_stateChanged(int arg1);
+
 private:
     void setFileWatch();
     void clearFileWatch();

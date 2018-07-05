@@ -122,6 +122,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->btn_Alphabetical->setChecked(settings.value(SETTINGS_SORT_ALPHA).toBool());
     ui->context_lock->setChecked(settings.value(SETTINGS_CONTEXT_LOCK,DEFAULT_CONTEXT_LOCK).toBool());
     updateSearchResults(); // Since we may have set a value in the search window
+    ui->lv_activetags->hide(); //  Not being used yet
+    ui->cb_showaall->setChecked(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool());
 }
 
 // This method is for making sure we're re-selecting the item that has been edited
@@ -131,6 +133,7 @@ void MainWindow::dataInModelChanged(QModelIndex i1,QModelIndex i2){
     //qDebug()<<"Changed:R="<<i1.row()<<":C="<<i1.column()<<endl;
     saved_selection = i1.data(Qt::UserRole).toString();
     resetTableSelection();
+
 }
 
 
@@ -411,4 +414,11 @@ void MainWindow::on_context_lock_toggled(bool checked)
 {
     QSettings settings;
     settings.setValue(SETTINGS_CONTEXT_LOCK,checked);
+}
+
+void MainWindow::on_cb_showaall_stateChanged(int arg1)
+{
+    QSettings settings;
+    settings.setValue(SETTINGS_SHOW_ALL,arg1);
+    on_pushButton_4_clicked();
 }

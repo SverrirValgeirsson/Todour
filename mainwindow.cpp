@@ -20,6 +20,7 @@
 #include <QtAwesome.h>
 #include <QDesktopWidget>
 #include <QDir>
+#include <QSystemTrayIcon>
 
 QNetworkAccessManager *networkaccessmanager;
 TodoTableModel *model;
@@ -122,8 +123,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->btn_Alphabetical->setChecked(settings.value(SETTINGS_SORT_ALPHA).toBool());
     ui->context_lock->setChecked(settings.value(SETTINGS_CONTEXT_LOCK,DEFAULT_CONTEXT_LOCK).toBool());
     updateSearchResults(); // Since we may have set a value in the search window
+
     ui->lv_activetags->hide(); //  Not being used yet
     ui->cb_showaall->setChecked(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool());
+
+    setTray();
+
 }
 
 // This method is for making sure we're re-selecting the item that has been edited
@@ -295,6 +300,60 @@ void MainWindow::on_actionSettings_triggered()
         model->refresh();// Not 100% sure why this is needed.. Should be done by re-setting the model above
         resetTableSelection();
         setFileWatch();
+        setTray();
+    }
+}
+
+
+void MainWindow::setTray(){
+    QSettings settings;
+    if(settings.value(SETTINGS_TRAY_ENABLED,DEFAULT_TRAY_ENABLED).toBool()){
+        // We should be showing a tray icon. Are we?
+        if(trayicon==NULL){
+            trayicon = new QSystemTrayIcon(this);
+            traymenu = new QMenu(this);
+            minimizeAction = new QAction(tr("Mi&nimize"), this);
+            connect(minimizeAction, SIGNAL(triggered()), this, SLOT(hide()));
+            maximizeAction = new QAction(tr("Ma&ximize"), this);
+            connect(maximizeAction, SIGNAL(triggered()), this, SLOT(showMaximized()));
+            restoreAction = new QAction(tr("&Restore"), this);
+            connect(restoreAction, SIGNAL(triggered()), this, SLOT(showNormal()));
+            quitAction = new QAction(tr("&Quit"), this);
+            connect(quitAction, SIGNAL(triggered()), this, SLOT(cleanup()));
+
+            traymenu->addAction(minimizeAction);
+            traymenu->addAction(maximizeAction);
+            traymenu->addAction(restoreAction);
+            traymenu->addSeparator();
+            traymenu->addAction(quitAction);
+            trayicon->setContextMenu(traymenu);
+            connect(trayicon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
+                        this, SLOT(iconActivated(QSystemTrayIcon::ActivationReason)));
+
+            trayicon->setIcon(QIcon(":/icons/newicon.png"));
+        }
+        trayicon->show();
+    }
+    else{
+        if(trayicon!=NULL){
+            trayicon->hide();
+        }
+    }
+}
+
+void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
+{
+    switch (reason) {
+    case QSystemTrayIcon::Trigger:
+    case QSystemTrayIcon::DoubleClick:
+            // Make sure the window is open
+            this->show();
+        break;
+    case QSystemTrayIcon::MiddleClick:
+        // Do nothing
+        break;
+    default:
+        ;
     }
 }
 
@@ -387,8 +446,7 @@ void MainWindow::resetTableSelection(){
 
 }
 
-void MainWindow::closeEvent(QCloseEvent *ev){
-
+void MainWindow::cleanup(){
     QSettings settings;
 
     settings.setValue( SETTINGS_GEOMETRY, saveGeometry() );
@@ -399,8 +457,22 @@ void MainWindow::closeEvent(QCloseEvent *ev){
         settings.setValue( SETTINGS_SIZE, size() );
     }
     settings.setValue(SETTINGS_SEARCH_STRING,ui->lineEdit_2->text());
+    if(trayicon!=NULL){
+        delete trayicon;
+    }
+    qApp->quit();
+}
 
-    ev->accept();
+void MainWindow::closeEvent(QCloseEvent *ev){
+
+    if (trayicon->isVisible()) {
+            hide();
+            ev->ignore();
+    } else {
+        cleanup();
+        ev->accept();
+    }
+
 }
 
 void MainWindow::on_btn_Alphabetical_toggled(bool checked)

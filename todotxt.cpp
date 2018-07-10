@@ -381,7 +381,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
         QRegularExpressionMatch m = threshold_shorthand.match(newrow);
         if(m.hasMatch()){
             newrow = newrow.replace(m.captured(1),"t:"+getRelativeDate(m.captured(1).mid(2)));
-        }
+        }        
     }
 
     if(row.isEmpty()){

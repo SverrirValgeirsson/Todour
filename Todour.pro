@@ -71,4 +71,8 @@ DISTFILES += \
     Feature-follow_select \
     Feature-Enter_To_Search \
     Feature-customized-font-colors \
+    newicon.png \
     Feature-Setup-ini
+
+RESOURCES += \
+    resources.qrc

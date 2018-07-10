@@ -206,6 +206,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="cb_tray_icon">
+     <property name="text">
+      <string>Enable tray</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

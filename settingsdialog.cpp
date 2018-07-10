@@ -29,6 +29,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->cb_showdates->setChecked(settings.value(SETTINGS_SHOW_DATES,DEFAULT_SHOW_DATES).toBool());
     ui->cb_liveSearch->setChecked(settings.value(SETTINGS_LIVE_SEARCH,DEFAULT_LIVE_SEARCH).toBool());
     ui->cb_hotKey->setChecked(settings.value(SETTINGS_HOTKEY_ENABLE,DEFAULT_HOTKEY_ENABLE).toBool());
+    ui->cb_tray_icon->setChecked(settings.value(SETTINGS_TRAY_ENABLED,DEFAULT_TRAY_ENABLED).toBool());
     // Handle the fonts
     activecolor=QColor::fromRgba(settings.value(SETTINGS_ACTIVE_COLOR,DEFAULT_ACTIVE_COLOR).toUInt());
     inactivecolor=QColor::fromRgba(settings.value(SETTINGS_INACTIVE_COLOR,DEFAULT_INACTIVE_COLOR).toUInt());
@@ -71,6 +72,7 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue(SETTINGS_THRESHOLD,ui->cb_threshold->isChecked());
     settings.setValue(SETTINGS_THRESHOLD_LABELS,ui->cb_threshold_label->isChecked());
     settings.setValue(SETTINGS_THRESHOLD_INACTIVE,ui->cb_threshold_inactive->isChecked());
+    settings.setValue(SETTINGS_TRAY_ENABLED,ui->cb_tray_icon->isChecked());
     refresh=true;
     this->close();
 }

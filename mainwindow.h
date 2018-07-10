@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QModelIndex>
 #include <uglobalhotkeys.h>
+#include <QSystemTrayIcon>
+#include <QMenu>
 
 namespace Ui {
 class MainWindow;
@@ -49,10 +51,16 @@ private slots:
 
     void on_context_lock_toggled(bool checked);
 
+
     void on_cb_showaall_stateChanged(int arg1);
+
+    void iconActivated(QSystemTrayIcon::ActivationReason reason);
+    void cleanup(); // Need to have a quit slot of my own to save settings and so on.
+
 
 private:
     void setFileWatch();
+    void setTray();
     void clearFileWatch();
     void closeEvent(QCloseEvent *ev);
     Ui::MainWindow *ui;
@@ -61,6 +69,12 @@ private:
     void updateSearchResults();
     UGlobalHotkeys *hotkey;
     void setHotkey();
+    QSystemTrayIcon *trayicon = NULL;
+    QMenu *traymenu=NULL;
+    QAction *minimizeAction;
+    QAction *maximizeAction;
+    QAction *restoreAction;
+    QAction *quitAction;
 };
 
 #endif // MAINWINDOW_H

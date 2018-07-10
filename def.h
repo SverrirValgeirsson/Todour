@@ -23,6 +23,7 @@
 #define DEFAULT_SHOW_ALL false
 
 
+
 // Names of settings in QSettings
 #define SETTINGS_TRAY_ENABLED "tray_enabled"
 #define SETTINGS_HOTKEY "hotkey"

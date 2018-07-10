@@ -47,32 +47,18 @@ FORMS    += mainwindow.ui \
 
 OTHER_FILES += \
     version.pl \
-    Setup.iss \
     myresource.rc \
     icon.icsn \
-    newicon.ico \
-    deploy.sh \
-    todo.txt
+    newicon.ico 
+
 
 DISTFILES += \
     todour-latest.php \
-    make_standalone_windows.pl \
     LICENSE \
     README \
-    PRIVACY-POLICY \
-    make_standalone_linux.pl \
-    todourdmg.json \
     CHANGELOG \
-    todour-latest_windows.php \
-    todour-latest_mac.php \
-    Feature_Url_Support \
-    Feature-Advanced_filters.txt \
     README.md \
-    Feature-follow_select \
-    Feature-Enter_To_Search \
-    Feature-customized-font-colors \
-    newicon.png \
-    Feature-Setup-ini
+    newicon.png
 
 RESOURCES += \
     resources.qrc

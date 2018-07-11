@@ -21,10 +21,17 @@
 #define DEFAULT_CONTEXT_LOCK false
 #define DEFAULT_TRAY_ENABLED false
 #define DEFAULT_SHOW_ALL false
-
+#define DEFAULT_DUE false
+#define DEFAULT_DUE_WARNING 3
+#define DEFAULT_DUE_WARNING_COLOR 0xFFFFFF00
+#define DEFAULT_DUE_LATE_COLOR 0xFFFF0000
 
 
 // Names of settings in QSettings
+#define SETTINGS_DUE "due"
+#define SETTINGS_DUE_WARNING "due_warning"
+#define SETTINGS_DUE_WARNING_COLOR "due_warning_color"
+#define SETTINGS_DUE_LATE_COLOR "due_late_color"
 #define SETTINGS_TRAY_ENABLED "tray_enabled"
 #define SETTINGS_HOTKEY "hotkey"
 #define SETTINGS_SHOW_ALL "show_all"

@@ -38,6 +38,10 @@ private slots:
 
     void on_cb_hotKey_stateChanged(int arg1);
 
+    void on_pb_warningColor_clicked();
+
+    void on_pb_lateColor_clicked();
+
 private:
     Ui::SettingsDialog *ui;
     void updateFonts();

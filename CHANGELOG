@@ -3,7 +3,7 @@ New in 2.14
 
 * Added a Show All checkbox that shows the contents of the entire done.txt as well. good for checking old stuff. Note everything will be slow...
 * Added possibility to use a tray icon. When the application is closed and tray icon is active, the application is minimized to tray instead. To quit, use the menu in the tray.
-
+* Added support for coloring due: tagged lines depending on date
 
 New in 2.13
 ===========

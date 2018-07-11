@@ -30,6 +30,11 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->cb_liveSearch->setChecked(settings.value(SETTINGS_LIVE_SEARCH,DEFAULT_LIVE_SEARCH).toBool());
     ui->cb_hotKey->setChecked(settings.value(SETTINGS_HOTKEY_ENABLE,DEFAULT_HOTKEY_ENABLE).toBool());
     ui->cb_tray_icon->setChecked(settings.value(SETTINGS_TRAY_ENABLED,DEFAULT_TRAY_ENABLED).toBool());
+    ui->cb_due->setChecked(settings.value(SETTINGS_DUE,DEFAULT_DUE).toBool());
+    ui->sb_due_warning->setValue(settings.value(SETTINGS_DUE_WARNING,DEFAULT_DUE_WARNING).toInt());
+
+
+
     // Handle the fonts
     activecolor=QColor::fromRgba(settings.value(SETTINGS_ACTIVE_COLOR,DEFAULT_ACTIVE_COLOR).toUInt());
     inactivecolor=QColor::fromRgba(settings.value(SETTINGS_INACTIVE_COLOR,DEFAULT_INACTIVE_COLOR).toUInt());
@@ -73,6 +78,8 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue(SETTINGS_THRESHOLD_LABELS,ui->cb_threshold_label->isChecked());
     settings.setValue(SETTINGS_THRESHOLD_INACTIVE,ui->cb_threshold_inactive->isChecked());
     settings.setValue(SETTINGS_TRAY_ENABLED,ui->cb_tray_icon->isChecked());
+    settings.setValue(SETTINGS_DUE,ui->cb_due->isChecked());
+    settings.setValue(SETTINGS_DUE_WARNING,ui->sb_due_warning->value());
     refresh=true;
     this->close();
 }
@@ -91,7 +98,7 @@ void SettingsDialog::on_pb_fontDlgActive_clicked()
 }
 
 void SettingsDialog::updateFonts(){
-
+    QSettings settings;
     QPalette p;
     ui->le_activeFont->setFont(activefont);
     p.setColor(QPalette::Text,activecolor);
@@ -99,6 +106,17 @@ void SettingsDialog::updateFonts(){
     p.setColor(QPalette::Text,inactivecolor);
     ui->le_InactiveFont->setPalette(p);
     ui->le_InactiveFont->setFont(inactivefont);
+
+    // Handle the colors of the due buttons
+    QPalette pal = ui->pb_warningColor->palette();
+    pal.setColor(QPalette::ButtonText,QColor::fromRgba(settings.value(SETTINGS_DUE_WARNING_COLOR,DEFAULT_DUE_WARNING_COLOR).toInt()));
+    pal.setColor(QPalette::Button,QColor::fromRgba(0xFFFFFFFF));
+    ui->pb_warningColor->setPalette(pal);
+    ui->pb_warningColor->update();
+
+    pal.setColor(QPalette::ButtonText,QColor::fromRgba(settings.value(SETTINGS_DUE_LATE_COLOR,DEFAULT_DUE_LATE_COLOR).toInt()));
+    ui->pb_lateColor->setPalette(pal);
+    ui->pb_lateColor->update();
 }
 
 void SettingsDialog::on_pb_fontDlgInactive_clicked()
@@ -122,4 +140,21 @@ void SettingsDialog::on_pb_colorDlgInactive_clicked()
 void SettingsDialog::on_cb_hotKey_stateChanged(int arg1)
 {
     Q_UNUSED(arg1);
+}
+
+void SettingsDialog::on_pb_warningColor_clicked()
+{
+    QSettings settings;
+    QColor c = QColorDialog::getRgba(settings.value(SETTINGS_DUE_WARNING_COLOR,DEFAULT_DUE_WARNING_COLOR).toInt());
+    settings.setValue(SETTINGS_DUE_WARNING_COLOR,c.rgba());
+    updateFonts();
+}
+
+void SettingsDialog::on_pb_lateColor_clicked()
+{
+    QSettings settings;
+    QColor c = QColorDialog::getRgba(settings.value(SETTINGS_DUE_LATE_COLOR,DEFAULT_DUE_LATE_COLOR).toInt());
+    settings.setValue(SETTINGS_DUE_LATE_COLOR,c.rgba());
+    updateFonts();
+
 }

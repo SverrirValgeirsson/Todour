@@ -75,7 +75,16 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
     }
 
     if (role == Qt::TextColorRole) {
-        if(todo->isInactive(todo_data.at(index.row()))){
+
+        int due = todo->dueIn(todo_data.at(index.row())); // The settings check is done in the todo call
+
+        if(due<=0){
+            // We have passed due date
+            return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_DUE_LATE_COLOR,DEFAULT_DUE_LATE_COLOR).toUInt()));
+        } else if(due<=settings.value(SETTINGS_DUE_WARNING,DEFAULT_DUE_WARNING).toInt()){
+            return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_DUE_WARNING_COLOR,DEFAULT_DUE_WARNING_COLOR).toUInt()));
+        }
+        else if(todo->isInactive(todo_data.at(index.row()))){
             return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_INACTIVE_COLOR,DEFAULT_INACTIVE_COLOR).toUInt()));
         } else {
             return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_ACTIVE_COLOR,DEFAULT_ACTIVE_COLOR).toUInt()));

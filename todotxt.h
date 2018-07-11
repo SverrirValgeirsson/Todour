@@ -42,6 +42,7 @@ public:
     void archive();
     void refresh();
     bool isInactive(QString& text);
+    int  dueIn(QString& text);
     QString getToday();
     QString getTodoFile();
     QString getDoneFile();

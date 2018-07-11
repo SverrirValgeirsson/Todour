@@ -496,3 +496,20 @@ QString todotxt::Todo2String(todoline &t){
     ret.append(t.text);
     return ret;
 }
+
+// Check when this is due
+
+QRegularExpression regex_due_date("due:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
+int todotxt::dueIn(QString &text){
+    int ret=INT_MAX;
+    QSettings settings;
+    if(settings.value(SETTINGS_DUE).toBool()){
+        QRegularExpressionMatch m=regex_due_date.match(text);
+        if(m.hasMatch()){
+            QString ds = m.captured(1);
+            QDate d = QDate::fromString(ds,"yyyy-MM-dd");
+            return QDate::currentDate().daysTo(d);
+        }
+    }
+    return ret;
+}

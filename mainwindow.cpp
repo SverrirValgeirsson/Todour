@@ -47,6 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
 #endif
 
     title.append(VER);
+    baseTitle=title;
     this->setWindowTitle(title);
 
 
@@ -131,6 +132,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
 }
 
+
+
 // This method is for making sure we're re-selecting the item that has been edited
 void MainWindow::dataInModelChanged(QModelIndex i1,QModelIndex i2){
     Q_UNUSED(i2);
@@ -148,9 +151,22 @@ MainWindow::~MainWindow()
     delete networkaccessmanager;
 }
 
-QSortFilterProxyModel *proxyModel;
+QSortFilterProxyModel *proxyModel=NULL;
 
 QFileSystemWatcher *watcher;
+
+void MainWindow::updateTitle(){
+    // The title is initialized to the name and version number at start and that is stored in baseTitle
+
+    if(proxyModel != NULL){
+        int visible = proxyModel->rowCount();
+        int total = proxyModel->sourceModel()->rowCount();
+
+        this->setWindowTitle(baseTitle+" ("+QString::number(visible)+"/"+QString::number(total)+")");
+    }
+
+
+}
 
 
 // A simple delay function I pulled of the 'net.. Need to delay reading a file a little bit.. A second seems to be enough
@@ -240,6 +256,7 @@ void MainWindow::updateSearchResults(){
     proxyModel->setFilterRegExp(regexp);
     //qDebug()<<"Setting filter: "<<regexp.pattern();
     proxyModel->setFilterKeyColumn(1);
+    updateTitle();
 }
 
 void MainWindow::on_lineEdit_2_returnPressed()

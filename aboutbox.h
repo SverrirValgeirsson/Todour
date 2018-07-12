@@ -7,11 +7,11 @@
 #include <QNetworkReply>
 
 #ifdef Q_OS_OSX
-    #define VERSION_URL "http://nerdur.com/todour-latest_mac.php"
+    #define VERSION_URL "https://nerdur.com/todour-latest_mac.php"
 #elif defined Q_OS_WIN
-    #define VERSION_URL "http://nerdur.com/todour-latest_windows.php"
+    #define VERSION_URL "https://nerdur.com/todour-latest_windows.php"
 #else
-    #define VERSION_URL "http://nerdur.com/todour-latest.php"
+    #define VERSION_URL "https://nerdur.com/todour-latest.php"
 #endif
 
 

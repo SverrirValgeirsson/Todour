@@ -67,6 +67,8 @@ private:
     void saveTableSelection();
     void resetTableSelection();
     void updateSearchResults();
+    void updateTitle();
+    QString baseTitle;
     UGlobalHotkeys *hotkey;
     void setHotkey();
     QSystemTrayIcon *trayicon = NULL;

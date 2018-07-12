@@ -5,6 +5,7 @@ New in 2.14
 * Added possibility to use a tray icon. When the application is closed and tray icon is active, the application is minimized to tray instead. To quit, use the menu in the tray.
 * Added support for coloring due: tagged lines depending on date
 * Added support for same shorthand with due: dates as with thresholds. Thus due:+2d will set the due date to 2 days from now. +3w is three weeks from now and so on..
+* Title now shows how many rows are shown of total
 
 New in 2.13
 ===========

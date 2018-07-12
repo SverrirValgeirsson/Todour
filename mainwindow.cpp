@@ -429,6 +429,7 @@ void MainWindow::on_pushButton_4_clicked()
     saveTableSelection();
     model->refresh();
     resetTableSelection();
+    updateTitle();
 }
 
 

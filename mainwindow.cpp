@@ -395,6 +395,7 @@ void MainWindow::addTodo(QString &s){
         }
     }
     model->add(s);
+    updateTitle();
 }
 
 void MainWindow::on_lineEdit_returnPressed()
@@ -413,7 +414,7 @@ void MainWindow::on_pushButton_2_clicked()
         //QString t=proxyModel->data(i).toString();
         model->remove(t);
     }
-
+    updateTitle();
 }
 
 void MainWindow::on_pushButton_3_clicked()
@@ -422,6 +423,7 @@ void MainWindow::on_pushButton_3_clicked()
     saveTableSelection();
     model->archive();
     resetTableSelection();
+    updateTitle();
 }
 
 void MainWindow::on_pushButton_4_clicked()

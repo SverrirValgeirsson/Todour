@@ -25,6 +25,7 @@
 #define DEFAULT_DUE_WARNING 3
 #define DEFAULT_DUE_WARNING_COLOR 0xFFFFA500
 #define DEFAULT_DUE_LATE_COLOR 0xFFFF0000
+#define DEFAULT_CHECK_UPDATES true
 
 
 // Names of settings in QSettings
@@ -59,5 +60,7 @@
 #define SETTINGS_INACTIVE_FONT "inactivefont"
 #define SETTINGS_DATES "dates"
 #define SETTINGS_CONTEXT_LOCK "context_lock"
+#define SETTINGS_CHECK_UPDATES "check_updates"
+#define SETTINGS_LAST_UPDATE_CHECK "last_update_check"
 
 #endif // DEF_H

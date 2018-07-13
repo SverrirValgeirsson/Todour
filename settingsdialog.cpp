@@ -30,6 +30,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->cb_liveSearch->setChecked(settings.value(SETTINGS_LIVE_SEARCH,DEFAULT_LIVE_SEARCH).toBool());
     ui->cb_hotKey->setChecked(settings.value(SETTINGS_HOTKEY_ENABLE,DEFAULT_HOTKEY_ENABLE).toBool());
     ui->cb_tray_icon->setChecked(settings.value(SETTINGS_TRAY_ENABLED,DEFAULT_TRAY_ENABLED).toBool());
+    ui->cb_CheckUpdates->setChecked(settings.value(SETTINGS_CHECK_UPDATES,DEFAULT_CHECK_UPDATES).toBool());
     ui->cb_due->setChecked(settings.value(SETTINGS_DUE,DEFAULT_DUE).toBool());
     ui->sb_due_warning->setValue(settings.value(SETTINGS_DUE_WARNING,DEFAULT_DUE_WARNING).toInt());
 
@@ -80,6 +81,7 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue(SETTINGS_TRAY_ENABLED,ui->cb_tray_icon->isChecked());
     settings.setValue(SETTINGS_DUE,ui->cb_due->isChecked());
     settings.setValue(SETTINGS_DUE_WARNING,ui->sb_due_warning->value());
+    settings.setValue(SETTINGS_CHECK_UPDATES,ui->cb_CheckUpdates->isChecked());
     refresh=true;
     this->close();
 }

@@ -98,6 +98,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->pushButton->setIcon(awesome->icon( fa::plus ));
     ui->pushButton_2->setIcon(awesome->icon( fa::minus ));
     ui->context_lock->setIcon(awesome->icon(fa::lock));
+    ui->pb_closeVersionBar->setIcon(awesome->icon(fa::times));
 
     // Set some defaults if they dont exist
     if(!settings.contains(SETTINGS_LIVE_SEARCH)){
@@ -126,9 +127,30 @@ MainWindow::MainWindow(QWidget *parent) :
     updateSearchResults(); // Since we may have set a value in the search window
 
     ui->lv_activetags->hide(); //  Not being used yet
+    ui->newVersionView->hide(); // This defaults to not being shown
     ui->cb_showaall->setChecked(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool());
 
     setTray();
+
+
+    // Version check
+    if(settings.value(SETTINGS_CHECK_UPDATES,DEFAULT_CHECK_UPDATES).toBool()){
+        QString last_check = settings.value(SETTINGS_LAST_UPDATE_CHECK,"").toString();
+        if(last_check.isEmpty()){
+            // We set this up so that first check will be later, giving users ample time to turn off the feature.
+            last_check = QDate::currentDate().toString("yyyy-MM-dd");
+            settings.setValue(SETTINGS_LAST_UPDATE_CHECK,last_check);
+
+        }
+        QDate nextCheck = QDate::currentDate().addDays(7);
+        QDate lastCheck = QDate::fromString(last_check,"yyyy-MM-dd");
+        qDebug()<<"Last update check date: "<<last_check<<" and next is "<<nextCheck.toString("yyyy-MM-dd")<<endl;
+        int daysToNextcheck = lastCheck.daysTo(nextCheck);
+        if(daysToNextcheck<0){
+            QString URL = VERSION_URL;
+            requestPage(URL);
+        }
+    }
 
 }
 
@@ -514,3 +536,40 @@ void MainWindow::on_cb_showaall_stateChanged(int arg1)
     settings.setValue(SETTINGS_SHOW_ALL,arg1);
     on_pushButton_4_clicked();
 }
+
+void MainWindow::on_pb_closeVersionBar_clicked()
+{
+    ui->newVersionView->hide();
+}
+
+void MainWindow::requestReceived(QNetworkReply* reply){
+    QString replyText;
+    QSettings settings;
+    if(reply->error()==QNetworkReply::NoError){
+
+        // Get the http status code
+        int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
+        if (v >= 200 && v < 300) // Success
+        {
+            replyText = reply->readAll();
+            double latest_version = replyText.toDouble();
+            double this_version = QString(VER).toDouble();
+            qDebug()<<"Checked version - Latest: "<<latest_version<<" this version "<<this_version<<endl;
+            if(latest_version>this_version){
+                ui->txtLatestVersion->setText("(v"+QString::number(latest_version,'f',2)+")");
+                ui->newVersionView->show();
+            }
+            // Update the last checked since we were successful
+            settings.setValue(SETTINGS_LAST_UPDATE_CHECK,QDate::currentDate().toString("yyyy-MM-dd"));
+        }
+    }
+    reply->deleteLater();
+}
+
+// Check if there is an update available
+void MainWindow::requestPage(QString &s){
+    connect(networkaccessmanager,SIGNAL(finished(QNetworkReply*)),this,SLOT(requestReceived(QNetworkReply*)));
+    networkaccessmanager->get(QNetworkRequest(QUrl(s)));
+
+}
+

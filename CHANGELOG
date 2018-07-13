@@ -6,6 +6,7 @@ New in 2.14
 * Added support for coloring due: tagged lines depending on date
 * Added support for same shorthand with due: dates as with thresholds. Thus due:+2d will set the due date to 2 days from now. +3w is three weeks from now and so on..
 * Title now shows how many rows are shown of total
+* Checking for updates is now more visible (and selectable). Of course, no data is ever sent. Just check a version.
 
 New in 2.13
 ===========

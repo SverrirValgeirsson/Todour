@@ -269,6 +269,13 @@
     </widget>
    </item>
    <item>
+    <widget class="QCheckBox" name="cb_CheckUpdates">
+     <property name="text">
+      <string>Check for updates (ca once per week and only at startup. no information is sent)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
     <widget class="QDialogButtonBox" name="buttonBox">
      <property name="orientation">
       <enum>Qt::Horizontal</enum>

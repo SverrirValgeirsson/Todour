@@ -7,6 +7,9 @@ New in 2.14
 * Added support for same shorthand with due: dates as with thresholds. Thus due:+2d will set the due date to 2 days from now. +3w is three weeks from now and so on..
 * Title now shows how many rows are shown of total
 * Checking for updates is now more visible (and selectable). Of course, no data is ever sent. Just check a version.
+* Added a 'hidden' feature of procrastination. either use due: or t: with the shortform and 'p' and todour will change the date to a random number of days up to the number you specify.
+  so t:+10p will put a date in the coming 10 days. And it will also add a '+procrastinated' tag, so you know you maybe shouldn't procrastinate the task again :)
+
 
 New in 2.13
 ===========

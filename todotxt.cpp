@@ -261,8 +261,9 @@ QString todotxt::getToday(){
 
 QString todotxt::getRelativeDate(QString shortform){
     QDate d = QDate::currentDate();
+    QString extra = "";
     // The short form supported for now is +\\dd
-    QRegularExpression reldateregex("\\+(\\d+)([dwmy])");
+    QRegularExpression reldateregex("\\+(\\d+)([dwmyp])");
     QRegularExpressionMatch m = reldateregex.match(shortform);
     if(m.hasMatch()){
         if(m.captured(2).contains('d')){
@@ -271,10 +272,14 @@ QString todotxt::getRelativeDate(QString shortform){
             d= d.addDays(m.captured(1).toInt()*7);
         } else if(m.captured(2).contains('m')){
             d= d.addMonths(m.captured(1).toInt());
-        } else {
+        } else if(m.captured(2).contains('y')) {
             d= d.addYears(m.captured(1).toInt());
+        } else if(m.captured(2).contains('p')){
+            // Ok. This is the procrastination 'feature'. Add a random number of days and also say that this was procrastrinated
+            d = d.addDays(rand()%m.captured(1).toInt());
+            extra = " +procrastinated";
         }
-        return d.toString("yyyy-MM-dd");
+        return d.toString("yyyy-MM-dd")+extra;
     } else {
         return shortform; // Don't know what to do.. so just put the string back
     }
@@ -377,7 +382,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
 
     // Preprocessing of the line
     if(settings.value(SETTINGS_THRESHOLD).toBool()){
-        QRegularExpression threshold_shorthand("(t:\\+\\d+[dwmy])");
+        QRegularExpression threshold_shorthand("(t:\\+\\d+[dwmyp])");
         QRegularExpressionMatch m = threshold_shorthand.match(newrow);
         if(m.hasMatch()){
             newrow = newrow.replace(m.captured(1),"t:"+getRelativeDate(m.captured(1).mid(2)));
@@ -386,7 +391,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
 
 
     if(settings.value(SETTINGS_DUE).toBool()){
-        QRegularExpression due_shorthand("(due:\\+\\d+[dwmy])");
+        QRegularExpression due_shorthand("(due:\\+\\d+[dwmyp])");
         QRegularExpressionMatch m = due_shorthand.match(newrow);
         if(m.hasMatch()){
             newrow = newrow.replace(m.captured(1),"due:"+getRelativeDate(m.captured(1).mid(2)));

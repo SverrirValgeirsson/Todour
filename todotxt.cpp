@@ -276,7 +276,7 @@ QString todotxt::getRelativeDate(QString shortform){
             d= d.addYears(m.captured(1).toInt());
         } else if(m.captured(2).contains('p')){
             // Ok. This is the procrastination 'feature'. Add a random number of days and also say that this was procrastrinated
-            d = d.addDays(rand()%m.captured(1).toInt());
+            d = d.addDays(rand()%m.captured(1).toInt()+1);
             extra = " +procrastinated";
         }
         return d.toString("yyyy-MM-dd")+extra;

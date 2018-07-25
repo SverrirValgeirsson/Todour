@@ -73,6 +73,10 @@ private slots:
 
     void on_pb_closeVersionBar_clicked();
 
+    void on_actionCheck_for_updates_triggered();
+
+    void on_tableView_customContextMenuRequested(const QPoint &pos);
+
 private:
     void setFileWatch();
     void requestPage(QString &s);

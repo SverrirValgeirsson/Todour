@@ -70,6 +70,12 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
                 f.fromString(settings.value(SETTINGS_ACTIVE_FONT).toString());
             }
             f.setStrikeOut(todo->getState(todo_data.at(index.row()))); // Strike out if done
+
+            QString url =todo->getURL(todo_data.at(index.row())) ;
+            if(!url.isEmpty()){
+                f.setUnderline(true);
+            }
+
             return f;
         }
     }
@@ -98,6 +104,10 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
     if(role == Qt::UserRole){
         // This one returns the RAW value of the row
         return todo_data.at(index.row());
+    }
+
+    if(role == Qt::UserRole+1){
+        return todo->getURL(todo_data.at(index.row()));
     }
 
     return QVariant();

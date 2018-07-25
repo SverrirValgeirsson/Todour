@@ -21,6 +21,7 @@
 #include <QDesktopWidget>
 #include <QDir>
 #include <QSystemTrayIcon>
+#include <QDesktopServices>
 
 QNetworkAccessManager *networkaccessmanager;
 TodoTableModel *model;
@@ -542,6 +543,7 @@ void MainWindow::on_pb_closeVersionBar_clicked()
     ui->newVersionView->hide();
 }
 
+bool forced_check_version=false;
 void MainWindow::requestReceived(QNetworkReply* reply){
     QString replyText;
     QSettings settings;
@@ -555,9 +557,15 @@ void MainWindow::requestReceived(QNetworkReply* reply){
             double latest_version = replyText.toDouble();
             double this_version = QString(VER).toDouble();
             qDebug()<<"Checked version - Latest: "<<latest_version<<" this version "<<this_version<<endl;
-            if(latest_version>this_version){
+            if(latest_version>this_version || forced_check_version){
+                if(latest_version >= this_version){
+                    ui->lbl_newVersion->hide();
+                } else {
+                    ui->lbl_latestVersion->hide();
+                }
                 ui->txtLatestVersion->setText("(v"+QString::number(latest_version,'f',2)+")");
                 ui->newVersionView->show();
+                forced_check_version=false;
             }
             // Update the last checked since we were successful
             settings.setValue(SETTINGS_LAST_UPDATE_CHECK,QDate::currentDate().toString("yyyy-MM-dd"));
@@ -573,3 +581,23 @@ void MainWindow::requestPage(QString &s){
 
 }
 
+
+void MainWindow::on_actionCheck_for_updates_triggered()
+{
+    forced_check_version=true;
+    QString URL = VERSION_URL;
+    requestPage(URL);
+
+}
+
+void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
+{
+    // This is used for triggering opening of a link.
+    // Find out where we are
+    auto index = ui->tableView->indexAt(pos);
+    QString URL=ui->tableView->model()->data(index,Qt::UserRole+1).toString();
+    if(!URL.isEmpty()){
+        QDesktopServices::openUrl(URL);
+    }
+
+}

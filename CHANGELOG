@@ -1,3 +1,11 @@
+New in 2.15
+===========
+
+* Check Version menu item added
+* Support for URL:s in the list (right click = open URL)
+* Items containing URL:s shown as underlined
+
+
 New in 2.14
 ===========
 

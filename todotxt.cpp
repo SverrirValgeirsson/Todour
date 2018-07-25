@@ -528,3 +528,14 @@ int todotxt::dueIn(QString &text){
     }
     return ret;
 }
+
+QRegularExpression regex_url("[a-zA-Z0-9_]+://[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=]*)");
+QString todotxt::getURL(QString &line){
+    QRegularExpressionMatch m=regex_url.match(line);
+    if(m.hasMatch()){
+        return m.capturedTexts().at(0);
+    }
+    else{
+        return "";
+    }
+}

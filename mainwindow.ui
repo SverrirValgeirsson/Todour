@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>522</width>
+    <width>689</width>
     <height>420</height>
    </rect>
   </property>
@@ -132,6 +132,9 @@ border-radius: 5px;
       </item>
       <item>
        <widget class="QTableView" name="tableView">
+        <property name="contextMenuPolicy">
+         <enum>Qt::CustomContextMenu</enum>
+        </property>
         <property name="horizontalScrollBarPolicy">
          <enum>Qt::ScrollBarAsNeeded</enum>
         </property>
@@ -203,7 +206,7 @@ border-radius: 5px;
         <number>0</number>
        </property>
        <item>
-        <widget class="QLabel" name="label">
+        <widget class="QLabel" name="lbl_newVersion">
          <property name="text">
           <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;New version is available at &lt;a href=&quot;http://nerdur.com/todour&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://nerdur.com/todour&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
@@ -215,6 +218,13 @@ border-radius: 5px;
          </property>
          <property name="textInteractionFlags">
           <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lbl_latestVersion">
+         <property name="text">
+          <string>You are running latest versionl</string>
          </property>
         </widget>
        </item>
@@ -255,8 +265,8 @@ border-radius: 5px;
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>522</width>
-     <height>21</height>
+     <width>689</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -270,6 +280,7 @@ border-radius: 5px;
      <string>Help</string>
     </property>
     <addaction name="actionAbout"/>
+    <addaction name="actionCheck_for_updates"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuHelp"/>
@@ -282,6 +293,11 @@ border-radius: 5px;
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionCheck_for_updates">
+   <property name="text">
+    <string>Check for updates</string>
    </property>
   </action>
  </widget>

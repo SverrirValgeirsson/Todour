@@ -256,7 +256,7 @@ void MainWindow::on_lineEdit_2_textEdited(const QString &arg1)
     QSettings settings;
 
     bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
-    if(liveUpdate){
+    if(!ui->cb_showaall->checkState() && liveUpdate){
         updateSearchResults();
     }
 }
@@ -287,7 +287,7 @@ void MainWindow::on_lineEdit_2_returnPressed()
     QSettings settings;
     bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
 
-    if(!liveUpdate){
+    if(!liveUpdate || ui->cb_showaall->checkState()==true){
         updateSearchResults();
     }
 

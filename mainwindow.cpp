@@ -287,7 +287,7 @@ void MainWindow::on_lineEdit_2_returnPressed()
     QSettings settings;
     bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
 
-    if(!liveUpdate || ui->cb_showaall->checkState()==true){
+    if(!liveUpdate || ui->cb_showaall->isChecked()){
         updateSearchResults();
     }
 

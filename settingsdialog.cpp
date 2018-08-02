@@ -33,6 +33,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->cb_CheckUpdates->setChecked(settings.value(SETTINGS_CHECK_UPDATES,DEFAULT_CHECK_UPDATES).toBool());
     ui->cb_due->setChecked(settings.value(SETTINGS_DUE,DEFAULT_DUE).toBool());
     ui->sb_due_warning->setValue(settings.value(SETTINGS_DUE_WARNING,DEFAULT_DUE_WARNING).toInt());
+    ui->comb_priorities->setCurrentIndex(settings.value(SETTINGS_PRIO_ON_CLOSE, DEFAULT_PRIO_ON_CLOSE).toInt());
 
 
 
@@ -82,6 +83,7 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue(SETTINGS_DUE,ui->cb_due->isChecked());
     settings.setValue(SETTINGS_DUE_WARNING,ui->sb_due_warning->value());
     settings.setValue(SETTINGS_CHECK_UPDATES,ui->cb_CheckUpdates->isChecked());
+    settings.setValue(SETTINGS_PRIO_ON_CLOSE,ui->comb_priorities->currentIndex());
     refresh=true;
     this->close();
 }

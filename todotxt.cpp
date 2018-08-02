@@ -432,6 +432,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
                             date.append(getToday()+" "); // Add a date if needed
                     }
                     tl.closedDate=date;
+
                     *r=Todo2String(tl);
 
                 }
@@ -496,6 +497,7 @@ void todotxt::String2Todo(QString &line,todoline &t){
 
 QString todotxt::Todo2String(todoline &t){
     QString ret;
+    QSettings settings;
 
     // Yep, an ugly side effect, but it make sure we're having the right format all the time
     if(t.checked && t.createdDate.isEmpty()){
@@ -504,10 +506,31 @@ QString todotxt::Todo2String(todoline &t){
 
     if(t.checked){
         ret.append("x ");
+    } else {
+        // Priority shall only be written if we are active
+        ret.append(t.priority);
     }
-    ret.append(t.priority);
     ret.append(t.closedDate);
     ret.append(t.createdDate);
+    // Here we have to decide how to handle priority tag if we have one
+    if(t.checked && !t.priority.isEmpty()){
+        prio_on_close how = (prio_on_close) settings.value(SETTINGS_PRIO_ON_CLOSE,DEFAULT_PRIO_ON_CLOSE).toInt();
+        switch(how){
+            case prio_on_close::removeit:
+                break; // We do nothing. Just forget it exists
+            case prio_on_close::moveit:
+                ret.append(t.priority+" "); // Put the priority first in the text
+                break;
+            case prio_on_close::tagit:
+                if(t.priority.size()>2){
+                    ret.append("pri:");
+                    ret.append(t.priority.at(1));
+                    ret.append(" ");
+                }
+                break;
+        }
+    }
+
     ret.append(t.text);
     return ret;
 }

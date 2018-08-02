@@ -26,6 +26,7 @@
 #define DEFAULT_DUE_WARNING_COLOR 0xFFFFA500
 #define DEFAULT_DUE_LATE_COLOR 0xFFFF0000
 #define DEFAULT_CHECK_UPDATES true
+#define DEFAULT_PRIO_ON_CLOSE 0
 
 
 // Names of settings in QSettings
@@ -62,5 +63,7 @@
 #define SETTINGS_CONTEXT_LOCK "context_lock"
 #define SETTINGS_CHECK_UPDATES "check_updates"
 #define SETTINGS_LAST_UPDATE_CHECK "last_update_check"
+#define SETTINGS_PRIO_ON_CLOSE "prio_on_close"
+enum prio_on_close {removeit=0,moveit,tagit};
 
 #endif // DEF_H

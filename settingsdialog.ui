@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>534</width>
-    <height>499</height>
+    <height>573</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -274,6 +274,39 @@
       <string>Check for updates (ca once per week and only at startup. no information is sent)</string>
      </property>
     </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_8">
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Priorities at checked</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="comb_priorities">
+       <property name="currentText">
+        <string>Remove</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Remove</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Keep (move to after date) </string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Add pri: tag</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QDialogButtonBox" name="buttonBox">

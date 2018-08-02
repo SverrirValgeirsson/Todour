@@ -5,6 +5,7 @@ New in 2.15
 * Support for URL:s in the list (right click = open URL)
 * Items containing URL:s shown as underlined
 * Live search is now turned off automatically when "Show all" is selected.
+* FIX/Changed behaviour: Priority is now handled according to the standard. Thus removed when an item is checked (or moved. See options)
 
 
 New in 2.14

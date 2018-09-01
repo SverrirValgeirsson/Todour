@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>689</width>
+    <width>693</width>
     <height>420</height>
    </rect>
   </property>
@@ -224,7 +224,7 @@ border-radius: 5px;
        <item>
         <widget class="QLabel" name="lbl_latestVersion">
          <property name="text">
-          <string>You are running latest versionl</string>
+          <string>You are running latest version</string>
          </property>
         </widget>
        </item>
@@ -265,7 +265,7 @@ border-radius: 5px;
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>689</width>
+     <width>693</width>
      <height>22</height>
     </rect>
    </property>

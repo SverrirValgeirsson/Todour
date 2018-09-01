@@ -20,8 +20,8 @@ void todotxt::setdirectory(QString &dir){
     filedirectory=dir;
 }
 
-QRegularExpression regex_project("\\s(\\+[^\\s]+)");
-QRegularExpression regex_context("\\s(\\@[^\\s]+)");
+static QRegularExpression regex_project("\\s(\\+[^\\s]+)");
+static QRegularExpression regex_context("\\s(\\@[^\\s]+)");
 
 void todotxt::parse(){
     QSettings settings;
@@ -130,9 +130,9 @@ bool todotxt::lessThan(QString &s1,QString &s2){
     return prettyPrint(s1).toLower() < prettyPrint(s2).toLower();
 }
 
-QRegularExpression regex_threshold_date("t:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
-QRegularExpression regex_threshold_project("t:(\\+[^\\s]+)");
-QRegularExpression regex_threshold_context("t:(\\@[^\\s]+)");
+static QRegularExpression regex_threshold_date("t:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
+static QRegularExpression regex_threshold_project("t:(\\+[^\\s]+)");
+static QRegularExpression regex_threshold_context("t:(\\@[^\\s]+)");
 
 bool todotxt::threshold_hide(QString &t){
     QSettings settings;
@@ -389,7 +389,6 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
         }        
     }
 
-
     if(settings.value(SETTINGS_DUE).toBool()){
         QRegularExpression due_shorthand("(due:\\+\\d+[dwmyp])");
         QRegularExpressionMatch m = due_shorthand.match(newrow);
@@ -397,7 +396,6 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
             newrow = newrow.replace(m.captured(1),"due:"+getRelativeDate(m.captured(1).mid(2)));
         }
     }
-
 
     if(row.isEmpty()){
         todoline tl;
@@ -463,7 +461,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
 }
 
 // A todo.txt line looks like this
-QRegularExpression todo_line("(x\\s+)?(\\([A-Z]\\)\\s+)?(\\d\\d\\d\\d-\\d\\d-\\d\\d\\s+)?(\\d\\d\\d\\d-\\d\\d-\\d\\d\\s+)?(.*)");
+static QRegularExpression todo_line("(x\\s+)?(\\([A-Z]\\)\\s+)?(\\d\\d\\d\\d-\\d\\d-\\d\\d\\s+)?(\\d\\d\\d\\d-\\d\\d-\\d\\d\\s+)?(.*)");
 
 void todotxt::String2Todo(QString &line,todoline &t){
     QRegularExpressionMatch match = todo_line.match(line);
@@ -537,7 +535,7 @@ QString todotxt::Todo2String(todoline &t){
 
 // Check when this is due
 
-QRegularExpression regex_due_date("due:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
+static QRegularExpression regex_due_date("due:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
 int todotxt::dueIn(QString &text){
     int ret=INT_MAX;
     QSettings settings;
@@ -546,14 +544,14 @@ int todotxt::dueIn(QString &text){
         if(m.hasMatch()){
             QString ds = m.captured(1);
             QDate d = QDate::fromString(ds,"yyyy-MM-dd");
-            return QDate::currentDate().daysTo(d);
+            return (int) QDate::currentDate().daysTo(d);
         }
     }
     return ret;
 }
 
 //QRegularExpression regex_url("[a-zA-Z0-9_]+://[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=\\(\\)]*)");
-QRegularExpression regex_url("[a-zA-Z0-9_]+:\\/\\/([-a-zA-Z0-9@:%_\\+.~#?&\\/=\\(\\)\\{\\}\\\\]*)");
+static QRegularExpression regex_url("[a-zA-Z0-9_]+:\\/\\/([-a-zA-Z0-9@:%_\\+.~#?&\\/=\\(\\)\\{\\}\\\\]*)");
 
 QString todotxt::getURL(QString &line){
     QRegularExpressionMatch m=regex_url.match(line);

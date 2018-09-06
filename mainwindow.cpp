@@ -143,10 +143,11 @@ MainWindow::MainWindow(QWidget *parent) :
             settings.setValue(SETTINGS_LAST_UPDATE_CHECK,last_check);
 
         }
-        QDate nextCheck = QDate::currentDate().addDays(7);
         QDate lastCheck = QDate::fromString(last_check,"yyyy-MM-dd");
+        QDate nextCheck = lastCheck.addDays(7);
+
         qDebug()<<"Last update check date: "<<last_check<<" and next is "<<nextCheck.toString("yyyy-MM-dd")<<endl;
-        int daysToNextcheck = lastCheck.daysTo(nextCheck);
+        int daysToNextcheck = QDate::currentDate().daysTo(nextCheck);
         if(daysToNextcheck<0){
             QString URL = VERSION_URL;
             requestPage(URL);
@@ -299,6 +300,8 @@ void MainWindow::setHotkey(){
             Q_UNUSED(id);
             on_hotkey();
         });
+    } else {
+        hotkey->unregisterAllHotkeys();
     }
 }
 
@@ -496,7 +499,7 @@ void MainWindow::cleanup(){
 
 void MainWindow::closeEvent(QCloseEvent *ev){
 
-    if (trayicon->isVisible()) {
+    if (trayicon != NULL && trayicon->isVisible()) {
             hide();
             ev->ignore();
     } else {

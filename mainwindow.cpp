@@ -199,6 +199,7 @@ void MainWindow::fileModified(const QString &str){
     saveTableSelection();
     model->refresh();
     resetTableSelection();
+    setFileWatch();
 }
 
 void MainWindow::clearFileWatch(){
@@ -320,7 +321,6 @@ void MainWindow::on_actionSettings_triggered()
     d.show();
     d.exec();
     if(d.refresh){
-        clearFileWatch();
         delete model;
         model = new TodoTableModel(this);
         proxyModel->setSourceModel(model);
@@ -550,9 +550,9 @@ void MainWindow::requestReceived(QNetworkReply* reply){
             qDebug()<<"Checked version - Latest: "<<latest_version<<" this version "<<this_version<<endl;
             if(latest_version>this_version || forced_check_version){
                 if(latest_version >= this_version){
-                    ui->lbl_newVersion->hide();
-                } else {
                     ui->lbl_latestVersion->hide();
+                } else {
+                    ui->lbl_newVersion->hide();
                 }
                 ui->txtLatestVersion->setText("(v"+QString::number(latest_version,'f',2)+")");
                 ui->newVersionView->show();

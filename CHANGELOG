@@ -1,3 +1,10 @@
+New in 2.16
+===========
+* Fixed bug with version checking that shows the wrong message when there is a new version
+* Qt 5.11.2 - Hotkey issues fixed
+* Fixed bug where the application would forget to monitor the todo.txt file for changes
+
+
 New in 2.15
 ===========
 

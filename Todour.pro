@@ -14,7 +14,7 @@ CONFIG += c++11
 
 macx{
 ICON = icon.icns
-QMAKE_MAC_SDK = macosx10.12
+QMAKE_MAC_SDK = macosx10.14
 }
 win32 {
     RC_FILE = myresource.rc
@@ -49,16 +49,35 @@ OTHER_FILES += \
     version.pl \
     myresource.rc \
     icon.icsn \
-    newicon.ico 
-
+    newicon.ico \
+    deploy.sh \
+    todo.txt
 
 DISTFILES += \
     todour-latest.php \
     LICENSE \
     README \
+    PRIVACY-POLICY \
     CHANGELOG \
-    README.md \
-    newicon.png
+    todour-latest_windows.php \
+    todour-latest_mac.php \
+    Feature_Url_Support \
+    Feature-Advanced_filters.txt \
+    Feature-follow_select \
+    Feature-Enter_To_Search \
+    Feature-customized-font-colors \
+    Feature-Setup-ini \
+    Feature-tagstrip \
+    PLAN.md \
+    newicon.png \
+    autobuild/package-windows.sh \
+    autobuild/Setup.iss \
+    autobuild/README.md \
+    autobuild/build-todour-mac.pl \
+    autobuild/todourdmg.json \
+    autobuild/package-linux.sh \
+    autobuild/DEBIAN_CONTROL_FILE.txt
 
 RESOURCES += \
     resources.qrc
+

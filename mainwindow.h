@@ -77,6 +77,8 @@ private slots:
 
     void on_tableView_customContextMenuRequested(const QPoint &pos);
 
+    void on_actionQuit_triggered();
+
 private:
     void setFileWatch();
     void requestPage(QString &s);

@@ -274,6 +274,7 @@ border-radius: 5px;
      <string>File</string>
     </property>
     <addaction name="actionSettings"/>
+    <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -298,6 +299,11 @@ border-radius: 5px;
   <action name="actionCheck_for_updates">
    <property name="text">
     <string>Check for updates</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Quit</string>
    </property>
   </action>
  </widget>

@@ -592,3 +592,8 @@ void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
     }
 
 }
+
+void MainWindow::on_actionQuit_triggered()
+{
+    cleanup();
+}

@@ -137,11 +137,11 @@ static QRegularExpression regex_threshold_context("t:(\\@[^\\s]+)");
 bool todotxt::threshold_hide(QString &t){
     QSettings settings;
     if(settings.value(SETTINGS_THRESHOLD).toBool()){
-        QRegularExpressionMatch m=regex_threshold_date.match(t);
-        if(m.hasMatch()){
+        auto matches=regex_threshold_date.globalMatch(t);
+        while(matches.hasNext()){
             QString today = getToday();
-            QString t = m.captured(1);
-            if(t.compare(today)>0){
+            QString td = matches.next().captured(1);
+            if(td.compare(today)>0){
                 return true; // Don't show this one since it's in the future
             }
 

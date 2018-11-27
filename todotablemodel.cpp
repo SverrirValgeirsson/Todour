@@ -221,4 +221,7 @@ QModelIndexList TodoTableModel::match(const QModelIndex &start, int role, const 
     return ret;
 }
 
+int TodoTableModel::count(){
+    return this->rowCount(QModelIndex());
+}
 

@@ -193,11 +193,28 @@ void MainWindow::updateTitle(){
 }
 
 
+// A simple delay function I pulled of the 'net.. Need to delay reading a file a little bit.. A second seems to be enough
+// really don't like this though as I have no idea of knowing when a second is enough.
+// Having more than one second will impact usability of the application as it changes the focus.
+void delay()
+{
+    QTime dieTime= QTime::currentTime().addSecs(1);
+    while( QTime::currentTime() < dieTime )
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+}
+
+
+
 void MainWindow::fileModified(const QString &str){
     Q_UNUSED(str);
     //qDebug()<<"MainWindow::fileModified  "<<watcher->files()<<" --- "<<str;
     saveTableSelection();
     model->refresh();
+    if(model->count()==0){
+        // This sometimes happens when the file is being updated. We have gotten the signal a bit soon so the file is still empty. Wait and try again
+        delay();
+        model->refresh();
+    }
     resetTableSelection();
     setFileWatch();
 }

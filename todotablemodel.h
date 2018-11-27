@@ -22,6 +22,7 @@ public:
     void remove(QString text);
     void archive();
     void refresh();
+    int count();
     QString getTodoFile();
     QModelIndexList match(const QModelIndex &start, int role, const QVariant &value, int hits = 1, Qt::MatchFlags flags = Qt::MatchFlags( Qt::MatchStartsWith | Qt::MatchWrap )) const;
 

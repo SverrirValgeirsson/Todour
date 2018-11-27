@@ -2,6 +2,7 @@ New in 2.16
 ===========
 * Multiple thresholds supported on each line
 * Added a Quit menu item
+* More robust autoreload
 
 New in 2.151
 =============

@@ -251,7 +251,6 @@ void MainWindow::parse_todotxt(){
     ui->tableView->setModel(proxyModel);
     //ui->tableView->resizeColumnsToContents();
     //ui->tableView->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
-    ui->tableView->setWordWrap(true);
     ui->tableView->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
     ui->tableView->resizeColumnToContents(0); // Checkboxes kept small
     //ui->tableView->resizeRowsToContents(); Om denna körs senare blir det riktigt bra, men inte här..

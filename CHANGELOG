@@ -3,6 +3,7 @@ New in 2.16
 * Multiple thresholds supported on each line
 * Added a Quit menu item
 * More robust autoreload
+* Qt 5.12
 
 New in 2.151
 =============

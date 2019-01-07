@@ -604,7 +604,7 @@ void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
     auto index = ui->tableView->indexAt(pos);
     QString URL=ui->tableView->model()->data(index,Qt::UserRole+1).toString();
     if(!URL.isEmpty()){
-        QDesktopServices::openUrl(URL);
+        QDesktopServices::openUrl(URL+"?v="+VER);
     }
 
 }

@@ -4,12 +4,14 @@ New in 2.16
 * Added a Quit menu item
 * More robust autoreload
 * Qt 5.12
+* Dark Mode support on macOS
+* Support for rec:
 
 New in 2.151
 =============
 * Fixed bug with version checking that shows the wrong message when there is a new version
 * Qt 5.11.2 - Hotkey issues fixed
-* Fixed bug where the application would forget to monitor the todo.txt file for changes
+* Fixed bug where the application would "forget" to monitor the todo.txt file for changes
 
 
 New in 2.15

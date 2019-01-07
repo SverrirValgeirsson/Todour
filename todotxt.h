@@ -13,6 +13,7 @@
 #include <vector>
 #include <set>
 #include <QString>
+#include <QDate>
 
 using namespace std;
 
@@ -47,7 +48,7 @@ public:
     QString getToday();
     QString getTodoFile();
     QString getDoneFile();
-    QString getRelativeDate(QString shortform);
+    QString getRelativeDate(QString shortform,QDate d=QDate::currentDate());
 
     struct todoline{
         QString createdDate;

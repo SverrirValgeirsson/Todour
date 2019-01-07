@@ -133,6 +133,7 @@ bool todotxt::lessThan(QString &s1,QString &s2){
 static QRegularExpression regex_threshold_date("t:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
 static QRegularExpression regex_threshold_project("t:(\\+[^\\s]+)");
 static QRegularExpression regex_threshold_context("t:(\\@[^\\s]+)");
+static QRegularExpression regex_due_date("due:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
 
 bool todotxt::threshold_hide(QString &t){
     QSettings settings;
@@ -259,8 +260,7 @@ QString todotxt::getToday(){
     return d.toString("yyyy-MM-dd");
 }
 
-QString todotxt::getRelativeDate(QString shortform){
-    QDate d = QDate::currentDate();
+QString todotxt::getRelativeDate(QString shortform,QDate d){
     QString extra = "";
     // The short form supported for now is +\\dd
     QRegularExpression reldateregex("\\+(\\d+)([dwmyp])");
@@ -379,6 +379,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
     QString todofile = getTodoFile();
     vector<QString> data;
     slurp(todofile,data);
+    QString additional_item = ""; // This is for recurrence. If there is a new item created, put it here since we have to add it after the file is written
 
     // Preprocessing of the line
     if(settings.value(SETTINGS_THRESHOLD).toBool()){
@@ -431,6 +432,44 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
                     }
                     tl.closedDate=date;
 
+                    // Handle recurrance
+                    //QRegularExpression rec_normal("(rec:\\d+[dwmyb])");
+                    QRegularExpression rec("(rec:\\+?\\d+[dwmyb])");
+
+                    // Get the "addition" from rec
+                    QRegularExpressionMatch m = rec.match(tl.text);
+                    if(m.hasMatch()){
+                        // Figure out what date we should use
+                        bool isStrict = true;
+                        QString rec_add = m.captured(1).mid(4);
+                        // Add a '+' if it's not there due to how getRelativeDate works
+                        if(rec_add.at(0)!= '+'){
+                            rec_add.insert(0,'+');
+                            isStrict = false;
+                        }
+                       // Make a copy. It's time to start altering that one
+                        additional_item = tl.text;
+
+                        // Get the t:
+                        auto mt = regex_threshold_date.globalMatch(tl.text);
+                        while(mt.hasNext()){
+                            QString old_t = mt.next().captured(1);
+                            QString newdate = isStrict?getRelativeDate(rec_add, QDate::fromString(old_t,"yyyy-MM-dd")):getRelativeDate(rec_add);
+                            additional_item.replace("t:"+old_t,"t:"+newdate);
+                        }
+                        // Get the due:
+                        auto md = regex_due_date.match(tl.text);
+                        if(md.hasMatch()){
+                            QString old_due = md.captured(1);
+                            QString newdate = isStrict?getRelativeDate(rec_add, QDate::fromString(old_due,"yyyy-MM-dd")):getRelativeDate(rec_add);
+                            additional_item.replace("due:"+old_due,"due:"+newdate);
+                        }
+
+
+
+                    }
+
+
                     *r=Todo2String(tl);
 
                 }
@@ -457,6 +496,10 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
     }
 
     write(todofile,data);
+    if(!additional_item.isEmpty()){
+        QString empty="";
+        this->update(empty,false,additional_item);
+    }
     parse();
 }
 
@@ -535,7 +578,7 @@ QString todotxt::Todo2String(todoline &t){
 
 // Check when this is due
 
-static QRegularExpression regex_due_date("due:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
+
 int todotxt::dueIn(QString &text){
     int ret=INT_MAX;
     QSettings settings;

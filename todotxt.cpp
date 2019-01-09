@@ -448,7 +448,12 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
                             isStrict = false;
                         }
                        // Make a copy. It's time to start altering that one
-                        additional_item = tl.text;
+
+                        if(!tl.priority.isEmpty()){
+                            additional_item = tl.priority+tl.text;
+                        } else {
+                            additional_item = tl.text;
+                        }
 
                         // Get the t:
                         auto mt = regex_threshold_date.globalMatch(tl.text);

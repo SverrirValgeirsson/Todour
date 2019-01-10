@@ -263,7 +263,7 @@ QString todotxt::getToday(){
 QString todotxt::getRelativeDate(QString shortform,QDate d){
     QString extra = "";
     // The short form supported for now is +\\dd
-    QRegularExpression reldateregex("\\+(\\d+)([dwmyp])");
+    QRegularExpression reldateregex("\\+(\\d+)([dwmypb])");
     QRegularExpressionMatch m = reldateregex.match(shortform);
     if(m.hasMatch()){
         if(m.captured(2).contains('d')){
@@ -278,6 +278,18 @@ QString todotxt::getRelativeDate(QString shortform,QDate d){
             // Ok. This is the procrastination 'feature'. Add a random number of days and also say that this was procrastrinated
             d = d.addDays(rand()%m.captured(1).toInt()+1);
             extra = " +procrastinated";
+        } else if (m.captured(2).contains('b')){
+            // Business days. Naive implementation
+            // 1=Monday, 6=Sat, 7=sun
+            int days=0;
+            int addDays = m.captured(1).toInt();
+            while(days<addDays){
+                d = d.addDays(1); // add one at a time
+                if(d.dayOfWeek() <6){
+                    days++;
+                }
+            }
+
         }
         return d.toString("yyyy-MM-dd")+extra;
     } else {
@@ -383,7 +395,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
 
     // Preprocessing of the line
     if(settings.value(SETTINGS_THRESHOLD).toBool()){
-        QRegularExpression threshold_shorthand("(t:\\+\\d+[dwmyp])");
+        QRegularExpression threshold_shorthand("(t:\\+\\d+[dwmypb])");
         QRegularExpressionMatch m = threshold_shorthand.match(newrow);
         if(m.hasMatch()){
             newrow = newrow.replace(m.captured(1),"t:"+getRelativeDate(m.captured(1).mid(2)));
@@ -391,7 +403,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
     }
 
     if(settings.value(SETTINGS_DUE).toBool()){
-        QRegularExpression due_shorthand("(due:\\+\\d+[dwmyp])");
+        QRegularExpression due_shorthand("(due:\\+\\d+[dwmypb])");
         QRegularExpressionMatch m = due_shorthand.match(newrow);
         if(m.hasMatch()){
             newrow = newrow.replace(m.captured(1),"due:"+getRelativeDate(m.captured(1).mid(2)));

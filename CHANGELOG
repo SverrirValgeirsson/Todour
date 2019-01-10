@@ -6,6 +6,7 @@ New in 2.16
 * Qt 5.12
 * Dark Mode support on macOS
 * Support for rec:
+* Support for "b" in shorthand and i rec: for business days
 
 New in 2.151
 =============

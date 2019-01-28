@@ -592,7 +592,7 @@ void MainWindow::requestPage(QString &s){
 void MainWindow::on_actionCheck_for_updates_triggered()
 {
     forced_check_version=true;
-    QString URL = VERSION_URL;
+    QString URL = VERSION_URL+(QString)"?v="+VER;
     requestPage(URL);
 
 }
@@ -604,7 +604,7 @@ void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
     auto index = ui->tableView->indexAt(pos);
     QString URL=ui->tableView->model()->data(index,Qt::UserRole+1).toString();
     if(!URL.isEmpty()){
-        QDesktopServices::openUrl(URL+"?v="+VER);
+        QDesktopServices::openUrl(URL);
     }
 
 }

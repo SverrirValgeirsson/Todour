@@ -1,3 +1,8 @@
+
+* Added support for "p" in rec: - This means that a reccurance can be random (note that this is non-standard)
+* Removed the +procrastinated label from automatically being added when using "p"
+
+
 New in 2.16
 ===========
 * Multiple thresholds supported on each line

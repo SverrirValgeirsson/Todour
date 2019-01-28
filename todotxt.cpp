@@ -277,7 +277,7 @@ QString todotxt::getRelativeDate(QString shortform,QDate d){
         } else if(m.captured(2).contains('p')){
             // Ok. This is the procrastination 'feature'. Add a random number of days and also say that this was procrastrinated
             d = d.addDays(rand()%m.captured(1).toInt()+1);
-            extra = " +procrastinated";
+            //extra = " +procrastinated";
         } else if (m.captured(2).contains('b')){
             // Business days. Naive implementation
             // 1=Monday, 6=Sat, 7=sun
@@ -446,7 +446,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
 
                     // Handle recurrance
                     //QRegularExpression rec_normal("(rec:\\d+[dwmyb])");
-                    QRegularExpression rec("(rec:\\+?\\d+[dwmyb])");
+                    QRegularExpression rec("(rec:\\+?\\d+[dwmybp])");
 
                     // Get the "addition" from rec
                     QRegularExpressionMatch m = rec.match(tl.text);
@@ -481,9 +481,6 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
                             QString newdate = isStrict?getRelativeDate(rec_add, QDate::fromString(old_due,"yyyy-MM-dd")):getRelativeDate(rec_add);
                             additional_item.replace("due:"+old_due,"due:"+newdate);
                         }
-
-
-
                     }
 
 

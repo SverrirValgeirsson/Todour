@@ -367,6 +367,7 @@ void MainWindow::setTray(){
             connect(restoreAction, SIGNAL(triggered()), this, SLOT(showNormal()));
             quitAction = new QAction(tr("&Quit"), this);
             connect(quitAction, SIGNAL(triggered()), this, SLOT(cleanup()));
+            connect(QApplication::instance(),SIGNAL(aboutToQuit()),this,SLOT(cleanup()));
 
             traymenu->addAction(minimizeAction);
             traymenu->addAction(maximizeAction);

@@ -1,7 +1,7 @@
 
 * Added support for "p" in rec: - This means that a reccurance can be random (note that this is non-standard)
 * Removed the +procrastinated label from automatically being added when using "p"
-
+* Fixed logout issues in KDE where the dock would stop logout from happening
 
 New in 2.16
 ===========

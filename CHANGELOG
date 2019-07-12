@@ -1,3 +1,6 @@
+
+* Fixed interpreting UTF-8 in done.txt that was missed (thanks @fuchsmich)
+
 New in 2.17
 ===========
 

@@ -50,7 +50,7 @@ void todotxt::parse(){
             return;
 
         QTextStream in2(&file2);
-        in.setCodec("UTF-8");
+        in2.setCodec("UTF-8");
         while (!in2.atEnd()) {
             QString line = in2.readLine();
             todo.push_back(line);

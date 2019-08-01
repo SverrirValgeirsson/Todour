@@ -510,6 +510,7 @@ void MainWindow::cleanup(){
     settings.setValue(SETTINGS_SEARCH_STRING,ui->lineEdit_2->text());
     if(trayicon!=NULL){
         delete trayicon;
+        trayicon = NULL;
     }
     qApp->quit();
 }

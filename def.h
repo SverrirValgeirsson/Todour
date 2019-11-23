@@ -64,6 +64,8 @@
 #define SETTINGS_CHECK_UPDATES "check_updates"
 #define SETTINGS_LAST_UPDATE_CHECK "last_update_check"
 #define SETTINGS_PRIO_ON_CLOSE "prio_on_close"
+#define SETTINGS_FONT_SIZE "font_size"
+
 enum prio_on_close {removeit=0,moveit,tagit};
 
 #endif // DEF_H

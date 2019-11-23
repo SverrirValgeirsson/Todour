@@ -14,7 +14,7 @@ CONFIG += c++11
 
 macx{
 ICON = icon.icns
-QMAKE_MAC_SDK = macosx10.14
+QMAKE_MAC_SDK = macosx10.15
 }
 win32 {
     RC_FILE = myresource.rc

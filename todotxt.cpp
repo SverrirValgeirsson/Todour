@@ -57,7 +57,6 @@ void todotxt::parse(){
          }
     }
 
-
       if(settings.value(SETTINGS_THRESHOLD_LABELS).toBool()){
           // Get all active tags with either a @ or a + sign infront of them, as they can be used for thresholds
           foreach (auto line, todo) {

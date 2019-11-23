@@ -132,7 +132,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->cb_showaall->setChecked(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool());
 
     setTray();
-
+    setFontSize();
 
     // Version check
     if(settings.value(SETTINGS_CHECK_UPDATES,DEFAULT_CHECK_UPDATES).toBool()){
@@ -348,9 +348,19 @@ void MainWindow::on_actionSettings_triggered()
         resetTableSelection();
         setFileWatch();
         setTray();
+        setFontSize();
     }
 }
 
+void MainWindow::setFontSize(){
+    QSettings settings;
+    int size = settings.value(SETTINGS_FONT_SIZE).toInt();
+    if(size >0){
+        auto f = qApp->font();
+        f.setPointSize(size);
+        qApp->setFont(f);
+    }
+}
 
 void MainWindow::setTray(){
     QSettings settings;
@@ -408,7 +418,7 @@ void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
 void MainWindow::on_pushButton_clicked()
 {
     // Adding a new value into the model
-    QString txt = ui->lineEdit->text();
+   QString txt = ui->lineEdit->text();
    addTodo(txt);
    ui->lineEdit->clear();
 }

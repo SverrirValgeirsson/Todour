@@ -90,6 +90,7 @@ private:
     void resetTableSelection();
     void updateSearchResults();
     void updateTitle();
+    void setFontSize();
     QString baseTitle;
     UGlobalHotkeys *hotkey;
     void setHotkey();

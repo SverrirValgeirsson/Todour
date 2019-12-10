@@ -1,4 +1,7 @@
 
+New in 2.18
+============
+
 * Possibility to change the application font size
 * Updatet Qt to 5.13
 * Fixed interpreting UTF-8 in done.txt that was missed (thanks @fuchsmich)

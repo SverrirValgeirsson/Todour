@@ -35,6 +35,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->sb_due_warning->setValue(settings.value(SETTINGS_DUE_WARNING,DEFAULT_DUE_WARNING).toInt());
     ui->comb_priorities->setCurrentIndex(settings.value(SETTINGS_PRIO_ON_CLOSE, DEFAULT_PRIO_ON_CLOSE).toInt());
     ui->sb_fontSize->setValue(qApp->font().pointSize());
+    ui->cb_removeDoublets->setChecked(settings.value(SETTINGS_REMOVE_DOUBLETS,DEFAULT_REMOVE_DOUBLETS).toBool());
 
 
     // Handle the fonts
@@ -85,6 +86,8 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue(SETTINGS_CHECK_UPDATES,ui->cb_CheckUpdates->isChecked());
     settings.setValue(SETTINGS_PRIO_ON_CLOSE,ui->comb_priorities->currentIndex());
     settings.setValue(SETTINGS_FONT_SIZE,ui->sb_fontSize->value());
+    settings.setValue(SETTINGS_REMOVE_DOUBLETS,ui->cb_removeDoublets->isChecked());
+
     refresh=true;
     this->close();
 }
@@ -132,13 +135,13 @@ void SettingsDialog::on_pb_fontDlgInactive_clicked()
 
 void SettingsDialog::on_pb_colorDlgActive_clicked()
 {
-    activecolor.setRgba(QColorDialog::getRgba());
+    activecolor = QColorDialog::getColor();
     updateFonts();
 }
 
 void SettingsDialog::on_pb_colorDlgInactive_clicked()
 {
-    inactivecolor.setRgba(QColorDialog::getRgba());
+    inactivecolor = QColorDialog::getColor();
     updateFonts();
 }
 

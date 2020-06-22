@@ -27,6 +27,8 @@
 #define DEFAULT_DUE_LATE_COLOR 0xFFFF0000
 #define DEFAULT_CHECK_UPDATES true
 #define DEFAULT_PRIO_ON_CLOSE 0
+#define DEFAULT_REMOVE_DOUBLETS false
+#define DEFAULT_UUID "0000-0000-0000-0000"
 
 
 // Names of settings in QSettings
@@ -65,6 +67,8 @@
 #define SETTINGS_LAST_UPDATE_CHECK "last_update_check"
 #define SETTINGS_PRIO_ON_CLOSE "prio_on_close"
 #define SETTINGS_FONT_SIZE "font_size"
+#define SETTINGS_REMOVE_DOUBLETS "remove_doublets"
+#define SETTINGS_UUID "uuid"
 
 enum prio_on_close {removeit=0,moveit,tagit};
 

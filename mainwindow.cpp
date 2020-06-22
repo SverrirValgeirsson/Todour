@@ -22,9 +22,10 @@
 #include <QDir>
 #include <QSystemTrayIcon>
 #include <QDesktopServices>
+#include <QUuid>
 
 QNetworkAccessManager *networkaccessmanager;
-TodoTableModel *model;
+TodoTableModel *model=NULL;
 QString saved_selection; // Used for selection memory
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -57,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent) :
     if(QCoreApplication::arguments().contains("-portable")){
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,QDir::currentPath());
-        qDebug()<<"Setting ini file path to: "<<QDir::currentPath()<<endl;
+        qDebug()<<"Setting ini file path to: "<<QDir::currentPath()<<Qt::endl;
     }
 
     hotkey = new UGlobalHotkeys();
@@ -88,6 +89,10 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->lineEdit_2->setText(settings.value(SETTINGS_SEARCH_STRING,DEFAULT_SEARCH_STRING).toString());
 
+    // Check that we have an UUID for this application (used for undo for example)
+    if(!settings.contains(SETTINGS_UUID)){
+        settings.setValue(SETTINGS_UUID,QUuid::createUuid().toString());
+    }
 
     // Fix some font-awesome stuff
     QtAwesome* awesome = new QtAwesome(qApp);
@@ -122,6 +127,14 @@ MainWindow::MainWindow(QWidget *parent) :
     //QObject::connect(contextshortcut,SIGNAL(activated()),ui->context_lock,SLOT(setChecked(!(ui->context_lock->isChecked()))));
     QObject::connect(model,SIGNAL(dataChanged (const QModelIndex , const QModelIndex )),this,SLOT(dataInModelChanged(QModelIndex,QModelIndex)));
 
+    /*
+    These should now be handled in the menu system
+    auto undoshortcut = new QShortcut(QKeySequence(tr("Ctrl+z")),this);
+    QObject::connect(undoshortcut,SIGNAL(activated()),this,SLOT(undo()));
+    auto redoshortcut = new QShortcut(QKeySequence(tr("Ctrl+r")),this);
+    QObject::connect(redoshortcut,SIGNAL(activated()),this,SLOT(redo()));*/
+
+
     // Do this late as it triggers action using data
     ui->btn_Alphabetical->setChecked(settings.value(SETTINGS_SORT_ALPHA).toBool());
     ui->context_lock->setChecked(settings.value(SETTINGS_CONTEXT_LOCK,DEFAULT_CONTEXT_LOCK).toBool());
@@ -146,7 +159,7 @@ MainWindow::MainWindow(QWidget *parent) :
         QDate lastCheck = QDate::fromString(last_check,"yyyy-MM-dd");
         QDate nextCheck = lastCheck.addDays(7);
 
-        qDebug()<<"Last update check date: "<<last_check<<" and next is "<<nextCheck.toString("yyyy-MM-dd")<<endl;
+        qDebug()<<"Last update check date: "<<last_check<<" and next is "<<nextCheck.toString("yyyy-MM-dd")<<Qt::endl;
         int daysToNextcheck = QDate::currentDate().daysTo(nextCheck);
         if(daysToNextcheck<0){
             QString URL = VERSION_URL;
@@ -165,6 +178,7 @@ void MainWindow::dataInModelChanged(QModelIndex i1,QModelIndex i2){
     //qDebug()<<"Changed:R="<<i1.row()<<":C="<<i1.column()<<endl;
     saved_selection = i1.data(Qt::UserRole).toString();
     resetTableSelection();
+    updateTitle();
 
 }
 
@@ -173,6 +187,7 @@ MainWindow::~MainWindow()
 {
     delete ui;
     delete networkaccessmanager;
+    delete model;
 }
 
 QSortFilterProxyModel *proxyModel=NULL;
@@ -189,6 +204,9 @@ void MainWindow::updateTitle(){
         this->setWindowTitle(baseTitle+" ("+QString::number(visible)+"/"+QString::number(total)+")");
     }
 
+    // Check the undo and redo meny items
+    ui->actionUndo->setEnabled(model->undoPossible());
+    ui->actionRedo->setEnabled(model->redoPossible());
 
 }
 
@@ -214,6 +232,7 @@ void MainWindow::fileModified(const QString &str){
         // This sometimes happens when the file is being updated. We have gotten the signal a bit soon so the file is still empty. Wait and try again
         delay();
         model->refresh();
+        updateTitle();
     }
     resetTableSelection();
     setFileWatch();
@@ -270,7 +289,7 @@ void MainWindow::on_lineEdit_2_textEdited(const QString &arg1)
 void MainWindow::updateSearchResults(){
     // Take the text of the format of match1 match2 !match3 and turn it into
     //(?=.*match1)(?=.*match2)(?!.*match3) - all escaped of course
-    QStringList words = ui->lineEdit_2->text().split(QRegularExpression("\\s"));
+    QStringList words = ui->lineEdit_2->text().split(QRegularExpression("\\s+"));
     QString regexpstring="(?=^.*$)"; // Seems a negative lookahead can't be first (!?), so this is a workaround
     for(QString word:words){
         QString start = "(?=^.*";
@@ -575,7 +594,7 @@ void MainWindow::requestReceived(QNetworkReply* reply){
             replyText = reply->readAll();
             double latest_version = replyText.toDouble();
             double this_version = QString(VER).toDouble();
-            qDebug()<<"Checked version - Latest: "<<latest_version<<" this version "<<this_version<<endl;
+            qDebug()<<"Checked version - Latest: "<<latest_version<<" this version "<<this_version<<Qt::endl;
             if(latest_version>this_version || forced_check_version){
                 if(latest_version >= this_version){
                     ui->lbl_latestVersion->hide();
@@ -591,6 +610,21 @@ void MainWindow::requestReceived(QNetworkReply* reply){
         }
     }
     reply->deleteLater();
+}
+
+void MainWindow::undo()
+{
+    if(model->undo()){
+        model->refresh();
+    }
+}
+
+void MainWindow::redo()
+{
+    if(model->redo()){
+        model->refresh();
+    }
+
 }
 
 // Check if there is an update available
@@ -624,4 +658,16 @@ void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
 void MainWindow::on_actionQuit_triggered()
 {
     cleanup();
+}
+
+void MainWindow::on_actionUndo_triggered()
+{
+    undo();
+    updateTitle();
+}
+
+void MainWindow::on_actionRedo_triggered()
+{
+    redo();
+    updateTitle();
 }

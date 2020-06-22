@@ -1,3 +1,4 @@
+
 #include "todotxt.h"
 
 // Todo.txt file format: https://github.com/ginatrapani/todo.txt-cli/wiki/The-Todo.txt-Format
@@ -10,10 +11,29 @@
 #include <QSettings>
 #include <QRegularExpression>
 #include <QDebug>
+#include <QUuid>
+#include <QDir>
 #include "def.h"
 
 todotxt::todotxt()
 {
+    // This is part of the old implementation where we'd have a constant undoDir that could
+    // be shared by many applications.  I leave it here in case we end up with using too much storage
+    // and need manual cleanups.
+    //cleanupUndoDir();
+
+    undoDir = new QTemporaryDir();
+    if(!undoDir->isValid()){
+        qDebug()<<"Could not create undo dir"<<Qt::endl;
+    } else {
+        qDebug()<<"Created undo dir at "<<undoDir->path()<<Qt::endl;
+    }
+}
+
+todotxt::~todotxt()
+{
+    if(undoDir)
+        delete undoDir;
 }
 
 void todotxt::setdirectory(QString &dir){
@@ -24,37 +44,26 @@ static QRegularExpression regex_project("\\s(\\+[^\\s]+)");
 static QRegularExpression regex_context("\\s(\\@[^\\s]+)");
 
 void todotxt::parse(){
+
+    // Before we do anything here, we make sure we have covered our bases with an undo save
+    // Note, that except for the first read, if we end up doing a save here, something has changed on disk
+    // outside of this program.
+    saveToUndo();
+
     QSettings settings;
     //qDebug()<<"todotxt::parse";
     // parse the files todo.txt and done.txt (for now only todo.txt)
     todo.clear();
     active_contexts.clear();
     active_projects.clear();
-    QString todofile=getTodoFile();
-    QFile file(todofile);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return;
+    QString todofile=getTodoFilePath();
 
-    QTextStream in(&file);
-    in.setCodec("UTF-8");
-    while (!in.atEnd()) {
-        QString line = in.readLine();
-        todo.push_back(line);
-     }
+    slurp(todofile,todo);
 
     if(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool()){
         // Donefile as well
-        QString donefile = getDoneFile();
-        QFile file2(donefile);
-        if (!file2.open(QIODevice::ReadOnly | QIODevice::Text))
-            return;
-
-        QTextStream in2(&file2);
-        in2.setCodec("UTF-8");
-        while (!in2.atEnd()) {
-            QString line = in2.readLine();
-            todo.push_back(line);
-         }
+        QString donefile = getDoneFilePath();
+        slurp(donefile,todo);
     }
 
       if(settings.value(SETTINGS_THRESHOLD_LABELS).toBool()){
@@ -80,7 +89,7 @@ void todotxt::parse(){
       }
 }
 
-QString todotxt::getTodoFile(){
+QString todotxt::getTodoFilePath(){
     QSettings settings;
     QString dir = settings.value(SETTINGS_DIRECTORY).toString();
     QString todofile = dir.append(TODOFILE);
@@ -88,12 +97,20 @@ QString todotxt::getTodoFile(){
 }
 
 
-QString todotxt::getDoneFile(){
+QString todotxt::getDoneFilePath(){
     QSettings settings;
     QString dir = settings.value(SETTINGS_DIRECTORY).toString();
     QString todofile = dir.append(DONEFILE);
     return todofile;
 }
+
+QString todotxt::getDeletedFilePath(){
+    QSettings settings;
+    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
+    QString todofile = dir.append(DELETEDFILE);
+    return todofile;
+}
+
 void todotxt::getActive(QString& filter,vector<QString> &output){
         // Obsolete... remove?
     Q_UNUSED(filter);
@@ -228,12 +245,9 @@ void todotxt::getAll(QString& filter,vector<QString> &output){
         // Sort the open and done sections alphabetically if needed
 
         if(settings.value(SETTINGS_SORT_ALPHA).toBool()){
-            qSort(open.begin(),open.end(),lessThan);
-            qSort(inactive.begin(),inactive.end(),lessThan);
-            qSort(done.begin(),done.end(),lessThan);
-            /*qSort(open);
-            qSort(inactive);
-            qSort(done);*/
+            std::sort(open.begin(),open.end(),lessThan);
+            std::sort(inactive.begin(),inactive.end(),lessThan);
+            std::sort(done.begin(),done.end(),lessThan);
         }
 
         for(set<QString>::iterator iter=prio.begin();iter!=prio.end();iter++)
@@ -296,6 +310,182 @@ QString todotxt::getRelativeDate(QString shortform,QDate d){
     }
 }
 
+
+void todotxt::restoreFiles(QString namePrefix){
+    qDebug()<<"Restoring: "<<namePrefix<<Qt::endl;
+    qDebug()<<"Pointer: "<<undoPointer<<Qt::endl;
+    // Copy back files from the undo
+    QString newtodo = namePrefix+TODOFILE;
+    QString newdone = namePrefix+DONEFILE;
+    QString newdeleted = namePrefix+DELETEDFILE;
+
+    if(QFile::exists(newtodo)){
+        QFile::remove(getTodoFilePath());
+        QFile::copy(newtodo,getTodoFilePath());
+    }
+    if(QFile::exists(newdone)){
+        QFile::remove(getDoneFilePath());
+        QFile::copy(newdone,getDoneFilePath());
+    }
+    if(QFile::exists(newdeleted)){
+        QFile::remove(getDeletedFilePath());
+        QFile::copy(newdeleted,getDeletedFilePath());
+    }
+
+}
+bool todotxt::undo()
+{
+    // Check if we can
+    if((int) undoBuffer.size()>undoPointer+1){
+        // yep. there is more in the buffer.
+        // Ok. Here it is obvious that I should have implemented undoBuffer as a vector and probably have the pointer to be a negative index
+        undoPointer++;
+        restoreFiles(undoBuffer[undoBuffer.size()-(1+undoPointer)]);
+        return true;
+    }
+    return false;
+}
+
+bool todotxt::redo()
+{
+    // Check if we can
+    if(undoPointer>0){
+        // yep. there is more in the buffer.
+        // Ok. Here it is obvious that I should have implemented undoBuffer as a vector and probably have the pointer to be a negative index
+        undoPointer--;
+        restoreFiles(undoBuffer[undoBuffer.size()-(1+undoPointer)]);
+        return true;
+    }
+    return false;
+}
+
+bool todotxt::undoPossible()
+{
+    if((int) undoBuffer.size()>undoPointer+1){
+        return true;
+    }
+    return false;
+}
+
+bool todotxt::redoPossible()
+{
+    if(undoPointer>0){
+        return true;
+    }
+    return false;
+}
+
+QString todotxt::getUndoDir()
+{
+    if(undoDir->isValid()){
+        return undoDir->path()+"/";
+    }
+
+    // The below code is backup for undo directory created in the same folder
+    // in case there was a problem with getting a temp directory (shouldn't happen.. but)
+    QSettings settings;
+    QString uuid = settings.value(SETTINGS_UUID,DEFAULT_UUID).toString();
+    QString dirbase = settings.value(SETTINGS_DIRECTORY).toString();
+    QString dir = dirbase+".todour_undo_"+uuid+"/";
+    // Check that the dir exists
+    QDir directory = QDir(dir);
+    if(!directory.exists()){
+        directory.mkdir(dir);
+    }
+    return dir;
+}
+
+QString todotxt::getNewUndoNameDirAndPrefix()
+{
+    // Make a file path that is made to have _todo.txt or _done.txt appended to it
+    // We want the name to be anything that doesn't crash with any other. This can be linear numbering or just an UUID
+    // For now it's UUID but a linear numbering (with a solution to multiple clients running with the same undo-directory) would make
+    // more sense and be easier to follow for end-users in case they are looking through the files.
+    return getUndoDir()+QUuid::createUuid().toString()+"_";
+}
+
+void todotxt::cleanupUndoDir()
+{
+    // Go through the directory and remove everything that is older than 14 days old.
+    // Why 14 days? Because. That's why :)
+    // (I simply don't think this is interesting to have configurable.. But simple enough to do in case needed)
+    QDir directory(getUndoDir());
+    QStringList files = directory.entryList(QDir::Files);
+    QDateTime expirationTime = QDateTime::currentDateTime();
+    expirationTime = expirationTime.addDays(-14);
+    qDebug()<<"Checking for undo files to cleanup..."<<Qt::endl;
+    foreach(QString filename, files) {
+        auto finfo = QFileInfo(directory.filePath(filename));
+        QDateTime created = finfo.birthTime();
+        if(expirationTime.daysTo(created)<0 || !created.isValid()){
+            //qDebug()<<"We should remove file (but wont now)"<<filename<<Qt::endl;
+            if(!QFile::remove(directory.filePath(filename))){
+                qDebug()<<"Failed to remove: "<<filename<<Qt::endl;
+            }
+        }
+    }
+}
+
+// Returns true of there is a need for a new undo
+bool todotxt::checkNeedForUndo(){
+    // check if the todo.txt is any different from the lastUndo file
+    vector<QString> todo;
+    vector<QString> lastUndo;
+
+    if(undoBuffer.empty()){
+        return true;
+    }
+
+    QString todofile = getTodoFilePath();
+    QString undofile = undoBuffer.back()+(TODOFILE);
+    slurp(todofile,todo);
+    slurp(undofile,lastUndo);
+    if(todo.size()!=lastUndo.size()){
+        qDebug()<<"Sizes differ: "<<todofile<<" vs "<<undofile<<Qt::endl;
+        return true;
+    }
+
+    // We got this far, we have to go trhough the files line by line
+    for(int i=0;i<(int) todo.size();i++){
+        if(todo[i] != lastUndo[i]){
+            qDebug()<<todo[i]<<" != "<<lastUndo[i]<<Qt::endl;
+            return true;
+        }
+    }
+
+    // Files are the same. No need to save a new undo.
+    return false;
+}
+
+void todotxt::saveToUndo()
+{
+    // This should be called every time we will read todo.txt
+
+    // if we're moving around the undoBuffer, we should not be doing anything
+    if(undoPointer)
+        return;
+
+    // Start with checking if there is a change in the file compared to the last one in the undoBuffer
+    // (or if the undoBuffer is empty)
+    if(checkNeedForUndo() ){
+        // Creating a new undo is pretty simple.
+        // Just copy the todo.txt and the done.txt to the undo directory under a new name and save the filename in the undoBuffer
+        QString namePrefix = getNewUndoNameDirAndPrefix();
+        QString newtodo = namePrefix+TODOFILE;
+        QString newdone = namePrefix+DONEFILE;
+        QString newdeleted = namePrefix+DELETEDFILE;
+
+        QFile::copy(getTodoFilePath(),newtodo);
+        QFile::copy(getDoneFilePath(),newdone);
+        QFile::copy(getDeletedFilePath(),newdeleted);
+
+        undoBuffer.push_back(namePrefix);
+        qDebug()<<"Added to undoBuffer: "<<namePrefix<<Qt::endl;
+        qDebug()<<"Buffer is now: "<<undoBuffer.size()<<Qt::endl;
+    }
+
+}
+
 QString todotxt::prettyPrint(QString& row){
     QString ret;
     QSettings settings;
@@ -316,6 +506,7 @@ QString todotxt::prettyPrint(QString& row){
 }
 
 void todotxt::slurp(QString& filename,vector<QString>& content){
+    QSettings settings;
     QFile file(filename);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return;
@@ -324,11 +515,23 @@ void todotxt::slurp(QString& filename,vector<QString>& content){
     in.setCodec("UTF-8");
     while (!in.atEnd()) {
         QString line = in.readLine();
+        if(settings.value(SETTINGS_REMOVE_DOUBLETS,DEFAULT_REMOVE_DOUBLETS).toBool()){
+            // This can be optimized by for example using a set<QString>
+            if(std::find(content.begin(),content.end(),line) != content.end()){
+                // We found this line. So we ignore it
+                continue;
+            }
+        }
         content.push_back(line);
      }
 }
 
 void todotxt::write(QString& filename,vector<QString>&  content){
+    // As we're about to write a change to the file, we have to consider what is now in the file as valid
+    // Thus we point the undo pointer to the last entry and check if we need to save what is now in the files before we overwrite it
+    undoPointer=0;
+    saveToUndo();
+
     //qDebug()<<"todotxt::write("<<filename<<")";
     QFile file(filename);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
@@ -338,14 +541,15 @@ void todotxt::write(QString& filename,vector<QString>&  content){
         out.setCodec("UTF-8");
         for(unsigned int i = 0;	i<content.size(); i++)
             out << content.at(i) << "\n";
+
+
 }
 
 void todotxt::remove(QString line){
     // Remove the line, but perhaps saving it for later as well..
     QSettings settings;
     if(settings.value(SETTINGS_DELETED_FILE).toBool()){
-        QString dir = settings.value(SETTINGS_DIRECTORY).toString();
-        QString deletedfile = dir.append(DELETEDFILE);
+        QString deletedfile = getDeletedFilePath();
         vector<QString> deleteddata;
         slurp(deletedfile,deleteddata);
         deleteddata.push_back(line);
@@ -359,8 +563,8 @@ void todotxt::remove(QString line){
 void todotxt::archive(){
     // Slurp the files
     QSettings settings;
-    QString todofile = getTodoFile();
-    QString donefile = getDoneFile();
+    QString todofile = getTodoFilePath();
+    QString donefile = getDoneFilePath();
     vector<QString> tododata;
     vector<QString> donedata;
     slurp(todofile,tododata);
@@ -387,7 +591,7 @@ void todotxt::refresh(){
 void todotxt::update(QString &row, bool checked, QString &newrow){
     // First slurp the file.
     QSettings settings;
-    QString todofile = getTodoFile();
+    QString todofile = getTodoFilePath();
     vector<QString> data;
     slurp(todofile,data);
     QString additional_item = ""; // This is for recurrence. If there is a new item created, put it here since we have to add it after the file is written

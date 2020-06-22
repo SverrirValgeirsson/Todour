@@ -15,6 +15,11 @@ TodoTableModel::TodoTableModel(QObject *parent) :
     todo->parse();
 }
 
+TodoTableModel::~TodoTableModel()
+{
+    delete todo;
+}
+
 int TodoTableModel::rowCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
     if(todo_data.empty()){
@@ -27,7 +32,7 @@ int TodoTableModel::rowCount(const QModelIndex &parent) const {
 
 
 QString TodoTableModel::getTodoFile(){
-    return todo->getTodoFile();
+    return todo->getTodoFilePath();
 }
 
 int TodoTableModel::columnCount(const QModelIndex &parent) const {
@@ -219,6 +224,26 @@ QModelIndexList TodoTableModel::match(const QModelIndex &start, int role, const 
     }
 
     return ret;
+}
+
+bool TodoTableModel::undo()
+{
+    return todo->undo();
+}
+
+bool TodoTableModel::redo()
+{
+    return todo->redo();
+}
+
+bool TodoTableModel::undoPossible()
+{
+    return todo->undoPossible();
+}
+
+bool TodoTableModel::redoPossible()
+{
+    return todo->redoPossible();
 }
 
 int TodoTableModel::count(){

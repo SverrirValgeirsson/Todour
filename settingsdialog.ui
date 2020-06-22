@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>534</width>
-    <height>597</height>
+    <height>641</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -188,7 +188,7 @@
    <item>
     <widget class="QGroupBox" name="groupBox_4">
      <property name="title">
-      <string>GroupBox</string>
+      <string/>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_9">
       <item>
@@ -291,6 +291,13 @@
     <widget class="QCheckBox" name="cb_CheckUpdates">
      <property name="text">
       <string>Check for updates (ca once per week and only at startup. no information is sent)</string>
+     </property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QCheckBox" name="cb_removeDoublets">
+     <property name="text">
+      <string>Remove Duplicate Lines</string>
      </property>
     </widget>
    </item>

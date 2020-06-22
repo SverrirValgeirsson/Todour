@@ -36,6 +36,8 @@ public:
 public slots:
     void fileModified(const QString& str);
     void requestReceived(QNetworkReply* reply);
+    void undo();
+    void redo();
 
 private slots:
     void on_lineEdit_2_textEdited(const QString &arg1);
@@ -78,6 +80,10 @@ private slots:
     void on_tableView_customContextMenuRequested(const QPoint &pos);
 
     void on_actionQuit_triggered();
+
+    void on_actionUndo_triggered();
+
+    void on_actionRedo_triggered();
 
 private:
     void setFileWatch();

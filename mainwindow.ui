@@ -60,6 +60,13 @@
        </spacer>
       </item>
       <item>
+       <widget class="QCheckBox" name="cb_threshold_inactive">
+        <property name="text">
+         <string>Show Threshold</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QCheckBox" name="cb_showaall">
         <property name="text">
          <string>Show All</string>

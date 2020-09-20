@@ -143,6 +143,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->lv_activetags->hide(); //  Not being used yet
     ui->newVersionView->hide(); // This defaults to not being shown
     ui->cb_showaall->setChecked(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool());
+    ui->cb_threshold_inactive->setChecked(settings.value(SETTINGS_THRESHOLD_INACTIVE,DEFAULT_THRESHOLD_INACTIVE).toBool());
 
     setTray();
     setFontSize();
@@ -573,6 +574,13 @@ void MainWindow::on_cb_showaall_stateChanged(int arg1)
 {
     QSettings settings;
     settings.setValue(SETTINGS_SHOW_ALL,arg1);
+    on_pushButton_4_clicked();
+}
+
+void MainWindow::on_cb_threshold_inactive_stateChanged(int arg1)
+{
+    QSettings settings;
+    settings.setValue(SETTINGS_THRESHOLD_INACTIVE,arg1);
     on_pushButton_4_clicked();
 }
 

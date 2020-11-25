@@ -85,7 +85,7 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
         }
     }
 
-    if (role == Qt::TextColorRole) {
+    if (role == Qt::ForegroundRole) {
 
         int due = todo->dueIn(todo_data.at(index.row())); // The settings check is done in the todo call
         bool active = true;

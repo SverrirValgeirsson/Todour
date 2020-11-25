@@ -9,6 +9,7 @@
 #include <QNetworkAccessManager>
 #include <QNetworkRequest>
 #include <QNetworkReply>
+#include <memory>
 
 #ifdef Q_OS_OSX
     #define VERSION_URL "https://nerdur.com/todour-latest_mac.php"
@@ -66,9 +67,6 @@ private slots:
 
     void on_context_lock_toggled(bool checked);
 
-
-    void on_cb_showaall_stateChanged(int arg1);
-
     void iconActivated(QSystemTrayIcon::ActivationReason reason);
     void cleanup(); // Need to have a quit slot of my own to save settings and so on.
 
@@ -85,6 +83,10 @@ private slots:
 
     void on_actionRedo_triggered();
 
+    void on_actionShow_All_changed();
+
+    void on_actionStay_On_Top_changed();
+
 private:
     void setFileWatch();
     void requestPage(QString &s);
@@ -97,6 +99,7 @@ private:
     void updateSearchResults();
     void updateTitle();
     void setFontSize();
+    void stayOnTop();
     QString baseTitle;
     UGlobalHotkeys *hotkey;
     void setHotkey();

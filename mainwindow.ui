@@ -60,13 +60,6 @@
        </spacer>
       </item>
       <item>
-       <widget class="QCheckBox" name="cb_showaall">
-        <property name="text">
-         <string>Show All</string>
-        </property>
-       </widget>
-      </item>
-      <item>
        <widget class="QPushButton" name="btn_Alphabetical">
         <property name="toolTip">
          <string>Toggle alpabetic sorting</string>
@@ -293,8 +286,16 @@ border-radius: 5px;
     <addaction name="actionUndo"/>
     <addaction name="actionRedo"/>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+    <addaction name="actionShow_All"/>
+    <addaction name="actionStay_On_Top"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuEdit"/>
+   <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
   </widget>
   <action name="actionSettings">
@@ -331,6 +332,22 @@ border-radius: 5px;
    </property>
    <property name="shortcut">
     <string>Ctrl+R</string>
+   </property>
+  </action>
+  <action name="actionShow_All">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show All</string>
+   </property>
+  </action>
+  <action name="actionStay_On_Top">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Stay On Top</string>
    </property>
   </action>
  </widget>

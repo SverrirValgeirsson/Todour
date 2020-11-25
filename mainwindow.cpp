@@ -142,8 +142,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->lv_activetags->hide(); //  Not being used yet
     ui->newVersionView->hide(); // This defaults to not being shown
-    ui->cb_showaall->setChecked(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool());
-
+    ui->actionShow_All->setChecked(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool());
+    ui->actionStay_On_Top->setChecked(settings.value(SETTINGS_STAY_ON_TOP,DEFAULT_STAY_ON_TOP).toBool());
+    stayOnTop();
     setTray();
     setFontSize();
 
@@ -281,7 +282,7 @@ void MainWindow::on_lineEdit_2_textEdited(const QString &arg1)
     QSettings settings;
 
     bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
-    if(!ui->cb_showaall->checkState() && liveUpdate){
+    if(!ui->actionShow_All->isChecked() && liveUpdate){
         updateSearchResults();
     }
 }
@@ -312,7 +313,7 @@ void MainWindow::on_lineEdit_2_returnPressed()
     QSettings settings;
     bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
 
-    if(!liveUpdate || ui->cb_showaall->isChecked()){
+    if(!liveUpdate || ui->actionShow_All->isChecked()){
         updateSearchResults();
     }
 
@@ -379,6 +380,16 @@ void MainWindow::setFontSize(){
         f.setPointSize(size);
         qApp->setFont(f);
     }
+}
+
+void MainWindow::stayOnTop()
+{
+    if(ui->actionStay_On_Top->isChecked()){
+        setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+    } else {
+        setWindowFlags(windowFlags() & ~Qt::WindowStaysOnTopHint);
+    }
+    show(); // This is needed as setWindowFlags can hide the window
 }
 
 void MainWindow::setTray(){
@@ -569,12 +580,6 @@ void MainWindow::on_context_lock_toggled(bool checked)
     settings.setValue(SETTINGS_CONTEXT_LOCK,checked);
 }
 
-void MainWindow::on_cb_showaall_stateChanged(int arg1)
-{
-    QSettings settings;
-    settings.setValue(SETTINGS_SHOW_ALL,arg1);
-    on_pushButton_4_clicked();
-}
 
 void MainWindow::on_pb_closeVersionBar_clicked()
 {
@@ -670,4 +675,18 @@ void MainWindow::on_actionRedo_triggered()
 {
     redo();
     updateTitle();
+}
+
+void MainWindow::on_actionShow_All_changed()
+{
+    QSettings settings;
+    settings.setValue(SETTINGS_SHOW_ALL,ui->actionShow_All->isChecked());
+    on_pushButton_4_clicked();
+}
+
+void MainWindow::on_actionStay_On_Top_changed()
+{
+    QSettings settings;
+    settings.setValue(SETTINGS_STAY_ON_TOP,ui->actionStay_On_Top->isChecked());
+    stayOnTop();
 }

@@ -29,6 +29,7 @@
 #define DEFAULT_PRIO_ON_CLOSE 0
 #define DEFAULT_REMOVE_DOUBLETS false
 #define DEFAULT_UUID "0000-0000-0000-0000"
+#define DEFAULT_STAY_ON_TOP false
 
 
 // Names of settings in QSettings
@@ -69,6 +70,7 @@
 #define SETTINGS_FONT_SIZE "font_size"
 #define SETTINGS_REMOVE_DOUBLETS "remove_doublets"
 #define SETTINGS_UUID "uuid"
+#define SETTINGS_STAY_ON_TOP "stay_on_top"
 
 enum prio_on_close {removeit=0,moveit,tagit};
 

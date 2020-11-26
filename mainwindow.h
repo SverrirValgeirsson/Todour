@@ -67,6 +67,9 @@ private slots:
 
     void on_context_lock_toggled(bool checked);
 
+
+    void on_cb_threshold_inactive_stateChanged(int arg1);
+
     void iconActivated(QSystemTrayIcon::ActivationReason reason);
     void cleanup(); // Need to have a quit slot of my own to save settings and so on.
 

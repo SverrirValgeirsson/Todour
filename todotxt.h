@@ -38,7 +38,7 @@ public:
     void getActive(QString& filter,vector<QString> &output);
     void getAll(QString& filter,vector<QString> &output);
     Qt::CheckState getState(QString& row);
-    static QString prettyPrint(QString& row);
+    static QString prettyPrint(QString& row,bool forEdit=false);
     void update(QString& row,bool checked,QString& newrow);
     void write(QString& filename,vector<QString>&  content);
     void slurp(QString& filename,vector<QString>&  content);

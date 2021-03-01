@@ -486,7 +486,7 @@ void todotxt::saveToUndo()
 
 }
 
-QString todotxt::prettyPrint(QString& row){
+QString todotxt::prettyPrint(QString& row,bool forEdit){
     QString ret;
     QSettings settings;
 
@@ -495,7 +495,7 @@ QString todotxt::prettyPrint(QString& row){
     String2Todo(row,tl);
 
     ret = tl.priority;
-    if(settings.value(SETTINGS_SHOW_DATES).toBool()){
+    if(forEdit || settings.value(SETTINGS_SHOW_DATES).toBool()){
         ret.append(tl.closedDate+tl.createdDate);
     }
 

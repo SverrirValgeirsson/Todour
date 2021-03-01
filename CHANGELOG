@@ -2,6 +2,7 @@
 
 * Moved the "Show All" checkbox to a menu
 * Added a "Stay on top" menu item
+* Fixed github issue 25 - Deleting of creation date
 
 New in 2.19
 ===========

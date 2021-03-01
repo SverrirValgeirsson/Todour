@@ -54,9 +54,16 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
     if (index.row() >= (int) todo_data.size() || index.row() < 0)
              return QVariant();
 
-    if (role == Qt::DisplayRole || role == Qt::EditRole|| role==Qt::ToolTipRole) {
+    if (role == Qt::DisplayRole || role==Qt::ToolTipRole) {
         if(index.column()==1){
-            QString s=todo->prettyPrint((todo_data.at(index.row())));
+            QString s=todo->prettyPrint((todo_data.at(index.row())),false);
+            return s;
+        }
+     }
+
+    if (role == Qt::EditRole) {
+        if(index.column()==1){
+            QString s=todo->prettyPrint((todo_data.at(index.row())),true);
             return s;
         }
      }

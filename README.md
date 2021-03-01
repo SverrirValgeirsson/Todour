@@ -8,6 +8,7 @@ The program uses QtAwesome for the icons.
 # Downloading
 ```
 git clone https://github.com/SverrirValgeirsson/Todour.git
+cd Todour
 git submodule init 
 git submodule update 
 ```

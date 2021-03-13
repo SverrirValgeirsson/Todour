@@ -36,7 +36,8 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->comb_priorities->setCurrentIndex(settings.value(SETTINGS_PRIO_ON_CLOSE, DEFAULT_PRIO_ON_CLOSE).toInt());
     ui->sb_fontSize->setValue(qApp->font().pointSize());
     ui->cb_removeDoublets->setChecked(settings.value(SETTINGS_REMOVE_DOUBLETS,DEFAULT_REMOVE_DOUBLETS).toBool());
-
+    ui->search_not_char->setText(settings.value(SETTINGS_SEARCH_NOT_CHAR,DEFAULT_SEARCH_NOT_CHAR).toChar());
+    ui->cb_default_threshold->setCurrentText(settings.value(SETTINGS_DEFAULT_THRESHOLD,DEFAULT_DEFAULT_THRESHOLD).toString());
 
     // Handle the fonts
     activecolor=QColor::fromRgba(settings.value(SETTINGS_ACTIVE_COLOR,DEFAULT_ACTIVE_COLOR).toUInt());
@@ -85,8 +86,11 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue(SETTINGS_DUE_WARNING,ui->sb_due_warning->value());
     settings.setValue(SETTINGS_CHECK_UPDATES,ui->cb_CheckUpdates->isChecked());
     settings.setValue(SETTINGS_PRIO_ON_CLOSE,ui->comb_priorities->currentIndex());
+    settings.setValue(SETTINGS_DEFAULT_THRESHOLD,ui->cb_default_threshold->currentText());
     settings.setValue(SETTINGS_FONT_SIZE,ui->sb_fontSize->value());
     settings.setValue(SETTINGS_REMOVE_DOUBLETS,ui->cb_removeDoublets->isChecked());
+    if(ui->search_not_char->text().size()>0)
+        settings.setValue(SETTINGS_SEARCH_NOT_CHAR,ui->search_not_char->text().at(0));
 
     refresh=true;
     this->close();

@@ -647,7 +647,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
                     }
                     tl.closedDate=date;
 
-                    // Handle recurrance
+                    // Handle recurrence
                     //QRegularExpression rec_normal("(rec:\\d+[dwmyb])");
                     QRegularExpression rec("(rec:\\+?\\d+[dwmybp])");
 
@@ -662,23 +662,33 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
                             rec_add.insert(0,'+');
                             isStrict = false;
                         }
-                       // Make a copy. It's time to start altering that one
 
+
+
+                        // Make a copy. It's time to start altering that one
                         if(!tl.priority.isEmpty()){
                             additional_item = tl.priority+tl.text;
                         } else {
                             additional_item = tl.text;
                         }
 
+                        // Handle the special case that we're in a rec but there is neither a due nor t
+                        if(!regex_threshold_date.match(tl.text).hasMatch() && !regex_due_date.match(tl.text).hasMatch()){
+                            // The rec doesn't have any real point without having a t or a due.
+                            // Add one with todays date
+                            additional_item.append(" "+settings.value(SETTINGS_DEFAULT_THRESHOLD,DEFAULT_DEFAULT_THRESHOLD).toString()+getToday());
+                        }
+
+
                         // Get the t:
-                        auto mt = regex_threshold_date.globalMatch(tl.text);
+                        auto mt = regex_threshold_date.globalMatch(additional_item);
                         while(mt.hasNext()){
                             QString old_t = mt.next().captured(1);
                             QString newdate = isStrict?getRelativeDate(rec_add, QDate::fromString(old_t,"yyyy-MM-dd")):getRelativeDate(rec_add);
                             additional_item.replace("t:"+old_t,"t:"+newdate);
                         }
                         // Get the due:
-                        auto md = regex_due_date.match(tl.text);
+                        auto md = regex_due_date.match(additional_item);
                         if(md.hasMatch()){
                             QString old_due = md.captured(1);
                             QString newdate = isStrict?getRelativeDate(rec_add, QDate::fromString(old_due,"yyyy-MM-dd")):getRelativeDate(rec_add);

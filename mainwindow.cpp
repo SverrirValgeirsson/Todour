@@ -291,11 +291,13 @@ void MainWindow::on_lineEdit_2_textEdited(const QString &arg1)
 void MainWindow::updateSearchResults(){
     // Take the text of the format of match1 match2 !match3 and turn it into
     //(?=.*match1)(?=.*match2)(?!.*match3) - all escaped of course
+    QSettings settings;
+    QChar search_not_char = settings.value(SETTINGS_SEARCH_NOT_CHAR,DEFAULT_SEARCH_NOT_CHAR).toChar();
     QStringList words = ui->lineEdit_2->text().split(QRegularExpression("\\s+"));
     QString regexpstring="(?=^.*$)"; // Seems a negative lookahead can't be first (!?), so this is a workaround
     for(QString word:words){
         QString start = "(?=^.*";
-        if(word.length()>0 && word.at(0)=='!'){
+        if(word.length()>0 && word.at(0)==search_not_char){
             start = "(?!^.*";
             word = word.remove(0,1);
         }

@@ -30,7 +30,8 @@
 #define DEFAULT_REMOVE_DOUBLETS false
 #define DEFAULT_UUID "0000-0000-0000-0000"
 #define DEFAULT_STAY_ON_TOP false
-
+#define DEFAULT_SEARCH_NOT_CHAR '!'
+#define DEFAULT_DEFAULT_THRESHOLD "rec:"
 
 // Names of settings in QSettings
 #define SETTINGS_DUE "due"
@@ -71,6 +72,8 @@
 #define SETTINGS_REMOVE_DOUBLETS "remove_doublets"
 #define SETTINGS_UUID "uuid"
 #define SETTINGS_STAY_ON_TOP "stay_on_top"
+#define SETTINGS_SEARCH_NOT_CHAR "search_not_char"
+#define SETTINGS_DEFAULT_THRESHOLD "default_threshold"
 
 enum prio_on_close {removeit=0,moveit,tagit};
 

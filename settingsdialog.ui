@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>534</width>
-    <height>641</height>
+    <height>691</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -205,16 +205,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="cb_separate">
-     <property name="enabled">
-      <bool>true</bool>
-     </property>
-     <property name="text">
-      <string>Sort all inactives last</string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QCheckBox" name="cb_autorefresh">
      <property name="text">
       <string>Refresh automatically when files has changed</string>
@@ -222,18 +212,43 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="cb_dates">
-     <property name="text">
-      <string>Add dates to lines</string>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_12">
+     <item>
+      <widget class="QCheckBox" name="cb_showdates">
+       <property name="text">
+        <string>Show dates</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="cb_dates">
+       <property name="text">
+        <string>Add dates to lines</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
-    <widget class="QCheckBox" name="cb_showdates">
-     <property name="text">
-      <string>Show dates</string>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_13">
+     <item>
+      <widget class="QCheckBox" name="cb_threshold_inactive">
+       <property name="text">
+        <string>Treat threshold as inactive</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="cb_separate">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="text">
+        <string>Sort all inactives last</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
    <item>
     <widget class="QCheckBox" name="cb_liveSearch">
@@ -274,13 +289,6 @@
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="cb_threshold_inactive">
-     <property name="text">
-      <string>Treat threshold as inactive</string>
-     </property>
-    </widget>
-   </item>
-   <item>
     <widget class="QCheckBox" name="cb_tray_icon">
      <property name="text">
       <string>Enable tray</string>
@@ -290,7 +298,7 @@
    <item>
     <widget class="QCheckBox" name="cb_CheckUpdates">
      <property name="text">
-      <string>Check for updates (ca once per week and only at startup. no information is sent)</string>
+      <string>Check for updates (ca once per week and only at startup. No information is sent)</string>
      </property>
     </widget>
    </item>
@@ -300,6 +308,81 @@
       <string>Remove Duplicate Lines</string>
      </property>
     </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_11">
+     <item>
+      <widget class="QLabel" name="label_6">
+       <property name="text">
+        <string>Default deadline/threshold to add when missing</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cb_default_threshold">
+       <property name="toolTip">
+        <string>What to add to a rec: line without any due: or t:</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>due:</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>t:</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_10">
+     <item>
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Symbol for &quot;NOT&quot; in search</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="search_not_char">
+       <property name="maxLength">
+        <number>1</number>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>80</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_8">

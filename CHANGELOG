@@ -1,8 +1,13 @@
 
+New in 2.20
+===========
 
 * Moved the "Show All" checkbox to a menu
 * Added a "Stay on top" menu item
 * Fixed github issue 25 - Deleting of creation date
+* Added version information in Mac Build / Bundle
+* Added ability to change what character is used for "NOT" in search
+* Add a due: or t: if using a rec: without any due: or t:
 
 New in 2.19
 ===========

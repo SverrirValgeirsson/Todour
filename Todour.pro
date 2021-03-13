@@ -11,10 +11,11 @@ TEMPLATE = app
 VERS = $$system(perl version.pl)
 DEFINES += VER=\"\\\"$${VERS}\\\"\"
 CONFIG += c++11
+CONFIG+=sdk_no_version_check
 
 macx{
 ICON = icon.icns
-QMAKE_MAC_SDK = macosx10.15
+#QMAKE_MAC_SDK = macosx11.0
 }
 win32 {
     RC_FILE = myresource.rc
@@ -54,6 +55,9 @@ OTHER_FILES += \
     todo.txt
 
 DISTFILES += \
+    Feature-move-show-all \
+    Feature-AlwaysOnTop \
+    Todour.desktop \
     todour-latest.php \
     LICENSE \
     README \

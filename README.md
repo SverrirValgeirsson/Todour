@@ -18,8 +18,16 @@ git submodule update
 qmake Todour.pro
 make
 ```
-
-
+## Dependencies 
+On Ubuntu 20.04 the following has been reported to be needed (see https://github.com/SverrirValgeirsson/Todour/issues/28)
+```
+sudo apt install qtchooser
+sudo apt install qt5-default
+sudo apt install qtbase5-private-dev
+sudo apt install cmake
+sudo apt install libxcb-keysyms1-dev
+``` 
+ 
 ## Dependency to nerdur.com 
 Please note that there is a small part of the code that checks on nerdur.com if there is an update available. This should not be an issue, 
 but if you are making your own copy you may want to disable this. 

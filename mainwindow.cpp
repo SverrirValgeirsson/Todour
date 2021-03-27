@@ -600,6 +600,9 @@ bool forced_check_version=false;
 void MainWindow::requestReceived(QNetworkReply* reply){
     QString replyText;
     QSettings settings;
+    // Have a default showing that you are running the latest
+    ui->lbl_latestVersion->hide();
+    ui->lbl_newVersion->hide();
     if(reply->error()==QNetworkReply::NoError){
 
         // Get the http status code
@@ -611,10 +614,10 @@ void MainWindow::requestReceived(QNetworkReply* reply){
             double this_version = QString(VER).toDouble();
             qDebug()<<"Checked version - Latest: "<<latest_version<<" this version "<<this_version<<Qt::endl;
             if(latest_version>this_version || forced_check_version){
-                if(latest_version >= this_version){
-                    ui->lbl_latestVersion->hide();
+                if(latest_version > this_version){
+                    ui->lbl_newVersion->show();
                 } else {
-                    ui->lbl_newVersion->hide();
+                    ui->lbl_latestVersion->show();
                 }
                 ui->txtLatestVersion->setText("(v"+QString::number(latest_version,'f',2)+")");
                 ui->newVersionView->show();

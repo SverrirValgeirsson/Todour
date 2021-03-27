@@ -31,7 +31,7 @@
 #define DEFAULT_UUID "0000-0000-0000-0000"
 #define DEFAULT_STAY_ON_TOP false
 #define DEFAULT_SEARCH_NOT_CHAR '!'
-#define DEFAULT_DEFAULT_THRESHOLD "rec:"
+#define DEFAULT_DEFAULT_THRESHOLD "due:"
 
 // Names of settings in QSettings
 #define SETTINGS_DUE "due"

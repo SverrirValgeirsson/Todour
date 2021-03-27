@@ -26,6 +26,7 @@ sudo apt install qt5-default
 sudo apt install qtbase5-private-dev
 sudo apt install cmake
 sudo apt install libxcb-keysyms1-dev
+sudo apt install clang
 ``` 
  
 ## Dependency to nerdur.com 

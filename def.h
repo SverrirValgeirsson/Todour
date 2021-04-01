@@ -1,6 +1,16 @@
 #ifndef DEF_H
 #define DEF_H
 
+/* Workaround for the Qt::endl not existing before 5.14.something */
+#include <QtGlobal>
+#if QT_VERSION < QT_VERSION_CHECK(5, 15, 0)
+#define endline endl
+#else
+#define endline Qt::endl
+#endif
+
+
+
 // Defaults and definitions for settings
 #define DEFAULT_HOTKEY "Ctrl+Alt+t"
 #define DEFAULT_HOTKEY_ENABLE false

@@ -1,5 +1,6 @@
 * Fixed a bug where the check for new version would basically always find a new version
 * Fixed bug introduced in 2.20 with automatically adding due: or t: when using rec:
+* Fixed building issues for older versions of Qt5 
 
 
 New in 2.20

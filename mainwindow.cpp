@@ -58,7 +58,7 @@ MainWindow::MainWindow(QWidget *parent) :
     if(QCoreApplication::arguments().contains("-portable")){
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,QDir::currentPath());
-        qDebug()<<"Setting ini file path to: "<<QDir::currentPath()<<Qt::endl;
+        qDebug()<<"Setting ini file path to: "<<QDir::currentPath()<<endline;
     }
 
     hotkey = new UGlobalHotkeys();
@@ -161,7 +161,7 @@ MainWindow::MainWindow(QWidget *parent) :
         QDate lastCheck = QDate::fromString(last_check,"yyyy-MM-dd");
         QDate nextCheck = lastCheck.addDays(7);
 
-        qDebug()<<"Last update check date: "<<last_check<<" and next is "<<nextCheck.toString("yyyy-MM-dd")<<Qt::endl;
+        qDebug()<<"Last update check date: "<<last_check<<" and next is "<<nextCheck.toString("yyyy-MM-dd")<<endline;
         int daysToNextcheck = QDate::currentDate().daysTo(nextCheck);
         if(daysToNextcheck<0){
             QString URL = VERSION_URL;
@@ -612,7 +612,7 @@ void MainWindow::requestReceived(QNetworkReply* reply){
             replyText = reply->readAll();
             double latest_version = replyText.toDouble();
             double this_version = QString(VER).toDouble();
-            qDebug()<<"Checked version - Latest: "<<latest_version<<" this version "<<this_version<<Qt::endl;
+            qDebug()<<"Checked version - Latest: "<<latest_version<<" this version "<<this_version<<endline;
             if(latest_version>this_version || forced_check_version){
                 if(latest_version > this_version){
                     ui->lbl_newVersion->show();

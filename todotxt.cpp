@@ -24,9 +24,9 @@ todotxt::todotxt()
 
     undoDir = new QTemporaryDir();
     if(!undoDir->isValid()){
-        qDebug()<<"Could not create undo dir"<<Qt::endl;
+        qDebug()<<"Could not create undo dir"<<endline;
     } else {
-        qDebug()<<"Created undo dir at "<<undoDir->path()<<Qt::endl;
+        qDebug()<<"Created undo dir at "<<undoDir->path()<<endline;
     }
 }
 
@@ -312,8 +312,8 @@ QString todotxt::getRelativeDate(QString shortform,QDate d){
 
 
 void todotxt::restoreFiles(QString namePrefix){
-    qDebug()<<"Restoring: "<<namePrefix<<Qt::endl;
-    qDebug()<<"Pointer: "<<undoPointer<<Qt::endl;
+    qDebug()<<"Restoring: "<<namePrefix<<endline;
+    qDebug()<<"Pointer: "<<undoPointer<<endline;
     // Copy back files from the undo
     QString newtodo = namePrefix+TODOFILE;
     QString newdone = namePrefix+DONEFILE;
@@ -413,14 +413,14 @@ void todotxt::cleanupUndoDir()
     QStringList files = directory.entryList(QDir::Files);
     QDateTime expirationTime = QDateTime::currentDateTime();
     expirationTime = expirationTime.addDays(-14);
-    qDebug()<<"Checking for undo files to cleanup..."<<Qt::endl;
+    qDebug()<<"Checking for undo files to cleanup..."<<endline;
     foreach(QString filename, files) {
         auto finfo = QFileInfo(directory.filePath(filename));
         QDateTime created = finfo.birthTime();
         if(expirationTime.daysTo(created)<0 || !created.isValid()){
-            //qDebug()<<"We should remove file (but wont now)"<<filename<<Qt::endl;
+            //qDebug()<<"We should remove file (but wont now)"<<filename<<endline;
             if(!QFile::remove(directory.filePath(filename))){
-                qDebug()<<"Failed to remove: "<<filename<<Qt::endl;
+                qDebug()<<"Failed to remove: "<<filename<<endline;
             }
         }
     }
@@ -441,14 +441,14 @@ bool todotxt::checkNeedForUndo(){
     slurp(todofile,todo);
     slurp(undofile,lastUndo);
     if(todo.size()!=lastUndo.size()){
-        qDebug()<<"Sizes differ: "<<todofile<<" vs "<<undofile<<Qt::endl;
+        qDebug()<<"Sizes differ: "<<todofile<<" vs "<<undofile<<endline;
         return true;
     }
 
     // We got this far, we have to go trhough the files line by line
     for(int i=0;i<(int) todo.size();i++){
         if(todo[i] != lastUndo[i]){
-            qDebug()<<todo[i]<<" != "<<lastUndo[i]<<Qt::endl;
+            qDebug()<<todo[i]<<" != "<<lastUndo[i]<<endline;
             return true;
         }
     }
@@ -480,8 +480,8 @@ void todotxt::saveToUndo()
         QFile::copy(getDeletedFilePath(),newdeleted);
 
         undoBuffer.push_back(namePrefix);
-        qDebug()<<"Added to undoBuffer: "<<namePrefix<<Qt::endl;
-        qDebug()<<"Buffer is now: "<<undoBuffer.size()<<Qt::endl;
+        qDebug()<<"Added to undoBuffer: "<<namePrefix<<endline;
+        qDebug()<<"Buffer is now: "<<undoBuffer.size()<<endline;
     }
 
 }

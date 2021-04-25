@@ -61,8 +61,6 @@
 #define SETTINGS_AUTOREFRESH "autorefresh"
 #define SETTINGS_GEOMETRY "geometry"
 #define SETTINGS_SAVESTATE "savestate"
-#define SETTINGS_POSITION "pos"
-#define SETTINGS_SIZE "size"
 #define SETTINGS_MAXIMIZED "maximized"
 #define SETTINGS_LIVE_SEARCH "liveSearch"
 #define SETTINGS_SORT_ALPHA "sort_alpha"

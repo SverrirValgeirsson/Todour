@@ -65,25 +65,9 @@ MainWindow::MainWindow(QWidget *parent) :
     setHotkey();
 
     // Restore the position of the window
-    auto rec = QApplication::desktop()->screenGeometry();
-    auto maxx = rec.height();
-    auto maxy = rec.width();
-    auto minx = rec.topLeft().x();
-    auto miny = rec.topLeft().y();
-
     QSettings settings;
     restoreGeometry(settings.value( SETTINGS_GEOMETRY, saveGeometry() ).toByteArray());
     restoreState(settings.value( SETTINGS_SAVESTATE, saveState() ).toByteArray());
-    auto p = settings.value(SETTINGS_POSITION, pos()).toPoint();
-
-    if(p.x()>=maxx-100 || p.x()<minx){
-       p.setX(minx); // Set to minx for safety
-    }
-    if(p.y()>=maxy-100 || p.y()<miny ){
-        p.setY(miny); // Set to miny for safety
-    }
-    move(p);
-    resize(settings.value( SETTINGS_SIZE, size() ).toSize());
     if ( settings.value( SETTINGS_MAXIMIZED, isMaximized() ).toBool() )
         showMaximized();
 
@@ -546,10 +530,6 @@ void MainWindow::cleanup(){
     settings.setValue( SETTINGS_GEOMETRY, saveGeometry() );
     settings.setValue( SETTINGS_SAVESTATE, saveState() );
     settings.setValue( SETTINGS_MAXIMIZED, isMaximized() );
-    if ( !isMaximized() ) {
-        settings.setValue( SETTINGS_POSITION, pos() );
-        settings.setValue( SETTINGS_SIZE, size() );
-    }
     settings.setValue(SETTINGS_SEARCH_STRING,ui->lineEdit_2->text());
     if(trayicon!=NULL){
         delete trayicon;

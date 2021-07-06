@@ -416,7 +416,11 @@ void todotxt::cleanupUndoDir()
     qDebug()<<"Checking for undo files to cleanup..."<<endline;
     foreach(QString filename, files) {
         auto finfo = QFileInfo(directory.filePath(filename));
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
         QDateTime created = finfo.birthTime();
+#else // QFileInfo::birthTime was introduced in QT 5.10
+        QDateTime created = finfo.created();
+#endif
         if(expirationTime.daysTo(created)<0 || !created.isValid()){
             //qDebug()<<"We should remove file (but wont now)"<<filename<<endline;
             if(!QFile::remove(directory.filePath(filename))){

@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Todour</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="resources.qrc">
+    <normaloff>:/icons/newicon.png</normaloff>:/icons/newicon.png</iconset>
+  </property>
   <property name="iconSize">
    <size>
     <width>24</width>
@@ -269,7 +273,7 @@ border-radius: 5px;
      <x>0</x>
      <y>0</y>
      <width>693</width>
-     <height>22</height>
+     <height>30</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -367,6 +371,8 @@ border-radius: 5px;
   <tabstop>pushButton_3</tabstop>
   <tabstop>pushButton_4</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

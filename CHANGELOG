@@ -1,3 +1,5 @@
+* Added icons in .deb build
+* Added icon on the window where supported
 * Multi-monitor support (for restoring)
 * Fixed a bug where the check for new version would basically always find a new version
 * Fixed bug introduced in 2.20 with automatically adding due: or t: when using rec:

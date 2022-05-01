@@ -1,3 +1,4 @@
+* Added scrollbars in settings dialog
 * Added icons in .deb build
 * Added icon on the window where supported
 * Multi-monitor support (for restoring)

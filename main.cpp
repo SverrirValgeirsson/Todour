@@ -5,6 +5,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     MainWindow w;
+    a.setWindowIcon(QIcon(":/icons/newicon.png"));
     w.show();
     
     return a.exec();

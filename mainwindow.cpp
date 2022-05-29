@@ -405,7 +405,7 @@ void MainWindow::setTray(){
             connect(trayicon, SIGNAL(activated(QSystemTrayIcon::ActivationReason)),
                         this, SLOT(iconActivated(QSystemTrayIcon::ActivationReason)));
 
-            trayicon->setIcon(QIcon(":/icons/newicon.png"));
+            trayicon->setIcon(QIcon(":/icons/todour.png"));
         }
         trayicon->show();
     }

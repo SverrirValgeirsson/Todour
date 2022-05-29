@@ -50,7 +50,7 @@ OTHER_FILES += \
     version.pl \
     myresource.rc \
     icon.icsn \
-    newicon.ico \
+    todour.ico \
     deploy.sh \
     todo.txt
 
@@ -58,6 +58,7 @@ DISTFILES += \
     Feature-move-show-all \
     Feature-AlwaysOnTop \
     Todour.desktop \
+    autobuild/Todour.desktop \
     todour-latest.php \
     LICENSE \
     README \
@@ -73,7 +74,7 @@ DISTFILES += \
     Feature-Setup-ini \
     Feature-tagstrip \
     PLAN.md \
-    newicon.png \
+    todour.png \
     autobuild/package-windows.sh \
     autobuild/Setup.iss \
     autobuild/README.md \

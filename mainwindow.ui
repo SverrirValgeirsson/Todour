@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="resources.qrc">
-    <normaloff>:/icons/newicon.png</normaloff>:/icons/newicon.png</iconset>
+    <normaloff>:/icons/todour.png</normaloff>:/icons/todour.png</iconset>
   </property>
   <property name="iconSize">
    <size>

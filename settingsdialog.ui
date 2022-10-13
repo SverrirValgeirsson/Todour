@@ -28,10 +28,10 @@
      <widget class="QWidget" name="scrollAreaWidgetContents">
       <property name="geometry">
        <rect>
-        <x>-12</x>
-        <y>0</y>
+        <x>0</x>
+        <y>-45</y>
         <width>530</width>
-        <height>742</height>
+        <height>772</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -402,6 +402,66 @@
             </size>
            </property>
           </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_14">
+         <item>
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Business days</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_monday">
+           <property name="text">
+            <string>Mon</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_tuesday">
+           <property name="text">
+            <string>Tue</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_wednesday">
+           <property name="text">
+            <string>Wed</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_thursday">
+           <property name="text">
+            <string>Thu</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_friday">
+           <property name="text">
+            <string>Fri</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_saturday">
+           <property name="text">
+            <string>Sat</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QCheckBox" name="cb_sunday">
+           <property name="text">
+            <string>Sun</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

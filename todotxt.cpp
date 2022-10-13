@@ -9,6 +9,8 @@
 #include <QDate>
 #include <set>
 #include <QSettings>
+#include <QList>
+#include <QVariant>
 #include <QRegularExpression>
 #include <QDebug>
 #include <QUuid>
@@ -273,6 +275,9 @@ QString todotxt::getToday(){
     return d.toString("yyyy-MM-dd");
 }
 
+
+Q_DECLARE_METATYPE(QList<int>)
+
 QString todotxt::getRelativeDate(QString shortform,QDate d){
     QString extra = "";
     // The short form supported for now is +\\dd
@@ -293,12 +298,20 @@ QString todotxt::getRelativeDate(QString shortform,QDate d){
             //extra = " +procrastinated";
         } else if (m.captured(2).contains('b')){
             // Business days. Naive implementation
+            QSettings settings;
+            QList<int> business_days = settings.value(SETTINGS_BUSINESS_DAYS, QVariant::fromValue(QList<int>())).value<QList<int> >();
+            if(business_days.size()==0){
+                // Hard code some defaults
+                for(int i=DEFAULT_BUSINESS_DAYS_FIRST;i<=DEFAULT_BUSINESS_DAYS_LAST;i++){
+                    business_days<<i;
+                }
+            }
             // 1=Monday, 6=Sat, 7=sun
             int days=0;
             int addDays = m.captured(1).toInt();
             while(days<addDays){
                 d = d.addDays(1); // add one at a time
-                if(d.dayOfWeek() <6){
+                if(business_days.contains(d.dayOfWeek())){
                     days++;
                 }
             }

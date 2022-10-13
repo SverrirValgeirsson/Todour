@@ -42,6 +42,10 @@
 #define DEFAULT_STAY_ON_TOP false
 #define DEFAULT_SEARCH_NOT_CHAR '!'
 #define DEFAULT_DEFAULT_THRESHOLD "due:"
+#define DEFAULT_BUSINESS_DAYS_FIRST 1
+#define DEFAULT_BUSINESS_DAYS_LAST 5
+
+
 
 // Names of settings in QSettings
 #define SETTINGS_DUE "due"
@@ -82,6 +86,7 @@
 #define SETTINGS_STAY_ON_TOP "stay_on_top"
 #define SETTINGS_SEARCH_NOT_CHAR "search_not_char"
 #define SETTINGS_DEFAULT_THRESHOLD "default_threshold"
+#define SETTINGS_BUSINESS_DAYS "business_days"
 
 enum prio_on_close {removeit=0,moveit,tagit};
 

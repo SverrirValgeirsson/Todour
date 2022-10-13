@@ -39,6 +39,24 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->search_not_char->setText(settings.value(SETTINGS_SEARCH_NOT_CHAR,DEFAULT_SEARCH_NOT_CHAR).toChar());
     ui->cb_default_threshold->setCurrentText(settings.value(SETTINGS_DEFAULT_THRESHOLD,DEFAULT_DEFAULT_THRESHOLD).toString());
 
+    // Business days
+    QList<int> business_days = settings.value(SETTINGS_BUSINESS_DAYS, QVariant::fromValue(QList<int>())).value<QList<int> >();
+    if(business_days.size()==0){
+        // Hard code some defaults
+        for(int i=DEFAULT_BUSINESS_DAYS_FIRST;i<=DEFAULT_BUSINESS_DAYS_LAST;i++){
+            business_days<<i;
+        }
+    }
+
+    ui->cb_monday->setChecked(business_days.contains(1));
+    ui->cb_tuesday->setChecked(business_days.contains(2));
+    ui->cb_wednesday->setChecked(business_days.contains(3));
+    ui->cb_thursday->setChecked(business_days.contains(4));
+    ui->cb_friday->setChecked(business_days.contains(5));
+    ui->cb_saturday->setChecked(business_days.contains(6));
+    ui->cb_sunday->setChecked(business_days.contains(7));
+
+
     // Handle the fonts
     activecolor=QColor::fromRgba(settings.value(SETTINGS_ACTIVE_COLOR,DEFAULT_ACTIVE_COLOR).toUInt());
     inactivecolor=QColor::fromRgba(settings.value(SETTINGS_INACTIVE_COLOR,DEFAULT_INACTIVE_COLOR).toUInt());
@@ -91,6 +109,25 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue(SETTINGS_REMOVE_DOUBLETS,ui->cb_removeDoublets->isChecked());
     if(ui->search_not_char->text().size()>0)
         settings.setValue(SETTINGS_SEARCH_NOT_CHAR,ui->search_not_char->text().at(0));
+
+    // Handle business days
+    QList<int> business_days;
+    if(ui->cb_monday->isChecked())
+        business_days<<1;
+    if(ui->cb_tuesday->isChecked())
+        business_days<<2;
+    if(ui->cb_wednesday->isChecked())
+        business_days<<3;
+    if(ui->cb_thursday->isChecked())
+        business_days<<4;
+    if(ui->cb_friday->isChecked())
+        business_days<<5;
+    if(ui->cb_saturday->isChecked())
+        business_days<<6;
+    if(ui->cb_sunday->isChecked())
+        business_days<<7;
+
+    settings.setValue(SETTINGS_BUSINESS_DAYS,QVariant::fromValue(business_days));
 
     refresh=true;
     this->close();

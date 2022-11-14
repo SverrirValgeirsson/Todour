@@ -167,6 +167,17 @@ bool todotxt::threshold_hide(QString &t){
         }
     }
 
+    // We can also choose to hide all due: labels the same way as t: for convenience
+    if(settings.value(SETTINGS_DUE_AS_THRESHOLD).toBool()){
+        auto matches=regex_due_date.globalMatch(t);
+        while(matches.hasNext()){
+            QString today = getToday();
+            QString td = matches.next().captured(1);
+            if(td.compare(today)>0){
+                return true; // Don't show this one since it's in the future
+            }
+        }
+    }
 
     if(settings.value(SETTINGS_THRESHOLD_LABELS).toBool()){
         auto matches=regex_threshold_project.globalMatch(t);

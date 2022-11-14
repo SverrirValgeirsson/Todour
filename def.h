@@ -44,6 +44,7 @@
 #define DEFAULT_DEFAULT_THRESHOLD "due:"
 #define DEFAULT_BUSINESS_DAYS_FIRST 1
 #define DEFAULT_BUSINESS_DAYS_LAST 5
+#define DEFAULT_DUE_AS_THRESHOLD false
 
 
 
@@ -87,6 +88,7 @@
 #define SETTINGS_SEARCH_NOT_CHAR "search_not_char"
 #define SETTINGS_DEFAULT_THRESHOLD "default_threshold"
 #define SETTINGS_BUSINESS_DAYS "business_days"
+#define SETTINGS_DUE_AS_THRESHOLD "due_as_threshold"
 
 enum prio_on_close {removeit=0,moveit,tagit};
 

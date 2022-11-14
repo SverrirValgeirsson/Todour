@@ -29,9 +29,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-45</y>
-        <width>530</width>
-        <height>772</height>
+        <y>0</y>
+        <width>500</width>
+        <height>774</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -306,6 +306,13 @@
         <widget class="QCheckBox" name="cb_threshold_label">
          <property name="text">
           <string>Respect threshold contexts and projecs (t:+project or t:@context)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="cb_due_as_threshold">
+         <property name="text">
+          <string>Treat due as threshold</string>
          </property>
         </widget>
        </item>

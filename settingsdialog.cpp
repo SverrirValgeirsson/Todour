@@ -25,6 +25,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->cb_threshold->setChecked(settings.value(SETTINGS_THRESHOLD,DEFAULT_THRESHOLD).toBool());
     ui->cb_threshold_label->setChecked(settings.value(SETTINGS_THRESHOLD_LABELS,DEFAULT_THRESHOLD_LABELS).toBool());
     ui->cb_threshold_inactive->setChecked(settings.value(SETTINGS_THRESHOLD_INACTIVE,DEFAULT_THRESHOLD_INACTIVE).toBool());
+    ui->cb_due_as_threshold->setChecked(settings.value(SETTINGS_DUE_AS_THRESHOLD,DEFAULT_DUE_AS_THRESHOLD).toBool());
     ui->cb_dates->setChecked(settings.value(SETTINGS_DATES,DEFAULT_DATES).toBool());
     ui->cb_showdates->setChecked(settings.value(SETTINGS_SHOW_DATES,DEFAULT_SHOW_DATES).toBool());
     ui->cb_liveSearch->setChecked(settings.value(SETTINGS_LIVE_SEARCH,DEFAULT_LIVE_SEARCH).toBool());
@@ -99,6 +100,7 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue(SETTINGS_THRESHOLD,ui->cb_threshold->isChecked());
     settings.setValue(SETTINGS_THRESHOLD_LABELS,ui->cb_threshold_label->isChecked());
     settings.setValue(SETTINGS_THRESHOLD_INACTIVE,ui->cb_threshold_inactive->isChecked());
+    settings.setValue(SETTINGS_DUE_AS_THRESHOLD,ui->cb_due_as_threshold->isChecked());
     settings.setValue(SETTINGS_TRAY_ENABLED,ui->cb_tray_icon->isChecked());
     settings.setValue(SETTINGS_DUE,ui->cb_due->isChecked());
     settings.setValue(SETTINGS_DUE_WARNING,ui->sb_due_warning->value());

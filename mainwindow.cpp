@@ -683,3 +683,9 @@ void MainWindow::on_actionStay_On_Top_changed()
     settings.setValue(SETTINGS_STAY_ON_TOP,ui->actionStay_On_Top->isChecked());
     stayOnTop();
 }
+
+void MainWindow::on_actionManual_triggered()
+{
+    QDesktopServices::openUrl(QUrl("https://sverrirvalgeirsson.github.io/Todour"));
+}
+

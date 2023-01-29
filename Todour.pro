@@ -25,7 +25,7 @@ include(QtAwesome/QtAwesome/QtAwesome.pri)
 include(UGlobalHotkey/uglobalhotkey.pri)
 
 SOURCES += main.cpp\
-        mainwindow.cpp \
+    mainwindow.cpp \
     todotxt.cpp \
     todotablemodel.cpp \
     settingsdialog.cpp \

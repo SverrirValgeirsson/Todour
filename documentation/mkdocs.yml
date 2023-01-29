@@ -1,0 +1,7 @@
+site_name: Todour
+nav:
+    - 'index.md'
+    - 'generic usage.md'
+    - 'commands.md'
+    - 'settings.md'
+    - 'License.md'

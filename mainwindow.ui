@@ -273,7 +273,7 @@ border-radius: 5px;
      <x>0</x>
      <y>0</y>
      <width>693</width>
-     <height>30</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -289,6 +289,7 @@ border-radius: 5px;
     </property>
     <addaction name="actionAbout"/>
     <addaction name="actionCheck_for_updates"/>
+    <addaction name="actionManual"/>
    </widget>
    <widget class="QMenu" name="menuEdit">
     <property name="title">
@@ -359,6 +360,11 @@ border-radius: 5px;
    </property>
    <property name="text">
     <string>Stay On Top</string>
+   </property>
+  </action>
+  <action name="actionManual">
+   <property name="text">
+    <string>Manual..</string>
    </property>
   </action>
  </widget>

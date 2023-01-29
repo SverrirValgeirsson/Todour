@@ -90,6 +90,8 @@ private slots:
 
     void on_actionStay_On_Top_changed();
 
+    void on_actionManual_triggered();
+
 private:
     void setFileWatch();
     void requestPage(QString &s);

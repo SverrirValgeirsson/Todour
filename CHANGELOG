@@ -1,3 +1,4 @@
+* Added documentation on GitHub pages 
 * Added support for treating due as threshold
 * Added support for "business days" https://github.com/SverrirValgeirsson/Todour/issues/31
 * Updated QtAwesome

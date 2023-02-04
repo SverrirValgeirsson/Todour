@@ -11,12 +11,14 @@ The different qualifiers available in todour are:
 |due:+Xm            | N           | Creates a due date X months in the future |
 |due:+Xb            | N           | Creates a due date X business days in the future |
 |due:+Xy            | N           | Creates a due date X years in the future |
+|due:+Xp            | N           | Creates a due date a random number of days between 1-X in the future |
 |t:YYYY-MM-DD       | Y           | Threshold. Hides a task until the date set |
 |t:+Xd              | N           | Set a threshold X days in the future |
 |t:+Xw              | N           | Set a threshold X weeks in the future |
 |t:+Xm              | N           | Set a threshold X months in the future |
 |t:+Xb              | N           | Set a threshold X business days in the future |
 |t:+Xy              | N           | Set a threshold X years in the future |
+|t:+Xp            | N           | Creates a threshold a random number of days between 1-X in the future |
 |t:+project         | N           | Threshold. Hide this line until all lines with +project are done |
 |t:@context         | N           | Threshold. Hide this line until all lines with @context are done |
 |rec:Xd             | N           | Recurrence. To use together with due:YYYY-MM-dd and/or t:YYYY-MM-dd.  When you close this task, create a copy with due and or threshold set X days in the future from today (depending on settings). If there is no due or t, one will be added (depending on settings) |
@@ -29,5 +31,6 @@ The different qualifiers available in todour are:
 |rec:+Xm             | N           | Recurrence. Same as rec:+Xd but for months |
 |rec:+Xy             | N           | Recurrence. Same as rec:+Xd but for years |
 |rec:+Xb             | N           | Recurrence. Same as rec:+Xd but for business days |
+|rec:+Xp            | N           | Creates a recurrence a random number of days between 1-X in the future |
 
 

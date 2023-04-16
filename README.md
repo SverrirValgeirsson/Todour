@@ -5,6 +5,10 @@ You can always download the latest release on [nerdur.com](https://nerdur.com/to
 
 The program uses QtAwesome for the icons. 
 
+# Documentation
+https://sverrirvalgeirsson.github.io/Todour/
+
+
 # Downloading
 ```
 git clone https://github.com/SverrirValgeirsson/Todour.git

@@ -570,6 +570,12 @@ void todotxt::write(QString& filename,vector<QString>&  content){
         for(unsigned int i = 0;	i<content.size(); i++)
             out << content.at(i) << "\n";
 
+        // I have been having issues with the file being chopped off somewhat
+        // when saving it on nextcloud. This should be automatically handled in the
+        // destructor, but here is an attempt to be expicit and see if it works better.
+
+        file.flush();
+        file.close();
 
 }
 

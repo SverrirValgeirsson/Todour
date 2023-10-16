@@ -167,13 +167,18 @@ bool todotxt::threshold_hide(QString &t){
         }
     }
 
+//Gaetan modification 15/10/23: Consider showing the due task in the warning period.
     // We can also choose to hide all due: labels the same way as t: for convenience
     if(settings.value(SETTINGS_DUE_AS_THRESHOLD).toBool()){
         auto matches=regex_due_date.globalMatch(t);
         while(matches.hasNext()){
-            QString today = getToday();
+            // QString today = getToday();
+            QDate d = QDate::currentDate();
+            d = d.addDays(settings.value(SETTINGS_DUE_WARNING,DEFAULT_DUE_WARNING).toInt());
+            QString cdate = d.toString("yyyy-MM-dd");
+               
             QString td = matches.next().captured(1);
-            if(td.compare(today)>0){
+            if(td.compare(cdate)>0){
                 return true; // Don't show this one since it's in the future
             }
         }

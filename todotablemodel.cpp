@@ -37,7 +37,8 @@ QString TodoTableModel::getTodoFile(){
 
 int TodoTableModel::columnCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
-    return 2;
+//    return 2;
+    return 3;   //GAETAN Modified 15/10/23
 }
 
 QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
@@ -72,6 +73,15 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
         if(index.column()==0)
             return todo->getState(todo_data.at(index.row()));
     }
+
+
+//Added by Gaetan 15/10/2023
+    if(role == Qt::CheckStateRole) {
+        if(index.column()==2)
+            return 1;
+    }
+// ---
+
 
     if(role == Qt::FontRole) {
         if(index.column()==1){
@@ -138,6 +148,11 @@ QVariant TodoTableModel::headerData(int section, Qt::Orientation orientation, in
           return "Todo";
       }
 
+//Added by Gaetan  15/10/2023
+      if(section==2){
+          return "Postpone";
+      }
+
     }
 
   return QVariant::Invalid;
@@ -145,7 +160,6 @@ QVariant TodoTableModel::headerData(int section, Qt::Orientation orientation, in
 
 bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
 {
-
     if(index.column()==0 && role == Qt::CheckStateRole)
     {
         beginResetModel();
@@ -156,6 +170,20 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
         bool checked = true?todo_data.at(index.row()).at(0)=='x':false;
         QString s=value.toString();
         todo->update(todo_data.at(index.row()),checked,s);
+//Added Gaetan 15/10/2023
+    }
+    else if(index.column()==2)
+    {
+        beginResetModel();
+        QDate d = QDate::currentDate();
+         d = d.addDays(7);
+        QString str=todo_data.at(index.row());
+        // QString str="yoyo";
+        str += " t:";
+        str += d.toString("yyyy-MM-dd");
+        todo->update(todo_data.at(index.row()),false,str);
+//--- 
+
     } else {
         // Nothing changed
         return false;
@@ -211,6 +239,14 @@ Qt::ItemFlags TodoTableModel::flags(const QModelIndex& index) const
   if (index.column()==1){
      returnFlags |= Qt::ItemIsEditable | Qt::ItemNeverHasChildren;
   }
+
+//Add by Gaetan 15/10/2023
+  if (index.column() == 2)
+  {
+    returnFlags |= Qt::ItemIsUserCheckable;
+  }
+// ---
+
 
   return returnFlags;
 }

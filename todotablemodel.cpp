@@ -60,6 +60,13 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
             QString s=todo->prettyPrint((todo_data.at(index.row())),false);
             return s;
         }
+
+        if(index.column()==2){//GAETAN Modified 01/01/24 : "Postpone column"
+            QString s=QString::asprintf("Postpone column");
+            return s;
+        }//END GAETAN MODIF.
+
+
      }
 
     if (role == Qt::EditRole) {
@@ -160,6 +167,8 @@ QVariant TodoTableModel::headerData(int section, Qt::Orientation orientation, in
 
 bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
 {
+    QSettings settings;
+
     if(index.column()==0 && role == Qt::CheckStateRole)
     {
         beginResetModel();
@@ -175,12 +184,8 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
     else if(index.column()==2)
     {
         beginResetModel();
-        QDate d = QDate::currentDate();
-         d = d.addDays(7);
         QString str=todo_data.at(index.row());
-        // QString str="yoyo";
-        str += " t:";
-        str += d.toString("yyyy-MM-dd");
+        str = str + " " + settings.value(SETTINGS_POSTPONE_STRING, DEFAULT_POSTPONE_STRING).toString();
         todo->update(todo_data.at(index.row()),false,str);
 //--- 
 

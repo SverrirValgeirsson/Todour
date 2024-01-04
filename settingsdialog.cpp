@@ -57,6 +57,9 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->cb_saturday->setChecked(business_days.contains(6));
     ui->cb_sunday->setChecked(business_days.contains(7));
 
+   //Postpone
+    ui->postpone_string->setText(settings.value(SETTINGS_POSTPONE_STRING,DEFAULT_POSTPONE_STRING).toString());
+
 
     // Handle the fonts
     activecolor=QColor::fromRgba(settings.value(SETTINGS_ACTIVE_COLOR,DEFAULT_ACTIVE_COLOR).toUInt());
@@ -131,6 +134,11 @@ void SettingsDialog::on_buttonBox_accepted()
 
     settings.setValue(SETTINGS_BUSINESS_DAYS,QVariant::fromValue(business_days));
 
+   //postpone
+    if(ui->postpone_string->text().size()>0)
+        settings.setValue(SETTINGS_POSTPONE_STRING,ui->postpone_string->text());
+
+
     refresh=true;
     this->close();
 }
@@ -198,7 +206,7 @@ void SettingsDialog::on_pb_warningColor_clicked()
     QSettings settings;
 //    QColor c = QColorDialog::getRgba(settings.value(SETTINGS_DUE_WARNING_COLOR,DEFAULT_DUE_WARNING_COLOR).toInt());
     QColor c = QColorDialog::getColor(QColor::fromRgb(settings.value(SETTINGS_DUE_WARNING_COLOR,DEFAULT_DUE_WARNING_COLOR).toInt()),this);
-    settings.setValue(SETTINGS_DUE_WARNING_COLOR,c.rgba());
+      settings.setValue(SETTINGS_DUE_WARNING_COLOR,c.rgba());
     updateFonts();
 }
 

@@ -61,8 +61,8 @@ MainWindow::MainWindow(QWidget *parent) :
         qDebug()<<"Setting ini file path to: "<<QDir::currentPath()<<endline;
     }
 
-    hotkey = new UGlobalHotkeys();
-    setHotkey();
+   // hotkey = new UGlobalHotkeys(); //Commented by Gaetan because SegFault.
+   // setHotkey();//Commented by Gaetan because SegFault.
 
     // Restore the position of the window
     QSettings settings;
@@ -107,6 +107,9 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(editshortcut,SIGNAL(activated()),ui->lineEdit,SLOT(setFocus()));
     auto findshortcut = new QShortcut(QKeySequence(tr("Ctrl+f")),this);
     QObject::connect(findshortcut,SIGNAL(activated()),ui->lineEdit_2,SLOT(setFocus()));
+    auto findshortcut2 = new QShortcut(QKeySequence(tr("F3")),this);
+    QObject::connect(findshortcut2,SIGNAL(activated()),ui->lineEdit_2,SLOT(setFocus()));
+
     //auto contextshortcut = new QShortcut(QKeySequence(tr("Ctrl+l")),this);
     //QObject::connect(contextshortcut,SIGNAL(activated()),ui->context_lock,SLOT(setChecked(!(ui->context_lock->isChecked()))));
     QObject::connect(model,SIGNAL(dataChanged (const QModelIndex , const QModelIndex )),this,SLOT(dataInModelChanged(QModelIndex,QModelIndex)));

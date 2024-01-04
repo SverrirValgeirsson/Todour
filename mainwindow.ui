@@ -103,7 +103,7 @@ border-radius: 5px;
 </string>
         </property>
         <property name="placeholderText">
-         <string>search</string>
+         <string>search (F3)</string>
         </property>
         <property name="clearButtonEnabled">
          <bool>true</bool>

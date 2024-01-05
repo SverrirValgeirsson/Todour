@@ -3,7 +3,6 @@
 
 #include "todotablemodel.h"
 
-#include "todotxt.h"
 #include "settingsdialog.h"
 #include "quickadddialog.h"
 #include "aboutbox.h"
@@ -46,6 +45,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QCoreApplication::setOrganizationDomain("nerdur-debug.com");
     QCoreApplication::setApplicationName("Todour-Debug");
     title.append("-DEBUG-");
+    qDebug()<<"Hello, we should be in debug mode."<<endline;
 #endif
 
     title.append(VER);
@@ -61,8 +61,8 @@ MainWindow::MainWindow(QWidget *parent) :
         qDebug()<<"Setting ini file path to: "<<QDir::currentPath()<<endline;
     }
 
-   // hotkey = new UGlobalHotkeys(); //Commented by Gaetan because SegFault.
-   // setHotkey();//Commented by Gaetan because SegFault.
+   // hotkey = new UGlobalHotkeys();
+   // setHotkey();
 
     // Restore the position of the window
     QSettings settings;
@@ -181,7 +181,7 @@ MainWindow::~MainWindow()
 
 QSortFilterProxyModel *proxyModel=NULL;
 
-QFileSystemWatcher *watcher;
+//QFileSystemWatcher *watcher;
 
 void MainWindow::updateTitle(){
     // The title is initialized to the name and version number at start and that is stored in baseTitle
@@ -227,25 +227,28 @@ void MainWindow::fileModified(const QString &str){
     setFileWatch();
 }
 
-void MainWindow::clearFileWatch(){
-    if(watcher != NULL){
-        delete watcher;
-        watcher = NULL;
-    }
+void MainWindow::clearFileWatch(){ // modified gaetandc 4/1/24
+//    if(watcher != NULL){
+//        delete watcher;
+//       watcher = NULL;
+//    }
+model->clearFileWatch();
 }
 
-void MainWindow::setFileWatch(){
+void MainWindow::setFileWatch(){ // modified gaetandc 4/1/24
     QSettings settings;
     if(settings.value(SETTINGS_AUTOREFRESH).toBool()==false)
            return;
 
-    clearFileWatch();
+    model->clearFileWatch();
 
-    watcher = new QFileSystemWatcher();
-    //qDebug()<<"Mainwindow::setFileWatch :: "<<watcher->files();
-    watcher->removePaths(watcher->files()); // Make sure this is empty. Should only be this file we're using in this program, and only one instance
-    watcher->addPath(model->getTodoFile());
-    QObject::connect(watcher, SIGNAL(fileChanged(QString)), this, SLOT(fileModified(QString)));
+//    watcher = new QFileSystemWatcher();
+//    //qDebug()<<"Mainwindow::setFileWatch :: "<<watcher->files();
+//    watcher->removePaths(watcher->files()); // Make sure this is empty. Should only be this file we're using in this program, and only one instance
+//    watcher->addPath(model->getTodoFile());
+//   QObject::connect(watcher, SIGNAL(fileChanged(QString)), this, SLOT(fileModified(QString)));
+   model->setFileWatch((QObject*) this);
+
 }
 
 

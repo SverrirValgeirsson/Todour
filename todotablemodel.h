@@ -24,12 +24,16 @@ public:
     void archive();
     void refresh();
     int count();
-    QString getTodoFile();
+//    QString getTodoFile(); removed gaetandc 4/1/24
     QModelIndexList match(const QModelIndex &start, int role, const QVariant &value, int hits = 1, Qt::MatchFlags flags = Qt::MatchFlags( Qt::MatchStartsWith | Qt::MatchWrap )) const;
     bool undo();
     bool redo();
     bool undoPossible(); // Say if undo is possible or not
     bool redoPossible(); // Say if redo is possible or not
+
+   void clearFileWatch(); //gaetan 5/1/24
+   void setFileWatch(QObject *parent); //gaetan 5/1/24
+
 
 signals:
    //void dataChanged(QModelIndex i1,QModelIndex i2,QVector<int> v); Borde inte behövas. Det finns ju redan

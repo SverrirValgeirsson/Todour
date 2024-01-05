@@ -34,25 +34,23 @@ public:
     todotxt();
     ~todotxt();
     void setdirectory(QString &dir);
-    void parse(); // Parses the files in the directory
+    void parse(); // Parses the files in the directory  
     void getActive(QString& filter,vector<QString> &output);
     void getAll(QString& filter,vector<QString> &output);
     Qt::CheckState getState(QString& row);
     static QString prettyPrint(QString& row,bool forEdit=false);
     void update(QString& row,bool checked,QString& newrow);
-    void write(QString& filename,vector<QString>&  content);
-    void slurp(QString& filename,vector<QString>&  content);
     QString getURL(QString &line);
     void remove(QString line);
     void archive();
     void refresh();
     bool isInactive(QString& text);
     int  dueIn(QString& text);
-    QString getToday();
-    QString getTodoFilePath();
-    QString getDoneFilePath();
-    QString getDeletedFilePath();
-    QString getRelativeDate(QString shortform,QDate d=QDate::currentDate());
+
+   void clearFileWatch(); //gaetan 5/1/24
+   void setFileWatch(QObject *parent); //gaetan 5/1/24
+
+
 
     // Undo and Redo
 public:
@@ -69,6 +67,11 @@ protected:
     bool    checkNeedForUndo();
     void    restoreFiles(QString);
 
+    void write(QString& filename,vector<QString>&  content);
+    void slurp(QString& filename,vector<QString>&  content);
+    QString getToday();
+
+
     vector<QString> undoBuffer; // A buffer with base filenames for undos
     int undoPointer = 0; // Pointer into the undo buffer for undo and redo. Generally should be 0
 
@@ -82,6 +85,13 @@ protected:
 
     static void String2Todo(QString &line,todoline &t);
     static QString Todo2String(todoline &t);
+
+
+private:
+    QString getTodoFilePath();
+    QString getDoneFilePath();
+    QString getDeletedFilePath();
+    QString getRelativeDate(QString shortform,QDate d=QDate::currentDate());
 
 
 };

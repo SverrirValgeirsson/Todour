@@ -1,5 +1,5 @@
 #include "todotablemodel.h"
-#include "todotxt.h"
+
 #include "globals.h"
 #include "def.h"
 #include <QFont>
@@ -31,9 +31,9 @@ int TodoTableModel::rowCount(const QModelIndex &parent) const {
 }
 
 
-QString TodoTableModel::getTodoFile(){
-    return todo->getTodoFilePath();
-}
+//QString TodoTableModel::getTodoFile(){   //removed gaetandc 4/1/24
+//    return todo->getTodoFilePath();
+//}
 
 int TodoTableModel::columnCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
@@ -297,4 +297,16 @@ bool TodoTableModel::redoPossible()
 int TodoTableModel::count(){
     return this->rowCount(QModelIndex());
 }
+
+// gaetandc 4/1/24
+void TodoTableModel::clearFileWatch()
+{
+   todo->clearFileWatch();
+}
+
+void TodoTableModel::setFileWatch(QObject *parent)
+{
+   todo->setFileWatch(parent);
+}
+
 

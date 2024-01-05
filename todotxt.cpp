@@ -15,6 +15,7 @@
 #include <QDebug>
 #include <QUuid>
 #include <QDir>
+#include <QFileSystemWatcher>  //Gaetandc 5/1/24
 #include "def.h"
 
 todotxt::todotxt()
@@ -872,3 +873,27 @@ QString todotxt::getURL(QString &line){
         return "";
     }
 }
+
+
+// gaetandc 4/1/24
+QFileSystemWatcher *watcher;
+
+
+void todotxt::clearFileWatch()
+{
+    if(watcher != NULL){
+        delete watcher;
+        watcher = NULL;
+    }
+}
+
+void todotxt::setFileWatch(QObject *parent)
+{
+    watcher = new QFileSystemWatcher();
+    //qDebug()<<"Mainwindow::setFileWatch :: "<<watcher->files();
+    watcher->removePaths(watcher->files()); // Make sure this is empty. Should only be this file we're using in this program, and only one instance
+    watcher->addPath(getTodoFilePath());
+    QObject::connect(watcher, SIGNAL(fileChanged(QString)), parent, SLOT(fileModified(QString)));
+
+}
+

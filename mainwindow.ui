@@ -170,7 +170,11 @@ border-radius: 5px;
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QLineEdit" name="lineEdit"/>
+       <widget class="QLineEdit" name="lineEdit">
+        <property name="placeholderText">
+         <string>New (ctrl-n)</string>
+        </property>
+      </widget>
       </item>
       <item>
        <widget class="QPushButton" name="pushButton">

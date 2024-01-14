@@ -51,7 +51,7 @@ private slots:
 
     void on_lineEdit_returnPressed();
 
-    void on_pushButton_2_clicked();
+//    void on_pushButton_2_clicked();
 
     void on_pushButton_3_clicked();
 
@@ -91,6 +91,13 @@ private slots:
     void on_actionStay_On_Top_changed();
 
     void on_actionManual_triggered();
+    
+    
+//Gaetandc 4/1/24
+   void on_actionEdit();
+   void on_actionDelete();
+   void on_actionPostpone();
+   void on_actionDuplicate();
 
 private:
     void setFileWatch();
@@ -114,6 +121,13 @@ private:
     QAction *maximizeAction;
     QAction *restoreAction;
     QAction *quitAction;
+    
+    
+    QMenu *rClickMenu=NULL;
+    QAction *editAction;
+    QAction *deleteAction;
+    QAction *postponeAction;
+    QAction *duplicateAction;
 };
 
 #endif // MAINWINDOW_H

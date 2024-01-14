@@ -23,6 +23,7 @@
 #include <QDesktopServices>
 #include <QUuid>
 
+
 QNetworkAccessManager *networkaccessmanager;
 TodoTableModel *model=NULL;
 QString saved_selection; // Used for selection memory
@@ -86,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->pushButton_3->setIcon(awesome->icon( fa::signout ));
     ui->pushButton_4->setIcon(awesome->icon( fa::refresh ));
     ui->pushButton->setIcon(awesome->icon( fa::plus ));
-    ui->pushButton_2->setIcon(awesome->icon( fa::minus ));
+//    ui->pushButton_2->setIcon(awesome->icon( fa::minus ));
     ui->context_lock->setIcon(awesome->icon(fa::lock));
     ui->pb_closeVersionBar->setIcon(awesome->icon(fa::times));
 
@@ -137,7 +138,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setFontSize();
 
     // Version check
-    if(settings.value(SETTINGS_CHECK_UPDATES,DEFAULT_CHECK_UPDATES).toBool()){
+    if(settings.value(SETTINGS_CHECK_UPDATES,!DEFAULT_CHECK_UPDATES).toBool()){
         QString last_check = settings.value(SETTINGS_LAST_UPDATE_CHECK,"").toString();
         if(last_check.isEmpty()){
             // We set this up so that first check will be later, giving users ample time to turn off the feature.
@@ -155,6 +156,23 @@ MainWindow::MainWindow(QWidget *parent) :
             requestPage(URL);
         }
     }
+    rClickMenu=new QMenu(this);
+    editAction = new QAction("&Edit", this);
+    deleteAction = new QAction("&Delete", this);
+    postponeAction = new QAction("&Postpone +10p", this);
+    duplicateAction = new QAction("&Duplicate", this);
+    
+   connect(editAction, SIGNAL(triggered()), this, SLOT(on_actionEdit()));
+   connect(duplicateAction, SIGNAL(triggered()), this, SLOT(on_actionDuplicate()));
+   connect(deleteAction, SIGNAL(triggered()), this, SLOT(on_actionDelete()));
+   connect(postponeAction, SIGNAL(triggered()), this, SLOT(on_actionPostpone()));
+
+
+    rClickMenu->addAction(deleteAction);
+    rClickMenu->addAction(duplicateAction);
+    rClickMenu->addAction(editAction);
+    rClickMenu->addAction(postponeAction);
+
 
 }
 
@@ -467,6 +485,7 @@ void MainWindow::on_lineEdit_returnPressed()
     on_pushButton_clicked();
 }
 
+/*
 void MainWindow::on_pushButton_2_clicked()
 {
     // Remove the selected item
@@ -479,7 +498,10 @@ void MainWindow::on_pushButton_2_clicked()
         model->remove(t);
     }
     updateTitle();
+Removed bu Gaetandc 4/1/24  - Delete is now in Right-Click Menu
+
 }
+*/
 
 void MainWindow::on_pushButton_3_clicked()
 {
@@ -651,12 +673,17 @@ void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
 {
     // This is used for triggering opening of a link.
     // Find out where we are
+
     auto index = ui->tableView->indexAt(pos);
     QString URL=ui->tableView->model()->data(index,Qt::UserRole+1).toString();
+    qDebug()<<"mainwindow.cpp - contextmenu clicked on"<<ui->tableView->model()->data(index,Qt::UserRole).toString()<<endline;
+
+    rClickMenu->popup(ui->tableView->viewport()->mapToGlobal(pos));
+
     if(!URL.isEmpty()){
         QDesktopServices::openUrl(URL);
     }
-
+    
 }
 
 void MainWindow::on_actionQuit_triggered()
@@ -694,4 +721,59 @@ void MainWindow::on_actionManual_triggered()
 {
     QDesktopServices::openUrl(QUrl("https://sverrirvalgeirsson.github.io/Todour"));
 }
+
+
+//GaetanDC 4/1/24
+void MainWindow::on_actionEdit()
+{
+   QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+    if(!indexes.empty()){
+        QModelIndex i=indexes.at(0);
+        ui->tableView->edit(i);
+    }
+
+}
+
+void MainWindow::on_actionDelete()
+{
+   // Remove the selected item
+    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+    // Only support for deleting one item at a time
+    if(!indexes.empty()){
+        QModelIndex i=indexes.at(0);
+        QString t=model->data(proxyModel->mapToSource(i),Qt::UserRole).toString(); // User Role is Raw data
+        model->remove(t);
+    }
+    updateTitle();
+
+}
+
+void MainWindow::on_actionPostpone()
+{
+   qDebug()<<"on_actionPostpone()"<<endline;
+   QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+    if(!indexes.empty()){
+        QModelIndex i=indexes.at(0);
+ //       QString t=model->data(proxyModel->mapToSource(i),Qt::UserRole).toString(); // User Role is Raw data
+        model->append(i,"t:+10p");
+    }
+    updateTitle();
+
+}
+
+void MainWindow::on_actionDuplicate()
+{
+   qDebug()<<"on_actionDuplicate()"<<endline;
+   QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+   QModelIndex i;
+   if(!indexes.empty()){
+        i=indexes.at(0);
+        QString t=model->data(proxyModel->mapToSource(i),Qt::UserRole).toString(); // User Role is Raw data
+        model->add(t);
+        updateTitle();   
+//   ui->tableView->edit(i);  //wanted to automatically make a "edit" of the new line, but not working...
+  }
+
+
+ }
 

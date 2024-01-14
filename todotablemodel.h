@@ -2,6 +2,7 @@
 #define TODOTABLEMODEL_H
 
 #include <QAbstractTableModel>
+#include <QMouseEvent>
 #include "todotxt.h"
 
 class TodoTableModel : public QAbstractTableModel
@@ -33,6 +34,8 @@ public:
 
    void clearFileWatch(); //gaetan 5/1/24
    void setFileWatch(QObject *parent); //gaetan 5/1/24
+   void append(const QModelIndex & index, QString data);
+
 
 
 signals:
@@ -40,6 +43,9 @@ signals:
     
 public slots:
     
+
+private:
+
 };
 
 #endif // TODOTABLEMODEL_H

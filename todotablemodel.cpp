@@ -37,8 +37,7 @@ int TodoTableModel::rowCount(const QModelIndex &parent) const {
 
 int TodoTableModel::columnCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
-//    return 2;
-    return 3;   //GAETAN Modified 15/10/23
+    return 2;
 }
 
 QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
@@ -61,12 +60,6 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
             return s;
         }
 
-        if(index.column()==2){//GAETAN Modified 01/01/24 : "Postpone column"
-            QString s=QString::asprintf("Postpone column");
-            return s;
-        }//END GAETAN MODIF.
-
-
      }
 
     if (role == Qt::EditRole) {
@@ -81,13 +74,6 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
             return todo->getState(todo_data.at(index.row()));
     }
 
-
-//Added by Gaetan 15/10/2023
-    if(role == Qt::CheckStateRole) {
-        if(index.column()==2)
-            return 1;
-    }
-// ---
 
 
     if(role == Qt::FontRole) {
@@ -154,12 +140,6 @@ QVariant TodoTableModel::headerData(int section, Qt::Orientation orientation, in
       if(section==1){
           return "Todo";
       }
-
-//Added by Gaetan  15/10/2023
-      if(section==2){
-          return "Postpone";
-      }
-
     }
 
   return QVariant::Invalid;
@@ -179,15 +159,6 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
         bool checked = true?todo_data.at(index.row()).at(0)=='x':false;
         QString s=value.toString();
         todo->update(todo_data.at(index.row()),checked,s);
-//Added Gaetan 15/10/2023
-    }
-    else if(index.column()==2)
-    {
-        beginResetModel();
-        QString str=todo_data.at(index.row());
-        str = str + " " + settings.value(SETTINGS_POSTPONE_STRING, DEFAULT_POSTPONE_STRING).toString();
-        todo->update(todo_data.at(index.row()),false,str);
-//--- 
 
     } else {
         // Nothing changed
@@ -309,4 +280,16 @@ void TodoTableModel::setFileWatch(QObject *parent)
    todo->setFileWatch(parent);
 }
 
+void TodoTableModel::append(const QModelIndex & index, QString data)
+{
+   beginResetModel();
+   QString str=todo_data.at(index.row());
+   str = str + " " + data;
+
+   todo->update(todo_data.at(index.row()),false,str);
+
+   emit dataChanged(index, index);
+   endResetModel();
+
+}
 

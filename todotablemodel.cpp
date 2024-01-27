@@ -30,11 +30,6 @@ int TodoTableModel::rowCount(const QModelIndex &parent) const {
     return size;
 }
 
-
-//QString TodoTableModel::getTodoFile(){   //removed gaetandc 4/1/24
-//    return todo->getTodoFilePath();
-//}
-
 int TodoTableModel::columnCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
     return 2;
@@ -151,11 +146,11 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
 
     if(index.column()==0 && role == Qt::CheckStateRole)
     {
-        beginResetModel();
+        QAbstractItemModel::beginResetModel();
         todo->update(todo_data.at(index.row()),value.toBool(),todo_data.at(index.row()));
     }
     else if(index.column()==1 && role == Qt::EditRole){
-        beginResetModel();
+        QAbstractItemModel::beginResetModel();
         bool checked = true?todo_data.at(index.row()).at(0)=='x':false;
         QString s=value.toString();
         todo->update(todo_data.at(index.row()),checked,s);
@@ -167,7 +162,7 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
 
    todo_data.clear();
 
-  endResetModel();
+  QAbstractItemModel::endResetModel();
 
   emit dataChanged(index, index); // Detta innebär ju också att denna item är den som är selected just nu så vi kan lyssna på den signalen
 
@@ -175,33 +170,33 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
 }
 
 void TodoTableModel::add(QString text){
-    beginResetModel();
+    QAbstractItemModel::beginResetModel();
     QString temp;
     todo->update(temp,false,text.replace('\n',' ')); // Make sure newlines don't get through as that would create multiple rows
     todo_data.clear();
-    endResetModel();
+    QAbstractItemModel::endResetModel();
 }
 
 void TodoTableModel::remove(QString text){
-    beginResetModel();
+    QAbstractItemModel::beginResetModel();
     todo->remove(text);
     // Old way : QString temp;todo->update(text,false,temp); // Sending in an empty string = remove
     todo_data.clear();
-    endResetModel();
+    QAbstractItemModel::endResetModel();
 }
 
 void TodoTableModel::archive(){
-    beginResetModel();
+    QAbstractItemModel::beginResetModel();
     todo->archive();
     todo_data.clear();
-    endResetModel();
+    QAbstractItemModel::endResetModel();
 }
 
 void TodoTableModel::refresh(){
-    beginResetModel();
+    QAbstractItemModel::beginResetModel();
     todo->refresh();
     todo_data.clear();
-    endResetModel();
+    QAbstractItemModel::endResetModel();
 }
 
 Qt::ItemFlags TodoTableModel::flags(const QModelIndex& index) const
@@ -215,15 +210,6 @@ Qt::ItemFlags TodoTableModel::flags(const QModelIndex& index) const
   if (index.column()==1){
      returnFlags |= Qt::ItemIsEditable | Qt::ItemNeverHasChildren;
   }
-
-//Add by Gaetan 15/10/2023
-  if (index.column() == 2)
-  {
-    returnFlags |= Qt::ItemIsUserCheckable;
-  }
-// ---
-
-
   return returnFlags;
 }
 
@@ -282,14 +268,14 @@ void TodoTableModel::setFileWatch(QObject *parent)
 
 void TodoTableModel::append(const QModelIndex & index, QString data)
 {
-   beginResetModel();
+   QAbstractItemModel::beginResetModel();
    QString str=todo_data.at(index.row());
    str = str + " " + data;
 
    todo->update(todo_data.at(index.row()),false,str);
 
    emit dataChanged(index, index);
-   endResetModel();
+   QAbstractItemModel::endResetModel();
 
 }
 

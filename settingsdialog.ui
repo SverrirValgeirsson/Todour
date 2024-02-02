@@ -422,20 +422,6 @@
     <item>
         <layout class="QHBoxLayout" name="horizontalLayout_16">
          <item>
-          <widget class="QLabel" name="label_16">
-           <property name="text">
-            <string>String for Postpone :</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLineEdit" name="postpone_string">
-           <property name="alignment">
-            <set>Qt::AlignLeft</set>
-           </property>
-          </widget>
-         </item>
-         <item>
           <spacer name="horizontalSpacer_2">
            <property name="orientation">
             <enum>Qt::Horizontal</enum>

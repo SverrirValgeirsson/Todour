@@ -57,7 +57,6 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->cb_saturday->setChecked(business_days.contains(6));
     ui->cb_sunday->setChecked(business_days.contains(7));
 
-
     // Handle the fonts
     activecolor=QColor::fromRgba(settings.value(SETTINGS_ACTIVE_COLOR,DEFAULT_ACTIVE_COLOR).toUInt());
     inactivecolor=QColor::fromRgba(settings.value(SETTINGS_INACTIVE_COLOR,DEFAULT_INACTIVE_COLOR).toUInt());
@@ -196,7 +195,7 @@ void SettingsDialog::on_cb_hotKey_stateChanged(int arg1)
 void SettingsDialog::on_pb_warningColor_clicked()
 {
     QSettings settings;
-//    QColor c = QColorDialog::getRgba(settings.value(SETTINGS_DUE_WARNING_COLOR,DEFAULT_DUE_WARNING_COLOR).toInt());
+
     QColor c = QColorDialog::getColor(QColor::fromRgb(settings.value(SETTINGS_DUE_WARNING_COLOR,DEFAULT_DUE_WARNING_COLOR).toInt()),this);
     settings.setValue(SETTINGS_DUE_WARNING_COLOR,c.rgba());
     updateFonts();
@@ -205,7 +204,6 @@ void SettingsDialog::on_pb_warningColor_clicked()
 void SettingsDialog::on_pb_lateColor_clicked()
 {
     QSettings settings;
-//    QColor c = QColorDialog::getRgba(settings.value(SETTINGS_DUE_LATE_COLOR,DEFAULT_DUE_LATE_COLOR).toInt());
     QColor c = QColorDialog::getColor(QColor::fromRgb(settings.value(SETTINGS_DUE_LATE_COLOR,DEFAULT_DUE_LATE_COLOR).toInt()),this);
     settings.setValue(SETTINGS_DUE_LATE_COLOR,c.rgba());
     updateFonts();

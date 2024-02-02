@@ -103,7 +103,7 @@ border-radius: 5px;
 </string>
         </property>
         <property name="placeholderText">
-         <string>search</string>
+         <string>search (F3)</string>
         </property>
         <property name="clearButtonEnabled">
          <bool>true</bool>
@@ -170,7 +170,11 @@ border-radius: 5px;
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QLineEdit" name="lineEdit"/>
+       <widget class="QLineEdit" name="lineEdit">
+        <property name="placeholderText">
+         <string>New (ctrl-n)</string>
+        </property>
+      </widget>
       </item>
       <item>
        <widget class="QPushButton" name="pushButton">

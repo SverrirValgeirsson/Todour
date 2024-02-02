@@ -1,5 +1,5 @@
 #include "todotablemodel.h"
-#include "todotxt.h"
+
 #include "globals.h"
 #include "def.h"
 #include <QFont>
@@ -30,11 +30,6 @@ int TodoTableModel::rowCount(const QModelIndex &parent) const {
     return size;
 }
 
-
-QString TodoTableModel::getTodoFile(){
-    return todo->getTodoFilePath();
-}
-
 int TodoTableModel::columnCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
     return 2;
@@ -59,6 +54,7 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
             QString s=todo->prettyPrint((todo_data.at(index.row())),false);
             return s;
         }
+
      }
 
     if (role == Qt::EditRole) {
@@ -72,6 +68,8 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
         if(index.column()==0)
             return todo->getState(todo_data.at(index.row()));
     }
+
+
 
     if(role == Qt::FontRole) {
         if(index.column()==1){
@@ -137,7 +135,6 @@ QVariant TodoTableModel::headerData(int section, Qt::Orientation orientation, in
       if(section==1){
           return "Todo";
       }
-
     }
 
   return QVariant::Invalid;
@@ -145,17 +142,19 @@ QVariant TodoTableModel::headerData(int section, Qt::Orientation orientation, in
 
 bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
 {
+    QSettings settings;
 
     if(index.column()==0 && role == Qt::CheckStateRole)
     {
-        beginResetModel();
+        QAbstractItemModel::beginResetModel();
         todo->update(todo_data.at(index.row()),value.toBool(),todo_data.at(index.row()));
     }
     else if(index.column()==1 && role == Qt::EditRole){
-        beginResetModel();
+        QAbstractItemModel::beginResetModel();
         bool checked = true?todo_data.at(index.row()).at(0)=='x':false;
         QString s=value.toString();
         todo->update(todo_data.at(index.row()),checked,s);
+
     } else {
         // Nothing changed
         return false;
@@ -163,7 +162,7 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
 
    todo_data.clear();
 
-  endResetModel();
+  QAbstractItemModel::endResetModel();
 
   emit dataChanged(index, index); // Detta innebär ju också att denna item är den som är selected just nu så vi kan lyssna på den signalen
 
@@ -171,33 +170,33 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
 }
 
 void TodoTableModel::add(QString text){
-    beginResetModel();
+    QAbstractItemModel::beginResetModel();
     QString temp;
     todo->update(temp,false,text.replace('\n',' ')); // Make sure newlines don't get through as that would create multiple rows
     todo_data.clear();
-    endResetModel();
+    QAbstractItemModel::endResetModel();
 }
 
 void TodoTableModel::remove(QString text){
-    beginResetModel();
+    QAbstractItemModel::beginResetModel();
     todo->remove(text);
     // Old way : QString temp;todo->update(text,false,temp); // Sending in an empty string = remove
     todo_data.clear();
-    endResetModel();
+    QAbstractItemModel::endResetModel();
 }
 
 void TodoTableModel::archive(){
-    beginResetModel();
+    QAbstractItemModel::beginResetModel();
     todo->archive();
     todo_data.clear();
-    endResetModel();
+    QAbstractItemModel::endResetModel();
 }
 
 void TodoTableModel::refresh(){
-    beginResetModel();
+    QAbstractItemModel::beginResetModel();
     todo->refresh();
     todo_data.clear();
-    endResetModel();
+    QAbstractItemModel::endResetModel();
 }
 
 Qt::ItemFlags TodoTableModel::flags(const QModelIndex& index) const
@@ -211,7 +210,6 @@ Qt::ItemFlags TodoTableModel::flags(const QModelIndex& index) const
   if (index.column()==1){
      returnFlags |= Qt::ItemIsEditable | Qt::ItemNeverHasChildren;
   }
-
   return returnFlags;
 }
 
@@ -255,5 +253,29 @@ bool TodoTableModel::redoPossible()
 
 int TodoTableModel::count(){
     return this->rowCount(QModelIndex());
+}
+
+// gaetandc 4/1/24
+void TodoTableModel::clearFileWatch()
+{
+   todo->clearFileWatch();
+}
+
+void TodoTableModel::setFileWatch(QObject *parent)
+{
+   todo->setFileWatch(parent);
+}
+
+void TodoTableModel::append(const QModelIndex & index, QString data)
+{
+   QAbstractItemModel::beginResetModel();
+   QString str=todo_data.at(index.row());
+   str = str + " " + data;
+
+   todo->update(todo_data.at(index.row()),false,str);
+
+   emit dataChanged(index, index);
+   QAbstractItemModel::endResetModel();
+
 }
 

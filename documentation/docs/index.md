@@ -21,3 +21,5 @@ The application always operates on the todo.txt file in every operation. There i
 ### Mac
 
 ## Getting started
+
+## Syncinc

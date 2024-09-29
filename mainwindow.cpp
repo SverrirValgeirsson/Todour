@@ -3,7 +3,6 @@
 
 #include "todotablemodel.h"
 
-#include "todotxt.h"
 #include "settingsdialog.h"
 #include "quickadddialog.h"
 #include "aboutbox.h"
@@ -23,6 +22,7 @@
 #include <QSystemTrayIcon>
 #include <QDesktopServices>
 #include <QUuid>
+
 
 QNetworkAccessManager *networkaccessmanager;
 TodoTableModel *model=NULL;
@@ -46,6 +46,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QCoreApplication::setOrganizationDomain("nerdur-debug.com");
     QCoreApplication::setApplicationName("Todour-Debug");
     title.append("-DEBUG-");
+    qDebug()<<"Hello, we should be in debug mode."<<endline;
 #endif
 
     title.append(VER);
@@ -61,8 +62,8 @@ MainWindow::MainWindow(QWidget *parent) :
         qDebug()<<"Setting ini file path to: "<<QDir::currentPath()<<endline;
     }
 
-    hotkey = new UGlobalHotkeys();
-    setHotkey();
+   // hotkey = new UGlobalHotkeys();
+   // setHotkey();
 
     // Restore the position of the window
     QSettings settings;
@@ -86,7 +87,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->pushButton_3->setIcon(awesome->icon( fa::signout ));
     ui->pushButton_4->setIcon(awesome->icon( fa::refresh ));
     ui->pushButton->setIcon(awesome->icon( fa::plus ));
-    ui->pushButton_2->setIcon(awesome->icon( fa::minus ));
+//    ui->pushButton_2->setIcon(awesome->icon( fa::minus ));
     ui->context_lock->setIcon(awesome->icon(fa::lock));
     ui->pb_closeVersionBar->setIcon(awesome->icon(fa::times));
 
@@ -107,6 +108,9 @@ MainWindow::MainWindow(QWidget *parent) :
     QObject::connect(editshortcut,SIGNAL(activated()),ui->lineEdit,SLOT(setFocus()));
     auto findshortcut = new QShortcut(QKeySequence(tr("Ctrl+f")),this);
     QObject::connect(findshortcut,SIGNAL(activated()),ui->lineEdit_2,SLOT(setFocus()));
+    auto findshortcut2 = new QShortcut(QKeySequence(tr("F3")),this);
+    QObject::connect(findshortcut2,SIGNAL(activated()),ui->lineEdit_2,SLOT(setFocus()));
+
     //auto contextshortcut = new QShortcut(QKeySequence(tr("Ctrl+l")),this);
     //QObject::connect(contextshortcut,SIGNAL(activated()),ui->context_lock,SLOT(setChecked(!(ui->context_lock->isChecked()))));
     QObject::connect(model,SIGNAL(dataChanged (const QModelIndex , const QModelIndex )),this,SLOT(dataInModelChanged(QModelIndex,QModelIndex)));
@@ -134,7 +138,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setFontSize();
 
     // Version check
-    if(settings.value(SETTINGS_CHECK_UPDATES,DEFAULT_CHECK_UPDATES).toBool()){
+    if(settings.value(SETTINGS_CHECK_UPDATES,!DEFAULT_CHECK_UPDATES).toBool()){
         QString last_check = settings.value(SETTINGS_LAST_UPDATE_CHECK,"").toString();
         if(last_check.isEmpty()){
             // We set this up so that first check will be later, giving users ample time to turn off the feature.
@@ -152,9 +156,41 @@ MainWindow::MainWindow(QWidget *parent) :
             requestPage(URL);
         }
     }
+    rClickMenu=new QMenu(this);
+    editAction = new QAction("&Edit", this);
+    deleteAction = new QAction("&Delete", this);
+    postponeAction = new QAction("&Postpone +10p", this);
+    duplicateAction = new QAction("&Duplicate", this);
+
+   priorityMenu=new QMenu("Priority",this);
+   rClickMenu->addMenu(priorityMenu);
+   ApriorAction = new QAction("(A) priority",this);
+   BpriorAction = new QAction("(B) priority",this);
+   CpriorAction = new QAction("(C) priority",this);
+   DpriorAction = new QAction("(D) priority",this);
+
+
+
+    
+   connect(editAction, SIGNAL(triggered()), this, SLOT(on_actionEdit()));
+   connect(duplicateAction, SIGNAL(triggered()), this, SLOT(on_actionDuplicate()));
+   connect(deleteAction, SIGNAL(triggered()), this, SLOT(on_actionDelete()));
+   connect(postponeAction, SIGNAL(triggered()), this, SLOT(on_actionPostpone()));
+   connect(ApriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityA()));
+   connect(BpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityB()));
+   connect(CpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityC()));
+   connect(DpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityD()));
+
+    rClickMenu->addAction(deleteAction);
+    rClickMenu->addAction(duplicateAction);
+    rClickMenu->addAction(editAction);
+    rClickMenu->addAction(postponeAction);
+   priorityMenu->addAction(ApriorAction);
+   priorityMenu->addAction(BpriorAction);
+   priorityMenu->addAction(CpriorAction);
+   priorityMenu->addAction(DpriorAction);
 
 }
-
 
 
 // This method is for making sure we're re-selecting the item that has been edited
@@ -178,7 +214,7 @@ MainWindow::~MainWindow()
 
 QSortFilterProxyModel *proxyModel=NULL;
 
-QFileSystemWatcher *watcher;
+//QFileSystemWatcher *watcher;
 
 void MainWindow::updateTitle(){
     // The title is initialized to the name and version number at start and that is stored in baseTitle
@@ -225,10 +261,7 @@ void MainWindow::fileModified(const QString &str){
 }
 
 void MainWindow::clearFileWatch(){
-    if(watcher != NULL){
-        delete watcher;
-        watcher = NULL;
-    }
+   model->clearFileWatch();
 }
 
 void MainWindow::setFileWatch(){
@@ -236,13 +269,9 @@ void MainWindow::setFileWatch(){
     if(settings.value(SETTINGS_AUTOREFRESH).toBool()==false)
            return;
 
-    clearFileWatch();
+    model->clearFileWatch();
 
-    watcher = new QFileSystemWatcher();
-    //qDebug()<<"Mainwindow::setFileWatch :: "<<watcher->files();
-    watcher->removePaths(watcher->files()); // Make sure this is empty. Should only be this file we're using in this program, and only one instance
-    watcher->addPath(model->getTodoFile());
-    QObject::connect(watcher, SIGNAL(fileChanged(QString)), this, SLOT(fileModified(QString)));
+   model->setFileWatch((QObject*) this);
 }
 
 
@@ -461,20 +490,6 @@ void MainWindow::on_lineEdit_returnPressed()
     on_pushButton_clicked();
 }
 
-void MainWindow::on_pushButton_2_clicked()
-{
-    // Remove the selected item
-    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
-    // Only support for deleting one item at a time
-    if(!indexes.empty()){
-        QModelIndex i=indexes.at(0);
-        QString t=model->data(proxyModel->mapToSource(i),Qt::UserRole).toString(); // User Role is Raw data
-        //QString t=proxyModel->data(i).toString();
-        model->remove(t);
-    }
-    updateTitle();
-}
-
 void MainWindow::on_pushButton_3_clicked()
 {
     // Archive
@@ -495,6 +510,7 @@ void MainWindow::on_pushButton_4_clicked()
 
 
 void MainWindow::saveTableSelection(){
+    qDebug()<<"   ---Launched saveTableSelection "<<endline;
     //auto index = ui->tableView->selectionModel()->selectedIndexes();
     auto index = ui->tableView->selectionModel()->currentIndex();
 //    if(index.count()>0){
@@ -509,15 +525,23 @@ void MainWindow::saveTableSelection(){
 }
 
 void MainWindow::resetTableSelection(){
+    qDebug()<<"   ---Launched resetTableSelection "<<endline;
     if(saved_selection.size()>0){
         // Set the selection again
         QModelIndexList foundIndexes = model->match(QModelIndex(),Qt::UserRole,saved_selection);
         if(foundIndexes.count()>0){
-            //qDebug()<<"Found at index: "<<foundIndexes.at(0)<<endl;
-            ui->tableView->setFocus(Qt::OtherFocusReason);
-            ui->tableView->selectionModel()->select(foundIndexes.at(0),QItemSelectionModel::Select);
-            ui->tableView->selectionModel()->setCurrentIndex(foundIndexes.at(0),QItemSelectionModel::ClearAndSelect);
-            //ui->tableView->setCurrentIndex(foundIndexes.at(0));
+            currentIndex=foundIndexes.at(0);
+    qDebug()<<"Found at index: "<<currentIndex<<endline;
+            
+//            ui->tableView->setFocus(Qt::MouseFocusReason);
+//              ui->tableView->selectionModel()->setCurrentIndex(currentIndex, QItemSelectionModel::Select | QItemSelectionModel::Current);
+//            ui->tableView->setFocusProxy(ui->tableView->indexWidget(currentIndex));
+            ui->tableView->selectionModel()->select(currentIndex,QItemSelectionModel::Select | QItemSelectionModel::Current);
+
+    qDebug()<<"MainWindow::resetTableSelection - index="<<ui->tableView->selectionModel()->currentIndex()<<endline;
+//            ui->tableView->setCurrentIndex(currentIndex);
+            //ui->tableView->setFocus(Qt::TabFocusReason);
+            ui->tableView->setFocus(Qt::TabFocusReason);
        }
     }
     saved_selection="";
@@ -645,12 +669,17 @@ void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
 {
     // This is used for triggering opening of a link.
     // Find out where we are
+
     auto index = ui->tableView->indexAt(pos);
     QString URL=ui->tableView->model()->data(index,Qt::UserRole+1).toString();
+    qDebug()<<"mainwindow.cpp - contextmenu clicked on"<<ui->tableView->model()->data(index,Qt::UserRole).toString()<<endline;
+
+    rClickMenu->popup(ui->tableView->viewport()->mapToGlobal(pos));
+
     if(!URL.isEmpty()){
         QDesktopServices::openUrl(URL);
     }
-
+    
 }
 
 void MainWindow::on_actionQuit_triggered()
@@ -687,5 +716,106 @@ void MainWindow::on_actionStay_On_Top_changed()
 void MainWindow::on_actionManual_triggered()
 {
     QDesktopServices::openUrl(QUrl("https://sverrirvalgeirsson.github.io/Todour"));
+}
+
+
+//GaetanDC 4/1/24
+void MainWindow::on_actionEdit()
+{
+   QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+    if(!indexes.empty()){
+       qDebug()<<"mainwindow->onedit index="<<indexes.at(0)<<endline;
+        ui->tableView->edit(indexes.at(0));
+    }
+
+}
+
+void MainWindow::on_actionDelete()
+{
+   // Remove the selected item
+   saveTableSelection();
+    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+    // Only support for deleting one item at a time
+    if(!indexes.empty()){
+        QModelIndex i=indexes.at(0);
+        QString t=model->data(proxyModel->mapToSource(i),Qt::UserRole).toString(); // User Role is Raw data
+        model->remove(t);
+    }
+    updateTitle();
+//resetTableSelection();
+}
+
+void MainWindow::on_actionPostpone()
+{
+   saveTableSelection();
+   QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+    if(!indexes.empty()){
+        QModelIndex i=indexes.at(0);
+ //       QString t=model->data(proxyModel->mapToSource(i),Qt::UserRole).toString(); // User Role is Raw data
+        model->append(i,"t:+10p");
+    }
+    updateTitle();
+//resetTableSelection();
+}
+
+void MainWindow::on_actionDuplicate()
+{
+
+  saveTableSelection();
+  if(!saved_selection.isEmpty()){
+  
+//  QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+//   QModelIndex i;
+//   if(!indexes.empty()){
+//        i=indexes.at(0);
+//        QString t=model->data(proxyModel->mapToSource(i),Qt::UserRole).toString(); // User Role is Raw data
+        saved_selection +=" bis";
+        model->add(saved_selection);
+   }
+   resetTableSelection();
+   updateTitle();
+   
+   QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+   if(!indexes.empty()){
+   qDebug()<<"mainwindow->onDuplicate index="<<indexes.at(0)<<endline;
+      ui->tableView->edit(indexes.at(0)); 
+      }
+//      indexes = ui->tableView->selectionModel()->selection().indexes();
+ //     if(!indexes.empty()){
+  //      ui->tableView->edit(indexes.at(0));
+   //   }
+   
+ }
+
+   void MainWindow::on_actionPriorityA(){
+
+//    auto index = ui->tableView->indexAt(pos);
+//    QString URL=ui->tableView->model()->data(index,Qt::UserRole+1).toString();
+//    qDebug()<<"mainwindow.cpp - contextmenu clicked on"<<ui->tableView->model()->data(index,Qt::UserRole).toString()<<endline;
+
+
+   QModelIndex indexes = ui->tableView->selectionModel()->currentIndex();
+
+      model->setPriority(indexes.data(Qt::UserRole).toString(),"A");
+
+
+}
+
+   void MainWindow::on_actionPriorityB(){
+   QModelIndex indexes = ui->tableView->selectionModel()->currentIndex();
+
+      model->setPriority(indexes.data(Qt::UserRole).toString(),"B");
+}
+
+   void MainWindow::on_actionPriorityC(){
+   QModelIndex indexes = ui->tableView->selectionModel()->currentIndex();
+
+      model->setPriority(indexes.data(Qt::UserRole).toString(),"C");
+}
+
+   void MainWindow::on_actionPriorityD(){
+   QModelIndex indexes = ui->tableView->selectionModel()->currentIndex();
+
+      model->setPriority(indexes.data(Qt::UserRole).toString(),"D");
 }
 

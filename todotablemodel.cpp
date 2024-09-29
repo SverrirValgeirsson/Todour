@@ -5,6 +5,7 @@
 #include <QFont>
 #include <QColor>
 #include <QSettings>
+#include <QRegularExpression>
 
 vector<QString> todo_data;
 
@@ -170,19 +171,22 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
 }
 
 void TodoTableModel::add(QString text){
-    QAbstractItemModel::beginResetModel();
+//    QAbstractItemModel::beginResetModel();
     QString temp;
     todo->update(temp,false,text.replace('\n',' ')); // Make sure newlines don't get through as that would create multiple rows
     todo_data.clear();
-    QAbstractItemModel::endResetModel();
+      emit dataChanged(QModelIndex(),QModelIndex());
+//    QAbstractItemModel::endResetModel();
 }
 
 void TodoTableModel::remove(QString text){
-    QAbstractItemModel::beginResetModel();
+//    QAbstractItemModel::beginResetModel();
     todo->remove(text);
     // Old way : QString temp;todo->update(text,false,temp); // Sending in an empty string = remove
     todo_data.clear();
-    QAbstractItemModel::endResetModel();
+     emit dataChanged(QModelIndex(),QModelIndex());
+
+//    QAbstractItemModel::endResetModel();
 }
 
 void TodoTableModel::archive(){
@@ -196,6 +200,8 @@ void TodoTableModel::refresh(){
     QAbstractItemModel::beginResetModel();
     todo->refresh();
     todo_data.clear();
+//     emit dataChanged(QModelIndex(),QModelIndex());
+
     QAbstractItemModel::endResetModel();
 }
 
@@ -275,6 +281,30 @@ void TodoTableModel::append(const QModelIndex & index, QString data)
    todo->update(todo_data.at(index.row()),false,str);
 
    emit dataChanged(index, index);
+   QAbstractItemModel::endResetModel();
+
+}
+
+void TodoTableModel::setPriority(QString text,QString prio)
+// This should make heavy use of CommonTodoModel isCompleted(), setPriority(), ...
+// in first instance, lets try to make it by the text.
+{
+   QAbstractItemModel::beginResetModel();
+
+// qDebug()<<"TodoTableModel::setPriority - prio="<<prio<<endline;
+  QRegularExpression regex_prior("(\\([A-Z]\\)\\s+)(.*)");
+  QString ntext=text;
+  if(text.left(1)!="x")  //not completed
+   {
+      if(regex_prior.match(text).hasMatch())
+      {
+         ntext = text.right(text.size()-4);
+      }
+
+         ntext = "("+prio + ") " + ntext;
+   }
+
+   todo->update(text,false,ntext);
    QAbstractItemModel::endResetModel();
 
 }

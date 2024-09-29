@@ -98,6 +98,10 @@ private slots:
    void on_actionDelete();
    void on_actionPostpone();
    void on_actionDuplicate();
+   void on_actionPriorityA();
+   void on_actionPriorityB();
+   void on_actionPriorityC();
+   void on_actionPriorityD();
 
 private:
     void setFileWatch();
@@ -122,12 +126,23 @@ private:
     QAction *restoreAction;
     QAction *quitAction;
     
+    QModelIndex currentIndex;
     
+//Gaetandc 4/1/24    
     QMenu *rClickMenu=NULL;
+    QMenu *priorityMenu=NULL;
+
     QAction *editAction;
     QAction *deleteAction;
     QAction *postponeAction;
     QAction *duplicateAction;
+   QAction *ApriorAction;
+   QAction *BpriorAction;
+   QAction *CpriorAction;
+   QAction *DpriorAction;
+
+
+
 };
 
 #endif // MAINWINDOW_H

@@ -35,6 +35,7 @@ public:
    void clearFileWatch(); //gaetan 5/1/24
    void setFileWatch(QObject *parent); //gaetan 5/1/24
    void append(const QModelIndex & index, QString data);
+   void setPriority(QString text,QString prio);
 
 
 

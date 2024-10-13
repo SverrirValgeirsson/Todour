@@ -16,6 +16,8 @@
 #include <QDate>
 #include <QTemporaryDir>
 
+#include "task.h"
+
 using namespace std;
 
 class todotxt
@@ -29,23 +31,28 @@ protected:
     static bool lessThan(QString &,QString &);
     bool threshold_hide(QString &);
     QTemporaryDir *undoDir;
+    
+    QString _TodoFilePath;
+    QString _DoneFilePath;
+    QString _DeleteFilePath;
+
 
 public:
     todotxt();
     ~todotxt();
-    void setdirectory(QString &dir);
+//used by new model:
+    void getAllTask(vector<task> &output);
+    void archive(vector<task> &set);
+
+
     void parse(); // Parses the files in the directory  
-    void getActive(QString& filter,vector<QString> &output);
-    void getAll(QString& filter,vector<QString> &output);
-    Qt::CheckState getState(QString& row);
     static QString prettyPrint(QString& row,bool forEdit=false);
     void update(QString& row,bool checked,QString& newrow);
-    QString getURL(QString &line);
+//    QString getURL(QString &line);
     void remove(QString line);
     void archive();
     void refresh();
     bool isInactive(QString& text);
-    int  dueIn(QString& text);
 
    void clearFileWatch(); //gaetan 5/1/24
    void setFileWatch(QObject *parent); //gaetan 5/1/24
@@ -60,6 +67,11 @@ public:
     bool redoPossible(); // Say if redo is possible or not
 
 protected:
+//used by new model:
+	void write(QString& filename,vector<task>&  content, bool append);
+
+
+
     QString getUndoDir(); // get the directory where we save undo stuff
     QString getNewUndoNameDirAndPrefix(); // get a new prefix to be used for creating new undo files
     void    cleanupUndoDir(); // Remove old files in the undo directory (not accessed for a while?)
@@ -69,8 +81,6 @@ protected:
 
     void write(QString& filename,vector<QString>&  content);
     void slurp(QString& filename,vector<QString>&  content);
-    QString getToday();
-
 
     vector<QString> undoBuffer; // A buffer with base filenames for undos
     int undoPointer = 0; // Pointer into the undo buffer for undo and redo. Generally should be 0
@@ -88,9 +98,6 @@ protected:
 
 
 private:
-    QString getTodoFilePath();
-    QString getDoneFilePath();
-    QString getDeletedFilePath();
     QString getRelativeDate(QString shortform,QDate d=QDate::currentDate());
 
 

@@ -25,6 +25,15 @@ todotxt::todotxt()
     // and need manual cleanups.
     //cleanupUndoDir();
 
+    QSettings settings;
+    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
+    _TodoFilePath = dir + TODOFILE;
+    _DoneFilePath = dir + DONEFILE;
+    _DeleteFilePath = dir + DELETEDFILE;
+
+
+
+
     undoDir = new QTemporaryDir();
     if(!undoDir->isValid()){
         qDebug()<<"Could not create undo dir"<<endline;
@@ -39,9 +48,6 @@ todotxt::~todotxt()
         delete undoDir;
 }
 
-void todotxt::setdirectory(QString &dir){
-    filedirectory=dir;
-}
 
 static QRegularExpression regex_project("\\s(\\+[^\\s]+)");
 static QRegularExpression regex_context("\\s(\\@[^\\s]+)");
@@ -59,14 +65,13 @@ void todotxt::parse(){
     todo.clear();
     active_contexts.clear();
     active_projects.clear();
-    QString todofile=getTodoFilePath();
 
-    slurp(todofile,todo);
+    slurp(_TodoFilePath,todo);
 
+
+//this is not working:
     if(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool()){
-        // Donefile as well
-        QString donefile = getDoneFilePath();
-        slurp(donefile,todo);
+        slurp(_DoneFilePath,todo);
     }
 
       if(settings.value(SETTINGS_THRESHOLD_LABELS).toBool()){
@@ -91,39 +96,6 @@ void todotxt::parse(){
           }
       }
 }
-
-QString todotxt::getTodoFilePath(){
-    QSettings settings;
-    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
-    QString todofile = dir.append(TODOFILE);
-    return todofile;
-}
-
-
-QString todotxt::getDoneFilePath(){
-    QSettings settings;
-    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
-    QString todofile = dir.append(DONEFILE);
-    return todofile;
-}
-
-QString todotxt::getDeletedFilePath(){
-    QSettings settings;
-    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
-    QString todofile = dir.append(DELETEDFILE);
-    return todofile;
-}
-
-void todotxt::getActive(QString& filter,vector<QString> &output){
-        // Obsolete... remove?
-    Q_UNUSED(filter);
-        for(vector<QString>::iterator iter=todo.begin();iter!=todo.end();iter++){
-                if( (*iter).length()==0 || (*iter).at(0) == 'x')
-                        continue;
-                output.push_back( (*iter));
-        }
-}
-
 
 bool todotxt::isInactive(QString &text){
     QSettings settings;
@@ -159,7 +131,7 @@ bool todotxt::threshold_hide(QString &t){
     if(settings.value(SETTINGS_THRESHOLD).toBool()){
         auto matches=regex_threshold_date.globalMatch(t);
         while(matches.hasNext()){
-            QString today = getToday();
+            QString today = QDate::currentDate().toString("yyyy-MM-dd");
             QString td = matches.next().captured(1);
             if(td.compare(today)>0){
                 return true; // Don't show this one since it's in the future
@@ -173,7 +145,7 @@ bool todotxt::threshold_hide(QString &t){
     if(settings.value(SETTINGS_DUE_AS_THRESHOLD).toBool()){
         auto matches=regex_due_date.globalMatch(t);
         while(matches.hasNext()){
-            // QString today = getToday();
+            // QString today = QDate::currentDate().toString("yyyy-MM-dd");
             QDate d = QDate::currentDate();
             d = d.addDays(settings.value(SETTINGS_DUE_WARNING,DEFAULT_DUE_WARNING).toInt());
             QString cdate = d.toString("yyyy-MM-dd");
@@ -204,9 +176,33 @@ bool todotxt::threshold_hide(QString &t){
 }
 
 
+void todotxt::getAllTask(vector<task> &output)
+// Load all tasks from file to "output"
+{
+    vector<QString> todo;
+    slurp(_TodoFilePath,todo);
+
+    for(vector<QString>::iterator iter=todo.begin();iter!=todo.end();iter++){
+        QString line = (*iter); // For debugging
+		if(line.isEmpty())
+        	continue;
+	
+    	// Begin by checking for inactive, as there are two different ways of sorting those
+//    	qDebug()<<"todotxt::getAlltask : adding 1 task: "<<line<<endline;
+		output.push_back((*iter));
+
+	}
+}
+
+
+
+/*
 void todotxt::getAll(QString& filter,vector<QString> &output){
         // Vectors are probably not the best here...
+        // old:  (normally not used anymore...)
     Q_UNUSED(filter);
+    
+    qDebug()<<"todotxt:getAll   *********  DEPRECATED  *********"<<endline;
         set<QString> prio;
         vector<QString> open;
         vector<QString> done;
@@ -278,20 +274,19 @@ void todotxt::getAll(QString& filter,vector<QString> &output){
         for(vector<QString>::iterator iter=done.begin();iter!=done.end();iter++)
             output.push_back((*iter));
 }
+*/
 
+/*
 Qt::CheckState todotxt::getState(QString& row){
+    qDebug()<<"todotxt:getState   *********  DEPRECATED  *********"<<endline;
+
     if(row.length()>1 && row.at(0)=='x' && row.at(1)==' '){
         return Qt::Checked;
     } else {
         return Qt::Unchecked;
     }
 }
-
-QString todotxt::getToday(){
-    QDate d = QDate::currentDate();
-    return d.toString("yyyy-MM-dd");
-}
-
+*/
 
 Q_DECLARE_METATYPE(QList<int>)
 
@@ -342,6 +337,8 @@ QString todotxt::getRelativeDate(QString shortform,QDate d){
 
 
 void todotxt::restoreFiles(QString namePrefix){
+Q_UNUSED(namePrefix)
+/*
     qDebug()<<"Restoring: "<<namePrefix<<endline;
     qDebug()<<"Pointer: "<<undoPointer<<endline;
     // Copy back files from the undo
@@ -360,7 +357,7 @@ void todotxt::restoreFiles(QString namePrefix){
     if(QFile::exists(newdeleted)){
         QFile::remove(getDeletedFilePath());
         QFile::copy(newdeleted,getDeletedFilePath());
-    }
+    }*/
 
 }
 bool todotxt::undo()
@@ -470,12 +467,12 @@ bool todotxt::checkNeedForUndo(){
         return true;
     }
 
-    QString todofile = getTodoFilePath();
+
     QString undofile = undoBuffer.back()+(TODOFILE);
-    slurp(todofile,todo);
+    slurp(_TodoFilePath,todo);
     slurp(undofile,lastUndo);
     if(todo.size()!=lastUndo.size()){
-        qDebug()<<"Sizes differ: "<<todofile<<" vs "<<undofile<<endline;
+        qDebug()<<"Sizes differ: "<<_TodoFilePath<<" vs "<<undofile<<endline;
         return true;
     }
 
@@ -493,6 +490,7 @@ bool todotxt::checkNeedForUndo(){
 
 void todotxt::saveToUndo()
 {
+/*
     // This should be called every time we will read todo.txt
 
     // if we're moving around the undoBuffer, we should not be doing anything
@@ -516,7 +514,7 @@ void todotxt::saveToUndo()
         undoBuffer.push_back(namePrefix);
         qDebug()<<"Added to undoBuffer: "<<namePrefix<<endline;
         qDebug()<<"Buffer is now: "<<undoBuffer.size()<<endline;
-    }
+    }*/
 
 }
 
@@ -560,9 +558,36 @@ void todotxt::slurp(QString& filename,vector<QString>& content){
      }
 }
 
+void todotxt::write(QString& filename,vector<task>&  content, bool append)
+//if append ==true, append the vector at the nd of file.
+// otherwise, replace the file.
+// undo to be managed ???
+{
+
+    qDebug()<<"todotxt::write("<<filename<<"). append="<<append<<endline;
+    QFile file(filename);
+    bool result;
+    if (append) result = file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
+    else result = file.open(QIODevice::WriteOnly | QIODevice::Text);
+    
+    if (!result)
+         return;
+
+     QTextStream out(&file);
+     out.setCodec("UTF-8");
+     for(unsigned int i = 0;	i<content.size(); i++)
+         out << content.at(i).get_raw() << "\n";
+   
+     file.flush();
+     file.close();
+}
+
+
 void todotxt::write(QString& filename,vector<QString>&  content){
     // As we're about to write a change to the file, we have to consider what is now in the file as valid
     // Thus we point the undo pointer to the last entry and check if we need to save what is now in the files before we overwrite it
+        qDebug()<<"todotxt:write   *********  DEPRECATED  *********"<<endline;
+
     undoPointer=0;
     saveToUndo();
 
@@ -585,22 +610,51 @@ void todotxt::write(QString& filename,vector<QString>&  content){
 
 }
 
-void todotxt::remove(QString line){
+void todotxt::remove(QString line)
+{
     // Remove the line, but perhaps saving it for later as well..
+    qDebug()<<"todotxt:remove   *********  DEPRECATED  *********"<<endline;
+
     QSettings settings;
     if(settings.value(SETTINGS_DELETED_FILE).toBool()){
-        QString deletedfile = getDeletedFilePath();
         vector<QString> deleteddata;
-        slurp(deletedfile,deleteddata);
+        slurp(_DeleteFilePath,deleteddata);
         deleteddata.push_back(line);
-        write(deletedfile,deleteddata);
+        write(_DeleteFilePath,deleteddata);
     }
     QString tmp;
     update(line,false,tmp);
 }
 
+void todotxt::archive(vector<task> &set)
+// Archive all the tasks marked "done" (isComplete() == true) to DoneFilePath()
+{
+//    QSettings settings;
+    vector<task> done_set;
 
-void todotxt::archive(){
+   for(vector<task>::iterator iter=set.begin();iter!=set.end();){
+        if((*iter).isComplete()){
+            done_set.push_back((*iter));
+            iter=set.erase(iter);
+        } else {
+            // No change
+            iter++;
+        }
+     }
+
+    write(_TodoFilePath,set,false);
+    write(_DoneFilePath,done_set,true);
+    parse();
+
+}
+
+void todotxt::archive()
+//
+{
+    qDebug()<<"todotxt:archive   *********  DEPRECATED  *********"<<endline;
+
+//old:
+/*
     // Slurp the files
     QSettings settings;
     QString todofile = getTodoFilePath();
@@ -622,6 +676,7 @@ void todotxt::archive(){
     write(todofile,tododata);
     write(donefile,donedata);
     parse();
+*/
 }
 
 void todotxt::refresh(){
@@ -631,9 +686,8 @@ void todotxt::refresh(){
 void todotxt::update(QString &row, bool checked, QString &newrow){
     // First slurp the file.
     QSettings settings;
-    QString todofile = getTodoFilePath();
     vector<QString> data;
-    slurp(todofile,data);
+    slurp(_TodoFilePath,data);
     QString additional_item = ""; // This is for recurrence. If there is a new item created, put it here since we have to add it after the file is written
 
     // Preprocessing of the line
@@ -658,7 +712,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
         String2Todo(newrow,tl);
         // Add a date to the line if where doing dates
         if(settings.value(SETTINGS_DATES).toBool()){
-            QString today = getToday()+" ";
+            QString today = QDate::currentDate().toString("yyyy-MM-dd")+" ";
             tl.createdDate = today;
         }
 
@@ -683,7 +737,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
 
                     QString date;
                     if(settings.value(SETTINGS_DATES).toBool()){
-                            date.append(getToday()+" "); // Add a date if needed
+                            date.append(QDate::currentDate().toString("yyyy-MM-dd")+" "); // Add a date if needed
                     }
                     tl.closedDate=date;
 
@@ -716,7 +770,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
                         if(!regex_threshold_date.match(tl.text).hasMatch() && !regex_due_date.match(tl.text).hasMatch()){
                             // The rec doesn't have any real point without having a t or a due.
                             // Add one with todays date
-                            additional_item.append(" "+settings.value(SETTINGS_DEFAULT_THRESHOLD,DEFAULT_DEFAULT_THRESHOLD).toString()+getToday());
+                            additional_item.append(" "+settings.value(SETTINGS_DEFAULT_THRESHOLD,DEFAULT_DEFAULT_THRESHOLD).toString()+QDate::currentDate().toString("yyyy-MM-dd"));
                         }
 
 
@@ -762,7 +816,7 @@ void todotxt::update(QString &row, bool checked, QString &newrow){
         }
     }
 
-    write(todofile,data);
+    write(_TodoFilePath,data);
     if(!additional_item.isEmpty()){
         QString empty="";
         this->update(empty,false,additional_item);
@@ -843,23 +897,7 @@ QString todotxt::Todo2String(todoline &t){
     return ret;
 }
 
-// Check when this is due
-
-
-int todotxt::dueIn(QString &text){
-    int ret=INT_MAX;
-    QSettings settings;
-    if(settings.value(SETTINGS_DUE).toBool()){
-        QRegularExpressionMatch m=regex_due_date.match(text);
-        if(m.hasMatch()){
-            QString ds = m.captured(1);
-            QDate d = QDate::fromString(ds,"yyyy-MM-dd");
-            return (int) QDate::currentDate().daysTo(d);
-        }
-    }
-    return ret;
-}
-
+/*
 //QRegularExpression regex_url("[a-zA-Z0-9_]+://[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=\\(\\)]*)");
 static QRegularExpression regex_url("[a-zA-Z0-9_]+:\\/\\/([-a-zA-Z0-9@:%_\\+.~#?&\\/=\\(\\)\\{\\}\\\\]*)");
 
@@ -873,12 +911,10 @@ QString todotxt::getURL(QString &line){
         return "";
     }
 }
+*/
 
 
-// gaetandc 4/1/24
 QFileSystemWatcher *watcher;
-
-
 void todotxt::clearFileWatch()
 {
     if(watcher != NULL){
@@ -890,9 +926,8 @@ void todotxt::clearFileWatch()
 void todotxt::setFileWatch(QObject *parent)
 {
     watcher = new QFileSystemWatcher();
-    //qDebug()<<"Mainwindow::setFileWatch :: "<<watcher->files();
     watcher->removePaths(watcher->files()); // Make sure this is empty. Should only be this file we're using in this program, and only one instance
-    watcher->addPath(getTodoFilePath());
+    watcher->addPath(_TodoFilePath);
     QObject::connect(watcher, SIGNAL(fileChanged(QString)), parent, SLOT(fileModified(QString)));
 
 }

@@ -737,9 +737,10 @@ void MainWindow::on_actionDelete()
     QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
     // Only support for deleting one item at a time
     if(!indexes.empty()){
-        QModelIndex i=indexes.at(0);
-        QString t=model->data(proxyModel->mapToSource(i),Qt::UserRole).toString(); // User Role is Raw data
-        model->remove(t);
+        //QModelIndex i=indexes.at(0);
+        //QString t=model->data(proxyModel->mapToSource(i),Qt::UserRole).toString(); // User Role is Raw data
+        //model->remove(t);
+        model->remove(indexes.at(0));
     }
     updateTitle();
 //resetTableSelection();
@@ -789,33 +790,36 @@ void MainWindow::on_actionDuplicate()
 
    void MainWindow::on_actionPriorityA(){
 
-//    auto index = ui->tableView->indexAt(pos);
-//    QString URL=ui->tableView->model()->data(index,Qt::UserRole+1).toString();
-//    qDebug()<<"mainwindow.cpp - contextmenu clicked on"<<ui->tableView->model()->data(index,Qt::UserRole).toString()<<endline;
-
-
-   QModelIndex indexes = ui->tableView->selectionModel()->currentIndex();
-
-      model->setPriority(indexes.data(Qt::UserRole).toString(),"A");
-
-
+   QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+    if(!indexes.empty())
+    {
+    	model->setPriority(indexes.at(0),"A");
+	}
 }
 
    void MainWindow::on_actionPriorityB(){
-   QModelIndex indexes = ui->tableView->selectionModel()->currentIndex();
+   QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
 
-      model->setPriority(indexes.data(Qt::UserRole).toString(),"B");
+    if(!indexes.empty())
+    {
+    	model->setPriority(indexes.at(0),"B");
+	}
 }
 
    void MainWindow::on_actionPriorityC(){
-   QModelIndex indexes = ui->tableView->selectionModel()->currentIndex();
-
-      model->setPriority(indexes.data(Qt::UserRole).toString(),"C");
+   QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+    if(!indexes.empty())
+    {
+    	model->setPriority(indexes.at(0),"C");
+	}
 }
 
    void MainWindow::on_actionPriorityD(){
-   QModelIndex indexes = ui->tableView->selectionModel()->currentIndex();
+   QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
 
-      model->setPriority(indexes.data(Qt::UserRole).toString(),"D");
+    if(!indexes.empty())
+    {
+    	model->setPriority(indexes.at(0),"D");
+	}
 }
 

@@ -1,58 +1,60 @@
 #include "todotablemodel.h"
 
+
 #include "globals.h"
 #include "def.h"
+
 #include <QFont>
 #include <QColor>
 #include <QSettings>
 #include <QRegularExpression>
-
-vector<QString> todo_data;
 
 TodoTableModel::TodoTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
     todo = new todotxt();
     todo->parse();
+	todo->getAllTask(task_set);
 }
 
 TodoTableModel::~TodoTableModel()
 {
     delete todo;
+
 }
 
 int TodoTableModel::rowCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
-    if(todo_data.empty()){
-        QString temp;
-        todo->getAll(temp,todo_data);
-    }
-    int size = (int)todo_data.size();
+
+    int size = (int)task_set.size();
     return size;
-}
+    }
 
 int TodoTableModel::columnCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
     return 2;
 }
 
+//del
+    static QRegularExpression regex_due_date("due:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
+
 QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
     QSettings settings;
+
 
     if (!index.isValid())
              return QVariant();
 
-    if(todo_data.empty()){
-        QString temp;
-        todo->getAll(temp,todo_data);
-    }
+	if(task_set.empty()){
+		return QVariant();
+	}
 
-    if (index.row() >= (int) todo_data.size() || index.row() < 0)
-             return QVariant();
+    if (index.row() >= (int) task_set.size() || index.row() < 0)
+        return QVariant();
 
     if (role == Qt::DisplayRole || role==Qt::ToolTipRole) {
         if(index.column()==1){
-            QString s=todo->prettyPrint((todo_data.at(index.row())),false);
+            QString s=task_set.at(index.row()).get_text();
             return s;
         }
 
@@ -60,14 +62,15 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
 
     if (role == Qt::EditRole) {
         if(index.column()==1){
-            QString s=todo->prettyPrint((todo_data.at(index.row())),true);
+            QString s=task_set.at(index.row()).get_text_long();   //ATTENTION : il faut ici afficher plus (color,...) mais pas tout!
+
             return s;
         }
      }
 
     if(role == Qt::CheckStateRole) {
         if(index.column()==0)
-            return todo->getState(todo_data.at(index.row()));
+        	return task_set.at(index.row()).isComplete();
     }
 
 
@@ -75,17 +78,18 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
     if(role == Qt::FontRole) {
         if(index.column()==1){
             QFont f;
-            if(todo->isInactive(todo_data.at(index.row()))){
-                f.fromString(settings.value(SETTINGS_INACTIVE_FONT).toString());
+            if (! task_set.at(index.row()).isActive()){
+            	 f.fromString(settings.value(SETTINGS_INACTIVE_FONT).toString());
             } else {
-                f.fromString(settings.value(SETTINGS_ACTIVE_FONT).toString());
+                 f.fromString(settings.value(SETTINGS_ACTIVE_FONT).toString());
             }
-            f.setStrikeOut(todo->getState(todo_data.at(index.row()))); // Strike out if done
+            //qDebug()<<task_set.at(index.row()).isComplete()<<endline;
+			 f.setStrikeOut(task_set.at(index.row()).isComplete()); // Strike out if done
 
-            QString url =todo->getURL(todo_data.at(index.row())) ;
-            if(!url.isEmpty()){
-                f.setUnderline(true);
-            }
+//            QString url =todo->getURL(todo_data.at(index.row())) ;
+//            if(!url.isEmpty()){
+//                f.setUnderline(true);
+//            }
 
             return f;
         }
@@ -93,9 +97,15 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
 
     if (role == Qt::ForegroundRole) {
 
-        int due = todo->dueIn(todo_data.at(index.row())); // The settings check is done in the todo call
+        int due=INT_MAX;
+    	QSettings settings;
+    	if(settings.value(SETTINGS_DUE).toBool()){
+    		if (task_set.at(index.row()).get_due_date().isValid()){
+				due = -(int) (task_set.at(index.row()).get_due_date().daysTo(QDate::currentDate()));
+			}
+		}
         bool active = true;
-        if(todo_data.at(index.row()).startsWith("x ")){
+        if(task_set.at(index.row()).isComplete()){
             active = false;
         }
 
@@ -105,7 +115,7 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
         } else if(active && due<=settings.value(SETTINGS_DUE_WARNING,DEFAULT_DUE_WARNING).toInt()){
             return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_DUE_WARNING_COLOR,DEFAULT_DUE_WARNING_COLOR).toUInt()));
         }
-        else if(todo->isInactive(todo_data.at(index.row()))){
+        else if(!task_set.at(index.row()).isActive()){
             return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_INACTIVE_COLOR,DEFAULT_INACTIVE_COLOR).toUInt()));
         } else {
             return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_ACTIVE_COLOR,DEFAULT_ACTIVE_COLOR).toUInt()));
@@ -113,12 +123,11 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
     }
 
     if(role == Qt::UserRole){
-        // This one returns the RAW value of the row
-        return todo_data.at(index.row());
+		 return task_set.at(index.row()).get_raw();
     }
 
     if(role == Qt::UserRole+1){
-        return todo->getURL(todo_data.at(index.row()));
+    	 return task_set.at(index.row()).getURL();
     }
 
     return QVariant();
@@ -130,79 +139,82 @@ QVariant TodoTableModel::headerData(int section, Qt::Orientation orientation, in
     Q_UNUSED(orientation);
     if(role == Qt::DisplayRole)
     {
-      if(section==0){
-          return "Done";
-      }
-      if(section==1){
-          return "Todo";
-      }
+      if(section==0) return "Done";
+      if(section==1) return "Todo";
     }
-
   return QVariant::Invalid;
 }
 
 bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
 {
+
+//qDebug()<<"todotablemodel::setData value= "<<value.toString()<<endline;
     QSettings settings;
 
     if(index.column()==0 && role == Qt::CheckStateRole)
     {
-        QAbstractItemModel::beginResetModel();
-        todo->update(todo_data.at(index.row()),value.toBool(),todo_data.at(index.row()));
+	    QAbstractItemModel::beginResetModel();
+        task_set.at(index.row()).set_complete(value.toBool());
+
+		//write changes?
+		QAbstractItemModel::endResetModel();
+		emit dataChanged(index, index); 
+
     }
     else if(index.column()==1 && role == Qt::EditRole){
         QAbstractItemModel::beginResetModel();
-        bool checked = true?todo_data.at(index.row()).at(0)=='x':false;
-        QString s=value.toString();
-        todo->update(todo_data.at(index.row()),checked,s);
+		task_set.at(index.row()).update(value.toString());
+		
+		//write changes?				
+		QAbstractItemModel::endResetModel();
+		emit dataChanged(index, index); 
 
     } else {
         // Nothing changed
         return false;
     }
 
-   todo_data.clear();
 
-  QAbstractItemModel::endResetModel();
-
-  emit dataChanged(index, index); // Detta innebär ju också att denna item är den som är selected just nu så vi kan lyssna på den signalen
 
   return true;
 }
 
 void TodoTableModel::add(QString text){
-//    QAbstractItemModel::beginResetModel();
-    QString temp;
-    todo->update(temp,false,text.replace('\n',' ')); // Make sure newlines don't get through as that would create multiple rows
-    todo_data.clear();
-      emit dataChanged(QModelIndex(),QModelIndex());
-//    QAbstractItemModel::endResetModel();
+    QAbstractItemModel::beginResetModel();
+	task_set.push_back(*new task(text.replace('\n',' ')));
+	beginResetModel();
+    QAbstractItemModel::endResetModel();
 }
 
-void TodoTableModel::remove(QString text){
-//    QAbstractItemModel::beginResetModel();
-    todo->remove(text);
-    // Old way : QString temp;todo->update(text,false,temp); // Sending in an empty string = remove
-    todo_data.clear();
-     emit dataChanged(QModelIndex(),QModelIndex());
-
-//    QAbstractItemModel::endResetModel();
+void TodoTableModel::remove(const QModelIndex &index){
+	QAbstractItemModel::beginResetModel();
+    task_set.erase(task_set.begin()+index.row());
+    QAbstractItemModel::endResetModel();
 }
 
 void TodoTableModel::archive(){
     QAbstractItemModel::beginResetModel();
-    todo->archive();
-    todo_data.clear();
+    todo->archive(task_set);
+
     QAbstractItemModel::endResetModel();
 }
 
-void TodoTableModel::refresh(){
-    QAbstractItemModel::beginResetModel();
-    todo->refresh();
-    todo_data.clear();
+void TodoTableModel::refresh()
+// what is exactly the scope of this?
+// it is activated by the click on "Reresh" button, requesting to reload the file from disk.
+// This is only possible if we trust more the file than our internal info.
+// Options : remove, de-activate
+//		or make a check of the file, if different, propose to reload
+//		or consider that we are saving any change immediately, and the file is trusted.
+{
+// For the moment, do nothing
+
+//    QAbstractItemModel::beginResetModel();
+//    todo->refresh();
+//    todo_data.clear();
 //     emit dataChanged(QModelIndex(),QModelIndex());
 
-    QAbstractItemModel::endResetModel();
+//    QAbstractItemModel::endResetModel();
 }
 
 Qt::ItemFlags TodoTableModel::flags(const QModelIndex& index) const
@@ -275,36 +287,25 @@ void TodoTableModel::setFileWatch(QObject *parent)
 void TodoTableModel::append(const QModelIndex & index, QString data)
 {
    QAbstractItemModel::beginResetModel();
-   QString str=todo_data.at(index.row());
+//   QString str=todo_data.at(index.row());
+   QString str=task_set.at(index.row()).get_raw();
    str = str + " " + data;
 
-   todo->update(todo_data.at(index.row()),false,str);
-
+	task_set.at(index.row()).update(str);
    emit dataChanged(index, index);
    QAbstractItemModel::endResetModel();
 
 }
 
-void TodoTableModel::setPriority(QString text,QString prio)
+void TodoTableModel::setPriority(const QModelIndex & index,QString prio)
 // This should make heavy use of CommonTodoModel isCompleted(), setPriority(), ...
 // in first instance, lets try to make it by the text.
 {
-   QAbstractItemModel::beginResetModel();
-
-// qDebug()<<"TodoTableModel::setPriority - prio="<<prio<<endline;
-  QRegularExpression regex_prior("(\\([A-Z]\\)\\s+)(.*)");
-  QString ntext=text;
-  if(text.left(1)!="x")  //not completed
-   {
-      if(regex_prior.match(text).hasMatch())
-      {
-         ntext = text.right(text.size()-4);
-      }
-
-         ntext = "("+prio + ") " + ntext;
-   }
-
-   todo->update(text,false,ntext);
+	QAbstractItemModel::beginResetModel();
+	if (! task_set.at(index.row()).isComplete())
+	{
+		task_set.at(index.row()).set_priority(prio);
+	}
    QAbstractItemModel::endResetModel();
 
 }

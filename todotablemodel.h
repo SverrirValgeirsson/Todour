@@ -4,12 +4,17 @@
 #include <QAbstractTableModel>
 #include <QMouseEvent>
 #include "todotxt.h"
+#include "task.h"
+
 
 class TodoTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 protected:
-    todotxt *todo;
+    todotxt *todo; // interface with files
+
+//new GDE:    
+    vector<task> task_set;
 
 public:
     explicit TodoTableModel(QObject *parent = 0);
@@ -21,7 +26,7 @@ public:
     Qt::ItemFlags flags(const QModelIndex& index) const;
     bool setData(const QModelIndex & index, const QVariant & value, int role);
     void add(QString text);
-    void remove(QString text);
+    void remove(const QModelIndex &index);
     void archive();
     void refresh();
     int count();
@@ -35,7 +40,7 @@ public:
    void clearFileWatch(); //gaetan 5/1/24
    void setFileWatch(QObject *parent); //gaetan 5/1/24
    void append(const QModelIndex & index, QString data);
-   void setPriority(QString text,QString prio);
+   void setPriority(const QModelIndex & index,QString prio);
 
 
 

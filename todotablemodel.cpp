@@ -1,13 +1,12 @@
 #include "todotablemodel.h"
 
-
-#include "globals.h"
 #include "def.h"
 
 #include <QFont>
 #include <QColor>
 #include <QSettings>
 #include <QRegularExpression>
+#include <QDebug>
 
 TodoTableModel::TodoTableModel(QObject *parent) :
     QAbstractTableModel(parent)
@@ -73,8 +72,6 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
         	return task_set.at(index.row()).isComplete();
     }
 
-
-
     if(role == Qt::FontRole) {
         if(index.column()==1){
             QFont f;
@@ -83,7 +80,6 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
             } else {
                  f.fromString(settings.value(SETTINGS_ACTIVE_FONT).toString());
             }
-            //qDebug()<<task_set.at(index.row()).isComplete()<<endline;
 			 f.setStrikeOut(task_set.at(index.row()).isComplete()); // Strike out if done
 
 //            QString url =todo->getURL(todo_data.at(index.row())) ;
@@ -95,8 +91,8 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
         }
     }
 
-    if (role == Qt::ForegroundRole) {
-
+    if (role == Qt::ForegroundRole) 
+    {
         int due=INT_MAX;
     	QSettings settings;
     	if(settings.value(SETTINGS_DUE).toBool()){
@@ -122,13 +118,17 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
         }
     }
 
-    if(role == Qt::UserRole){
-		 return task_set.at(index.row()).get_raw();
-    }
+    if (role == Qt::BackgroundRole && index.column()==1)
+    {
+		if (task_set.at(index.row()).get_color().isValid())
+			return QVariant::fromValue(task_set.at(index.row()).get_color().lighter(150));
+	}
 
-    if(role == Qt::UserRole+1){
+    if(role == Qt::UserRole)
+		 return task_set.at(index.row()).get_raw();
+
+    if(role == Qt::UserRole+1)
     	 return task_set.at(index.row()).getURL();
-    }
 
     return QVariant();
 }
@@ -147,13 +147,13 @@ QVariant TodoTableModel::headerData(int section, Qt::Orientation orientation, in
 
 bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
 {
-
 //qDebug()<<"todotablemodel::setData value= "<<value.toString()<<endline;
     QSettings settings;
 
     if(index.column()==0 && role == Qt::CheckStateRole)
     {
 	    QAbstractItemModel::beginResetModel();
+	    // manage undo
         task_set.at(index.row()).set_complete(value.toBool());
 
 		//write changes?
@@ -163,6 +163,7 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
     }
     else if(index.column()==1 && role == Qt::EditRole){
         QAbstractItemModel::beginResetModel();
+        // manage undo
 		task_set.at(index.row()).update(value.toString());
 		
 		//write changes?				
@@ -181,6 +182,7 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
 
 void TodoTableModel::add(QString text){
     QAbstractItemModel::beginResetModel();
+    // manage undo
 	task_set.push_back(*new task(text.replace('\n',' ')));
 	beginResetModel();
     QAbstractItemModel::endResetModel();
@@ -188,6 +190,7 @@ void TodoTableModel::add(QString text){
 
 void TodoTableModel::remove(const QModelIndex &index){
 	QAbstractItemModel::beginResetModel();
+	// manage undo
     task_set.erase(task_set.begin()+index.row());
     QAbstractItemModel::endResetModel();
 }
@@ -232,6 +235,7 @@ Qt::ItemFlags TodoTableModel::flags(const QModelIndex& index) const
 }
 
 QModelIndexList TodoTableModel::match(const QModelIndex &start, int role, const QVariant &value, int hits , Qt::MatchFlags flags) const {
+qDebug()<<"TodoTableModel::match   ***  DEPRECATED ***"<<endline;
     Q_UNUSED(start);
     Q_UNUSED(hits);
     Q_UNUSED(flags);

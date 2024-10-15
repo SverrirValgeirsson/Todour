@@ -4,14 +4,16 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network widgets
+QT       += core gui network widgets 
 
 TARGET = Todour
 TEMPLATE = app
-VERS = $$system(perl version.pl)
+#VERS = $$system(perl version.pl)
+VERS = 2.22G
 DEFINES += VER=\"\\\"$${VERS}\\\"\"
 CONFIG += c++11
 CONFIG+=sdk_no_version_check
+CONFIG+=qt debug console
 
 macx{
 ICON = icon.icns
@@ -30,16 +32,20 @@ SOURCES += main.cpp\
     todotablemodel.cpp \
     settingsdialog.cpp \
     aboutbox.cpp \
-    quickadddialog.cpp
+    quickadddialog.cpp \
+    task.cpp \
+    version.cpp
+    
 
 HEADERS  += mainwindow.h \
     todotxt.h \
     todotablemodel.h \
     settingsdialog.h \
     aboutbox.h \
-    globals.h \
     quickadddialog.h \
-    def.h
+    def.h \
+    task.h \
+    version.h
 
 FORMS    += mainwindow.ui \
     settingsdialog.ui \

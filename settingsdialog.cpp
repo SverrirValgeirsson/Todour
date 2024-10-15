@@ -6,7 +6,6 @@
 
 #include "settingsdialog.h"
 #include "ui_settingsdialog.h"
-#include "globals.h"
 #include "def.h"
 
 #include <QSettings>

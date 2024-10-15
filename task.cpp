@@ -9,18 +9,20 @@ static QRegularExpression regex_url("[a-zA-Z0-9_]+:\\/\\/([-a-zA-Z0-9@:%_\\+.~#?
 
 static QRegularExpression regex_threshold_date("t:(\\d\\d\\d\\d-\\d\\d-\\d\\d) ");
 static QRegularExpression regex_due_date("due:(\\d\\d\\d\\d-\\d\\d-\\d\\d) ");
-static QRegularExpression regex_color("color:([^\\s] +)");
+static QRegularExpression regex_color("color:([a-z]*)");
 static QRegularExpression regex_priority("^\\((\\w)\\) +");
 static QRegularExpression regex_done("^(x )*");
 
-static QRegularExpression reldateregex("\\+(\\d+)([dwmypb])");
 static QRegularExpression threshold_shorthand("(t:\\+\\d+[dwmypb]) ");
 static QRegularExpression due_shorthand("(due:\\+\\d+[dwmypb]) ");
-static QRegularExpression rec("(rec:\\+?\\d+[dwmybp]) ");
+static QRegularExpression rec_shorthand("(rec:\\+?\\d+[dwmybp]) ");
 
 
 static QRegularExpression regex_threshold_project("t:(\\+[^\\s]+) ");
 static QRegularExpression regex_threshold_context("t:(\\@[^\\s]+) ");
+
+
+static QRegularExpression reldateregex("\\+(\\d+)([dwmypb])");
 
 
 bool task::is_txt_compatible()
@@ -68,8 +70,9 @@ void task::update(QString s)
 	}
 
 	auto match = regex_color.match(s);
-	if (match.isValid()) _color = QColor(match.captured(1));	
-
+	if (match.isValid()){
+		_color = QColor(match.captured(1));
+}
 	_priority = "";
 	match = regex_priority.match(s);
 	if (match.isValid()){
@@ -250,9 +253,8 @@ QString task::get_priority() const
 
 
 QColor task::get_color() const
-//
+// Returns a QColor as the "color" for task, typically used in background
 {
-//	return color;
 	return _color;
 }
 

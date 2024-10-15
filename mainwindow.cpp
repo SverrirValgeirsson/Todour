@@ -6,7 +6,6 @@
 #include "settingsdialog.h"
 #include "quickadddialog.h"
 #include "aboutbox.h"
-#include "globals.h"
 #include "def.h"
 
 #include <QSortFilterProxyModel>
@@ -23,8 +22,6 @@
 #include <QDesktopServices>
 #include <QUuid>
 
-
-QNetworkAccessManager *networkaccessmanager;
 TodoTableModel *model=NULL;
 QString saved_selection; // Used for selection memory
 
@@ -49,11 +46,10 @@ MainWindow::MainWindow(QWidget *parent) :
     qDebug()<<"Hello, we should be in debug mode."<<endline;
 #endif
 
-    title.append(VER);
+	
+    title.append(todour_version::get_version());
     baseTitle=title;
     this->setWindowTitle(title);
-
-
 
     // Check if we're supposed to have the settings from .ini file or not
     if(QCoreApplication::arguments().contains("-portable")){
@@ -66,8 +62,7 @@ MainWindow::MainWindow(QWidget *parent) :
    // setHotkey();
 
     // Restore the position of the window
-    QSettings settings;
-    restoreGeometry(settings.value( SETTINGS_GEOMETRY, saveGeometry() ).toByteArray());
+        restoreGeometry(settings.value( SETTINGS_GEOMETRY, saveGeometry() ).toByteArray());
     restoreState(settings.value( SETTINGS_SAVESTATE, saveState() ).toByteArray());
     if ( settings.value( SETTINGS_MAXIMIZED, isMaximized() ).toBool() )
         showMaximized();
@@ -99,7 +94,6 @@ MainWindow::MainWindow(QWidget *parent) :
     // Started. Lets open the todo.txt file, parse it and show it.
     parse_todotxt();
     setFileWatch();
-    networkaccessmanager = new QNetworkAccessManager(this);
 
 
     // Set up shortcuts . Mac translates the Ctrl -> Cmd
@@ -137,25 +131,9 @@ MainWindow::MainWindow(QWidget *parent) :
     setTray();
     setFontSize();
 
-    // Version check
-    if(settings.value(SETTINGS_CHECK_UPDATES,!DEFAULT_CHECK_UPDATES).toBool()){
-        QString last_check = settings.value(SETTINGS_LAST_UPDATE_CHECK,"").toString();
-        if(last_check.isEmpty()){
-            // We set this up so that first check will be later, giving users ample time to turn off the feature.
-            last_check = QDate::currentDate().toString("yyyy-MM-dd");
-            settings.setValue(SETTINGS_LAST_UPDATE_CHECK,last_check);
 
-        }
-        QDate lastCheck = QDate::fromString(last_check,"yyyy-MM-dd");
-        QDate nextCheck = lastCheck.addDays(7);
-
-        qDebug()<<"Last update check date: "<<last_check<<" and next is "<<nextCheck.toString("yyyy-MM-dd")<<endline;
-        int daysToNextcheck = QDate::currentDate().daysTo(nextCheck);
-        if(daysToNextcheck<0){
-            QString URL = VERSION_URL;
-            requestPage(URL);
-        }
-    }
+    
+    
     rClickMenu=new QMenu(this);
     editAction = new QAction("&Edit", this);
     deleteAction = new QAction("&Delete", this);
@@ -185,10 +163,19 @@ MainWindow::MainWindow(QWidget *parent) :
     rClickMenu->addAction(duplicateAction);
     rClickMenu->addAction(editAction);
     rClickMenu->addAction(postponeAction);
-   priorityMenu->addAction(ApriorAction);
-   priorityMenu->addAction(BpriorAction);
-   priorityMenu->addAction(CpriorAction);
-   priorityMenu->addAction(DpriorAction);
+    priorityMenu->addAction(ApriorAction);
+    priorityMenu->addAction(BpriorAction);
+    priorityMenu->addAction(CpriorAction);
+    priorityMenu->addAction(DpriorAction);
+ 
+
+    // Version check
+    Version = new todour_version(&settings);
+//    connect(Version,&todour_version::NewVersion,this,&MainWindow::on_new_version);
+    connect(Version,SIGNAL(NewVersion(QString)),this,SLOT(new_version(QString)));
+	Version->onlineCheck(false);
+
+//on_new_version("test");
 
 }
 
@@ -208,13 +195,10 @@ void MainWindow::dataInModelChanged(QModelIndex i1,QModelIndex i2){
 MainWindow::~MainWindow()
 {
     delete ui;
-    delete networkaccessmanager;
     delete model;
 }
 
 QSortFilterProxyModel *proxyModel=NULL;
-
-//QFileSystemWatcher *watcher;
 
 void MainWindow::updateTitle(){
     // The title is initialized to the name and version number at start and that is stored in baseTitle
@@ -231,7 +215,6 @@ void MainWindow::updateTitle(){
     ui->actionRedo->setEnabled(model->redoPossible());
 
 }
-
 
 // A simple delay function I pulled of the 'net.. Need to delay reading a file a little bit.. A second seems to be enough
 // really don't like this though as I have no idea of knowing when a second is enough.
@@ -265,7 +248,6 @@ void MainWindow::clearFileWatch(){
 }
 
 void MainWindow::setFileWatch(){
-    QSettings settings;
     if(settings.value(SETTINGS_AUTOREFRESH).toBool()==false)
            return;
 
@@ -291,22 +273,33 @@ void MainWindow::parse_todotxt(){
 }
 
 void MainWindow::on_lineEdit_2_textEdited(const QString &arg1)
+// This is the filter field
 {
     Q_UNUSED(arg1);
-    QSettings settings;
-
     bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
     if(!ui->actionShow_All->isChecked() && liveUpdate){
         updateSearchResults();
     }
 }
 
+void MainWindow::on_cb_threshold_inactive_stateChanged(int arg1)
+// This is the "Show threshold" selection switch
+{
+    settings.setValue(SETTINGS_THRESHOLD_INACTIVE,arg1);
+//    on_pushButton_4_clicked(); // don't activate refresh, but act as a filter change.
+	updateSearchResults();
+}
+
+
 void MainWindow::updateSearchResults(){
     // Take the text of the format of match1 match2 !match3 and turn it into
     //(?=.*match1)(?=.*match2)(?!.*match3) - all escaped of course
-    QSettings settings;
+    
+    // Shouldn't we integrate the "show threshold "
+    
     QChar search_not_char = settings.value(SETTINGS_SEARCH_NOT_CHAR,DEFAULT_SEARCH_NOT_CHAR).toChar();
     QStringList words = ui->lineEdit_2->text().split(QRegularExpression("\\s+"));
+    bool show_thr = (ui->cb_threshold_inactive->checkState() == Qt::Checked);
     QString regexpstring="(?=^.*$)"; // Seems a negative lookahead can't be first (!?), so this is a workaround
     for(QString word:words){
         QString start = "(?=^.*";
@@ -317,8 +310,8 @@ void MainWindow::updateSearchResults(){
         if(word.length()==0) break;
         regexpstring += start+QRegExp::escape(word)+".*$)";
     }
-    QRegExp regexp(regexpstring,Qt::CaseInsensitive);
-    proxyModel->setFilterRegExp(regexp);
+    QRegularExpression regexp(regexpstring);
+    proxyModel->setFilterRegularExpression(regexp);
     //qDebug()<<"Setting filter: "<<regexp.pattern();
     proxyModel->setFilterKeyColumn(1);
     updateTitle();
@@ -326,7 +319,6 @@ void MainWindow::updateSearchResults(){
 
 void MainWindow::on_lineEdit_2_returnPressed()
 {
-    QSettings settings;
     bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
 
     if(!liveUpdate || ui->actionShow_All->isChecked()){
@@ -346,7 +338,6 @@ void MainWindow::on_hotkey(){
 }
 
 void MainWindow::setHotkey(){
-    QSettings settings;
     if(settings.value(SETTINGS_HOTKEY_ENABLE).toBool()){
         hotkey->registerHotkey(settings.value(SETTINGS_HOTKEY,DEFAULT_HOTKEY).toString());
         connect(hotkey,&UGlobalHotkeys::activated,[=](size_t id){
@@ -389,7 +380,6 @@ void MainWindow::on_actionSettings_triggered()
 }
 
 void MainWindow::setFontSize(){
-    QSettings settings;
     int size = settings.value(SETTINGS_FONT_SIZE).toInt();
     if(size >0){
         auto f = qApp->font();
@@ -409,7 +399,6 @@ void MainWindow::stayOnTop()
 }
 
 void MainWindow::setTray(){
-    QSettings settings;
     if(settings.value(SETTINGS_TRAY_ENABLED,DEFAULT_TRAY_ENABLED).toBool()){
         // We should be showing a tray icon. Are we?
         if(trayicon==NULL){
@@ -500,6 +489,7 @@ void MainWindow::on_pushButton_3_clicked()
 }
 
 void MainWindow::on_pushButton_4_clicked()
+// This is the Refresh button
 {
     saveTableSelection();
     model->refresh();
@@ -549,7 +539,6 @@ void MainWindow::resetTableSelection(){
 }
 
 void MainWindow::cleanup(){
-    QSettings settings;
 
     settings.setValue( SETTINGS_GEOMETRY, saveGeometry() );
     settings.setValue( SETTINGS_SAVESTATE, saveState() );
@@ -576,93 +565,41 @@ void MainWindow::closeEvent(QCloseEvent *ev){
 
 void MainWindow::on_btn_Alphabetical_toggled(bool checked)
 {
-    QSettings settings;
     settings.setValue(SETTINGS_SORT_ALPHA,checked);
     on_pushButton_4_clicked(); // Refresh
 }
 
 void MainWindow::on_context_lock_toggled(bool checked)
 {
-    QSettings settings;
     settings.setValue(SETTINGS_CONTEXT_LOCK,checked);
 }
 
 
-void MainWindow::on_cb_threshold_inactive_stateChanged(int arg1)
-{
-    QSettings settings;
-    settings.setValue(SETTINGS_THRESHOLD_INACTIVE,arg1);
-    on_pushButton_4_clicked();
-}
+
 
 void MainWindow::on_pb_closeVersionBar_clicked()
 {
     ui->newVersionView->hide();
 }
 
-bool forced_check_version=false;
-void MainWindow::requestReceived(QNetworkReply* reply){
-    QString replyText;
-    QSettings settings;
-    // Have a default showing that you are running the latest
-    ui->lbl_latestVersion->hide();
-    ui->lbl_newVersion->hide();
-    if(reply->error()==QNetworkReply::NoError){
-
-        // Get the http status code
-        int v = reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt();
-        if (v >= 200 && v < 300) // Success
-        {
-            replyText = reply->readAll();
-            double latest_version = replyText.toDouble();
-            double this_version = QString(VER).toDouble();
-            qDebug()<<"Checked version - Latest: "<<latest_version<<" this version "<<this_version<<endline;
-            if(latest_version>this_version || forced_check_version){
-                if(latest_version > this_version){
-                    ui->lbl_newVersion->show();
-                } else {
-                    ui->lbl_latestVersion->show();
-                }
-                ui->txtLatestVersion->setText("(v"+QString::number(latest_version,'f',2)+")");
-                ui->newVersionView->show();
-                forced_check_version=false;
-            }
-            // Update the last checked since we were successful
-            settings.setValue(SETTINGS_LAST_UPDATE_CHECK,QDate::currentDate().toString("yyyy-MM-dd"));
-        }
-    }
-    reply->deleteLater();
-}
 
 void MainWindow::undo()
 {
-    if(model->undo()){
+    if(model->undo())
         model->refresh();
-    }
 }
 
 void MainWindow::redo()
 {
-    if(model->redo()){
+    if(model->redo())
         model->refresh();
-    }
-
 }
 
-// Check if there is an update available
-void MainWindow::requestPage(QString &s){
-    connect(networkaccessmanager,SIGNAL(finished(QNetworkReply*)),this,SLOT(requestReceived(QNetworkReply*)));
-    networkaccessmanager->get(QNetworkRequest(QUrl(s)));
-
-}
 
 
 void MainWindow::on_actionCheck_for_updates_triggered()
 {
-    forced_check_version=true;
-    QString URL = VERSION_URL+(QString)"?v="+VER;
-    requestPage(URL);
-
+	Version->onlineCheck(true);
 }
 
 void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
@@ -701,14 +638,12 @@ void MainWindow::on_actionRedo_triggered()
 
 void MainWindow::on_actionShow_All_changed()
 {
-    QSettings settings;
     settings.setValue(SETTINGS_SHOW_ALL,ui->actionShow_All->isChecked());
     on_pushButton_4_clicked();
 }
 
 void MainWindow::on_actionStay_On_Top_changed()
 {
-    QSettings settings;
     settings.setValue(SETTINGS_STAY_ON_TOP,ui->actionStay_On_Top->isChecked());
     stayOnTop();
 }
@@ -718,8 +653,6 @@ void MainWindow::on_actionManual_triggered()
     QDesktopServices::openUrl(QUrl("https://sverrirvalgeirsson.github.io/Todour"));
 }
 
-
-//GaetanDC 4/1/24
 void MainWindow::on_actionEdit()
 {
    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
@@ -747,6 +680,7 @@ void MainWindow::on_actionDelete()
 }
 
 void MainWindow::on_actionPostpone()
+//
 {
    saveTableSelection();
    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
@@ -760,17 +694,12 @@ void MainWindow::on_actionPostpone()
 }
 
 void MainWindow::on_actionDuplicate()
+//
 {
 
-  saveTableSelection();
-  if(!saved_selection.isEmpty()){
-  
-//  QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
-//   QModelIndex i;
-//   if(!indexes.empty()){
-//        i=indexes.at(0);
-//        QString t=model->data(proxyModel->mapToSource(i),Qt::UserRole).toString(); // User Role is Raw data
-        saved_selection +=" bis";
+	saveTableSelection();
+	if(!saved_selection.isEmpty()){
+		saved_selection +=" bis";
         model->add(saved_selection);
    }
    resetTableSelection();
@@ -789,37 +718,33 @@ void MainWindow::on_actionDuplicate()
  }
 
    void MainWindow::on_actionPriorityA(){
-
    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
     if(!indexes.empty())
-    {
     	model->setPriority(indexes.at(0),"A");
-	}
 }
 
    void MainWindow::on_actionPriorityB(){
    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
-
     if(!indexes.empty())
-    {
     	model->setPriority(indexes.at(0),"B");
-	}
 }
 
    void MainWindow::on_actionPriorityC(){
    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
     if(!indexes.empty())
-    {
     	model->setPriority(indexes.at(0),"C");
-	}
 }
 
    void MainWindow::on_actionPriorityD(){
    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
-
     if(!indexes.empty())
-    {
     	model->setPriority(indexes.at(0),"D");
-	}
 }
+
+    void MainWindow::new_version(QString text)
+	// show "alarm" of new version available (status bar? Notification? balloon tooltip?)
+    {
+		ui->txtLatestVersion->setText(text);
+		ui->newVersionView->show();
+    }
 

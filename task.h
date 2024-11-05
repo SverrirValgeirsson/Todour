@@ -17,11 +17,13 @@ Author Gaetan DC
 #include <QString>
 #include <QDate>
 #include <QColor>
+#include <QUuid>
 
 class task
 {
 private:
 	QString raw;
+	QUuid tuid;
 	QDate _d_date;
 	QDate _t_date;
 	QColor _color;
@@ -36,27 +38,29 @@ public:
 	void set_due_date(QDate d);
 	void set_threshold_date(QDate d);
 	void set_color(QColor c);
-	void set_text(QString s);
+	void set_description(QString s);
 	void set_priority(QString c);
-	void set_complete(bool c);
+	void set_complete(bool c = true);
+	void set_raw(QString s);
 
-	void update(QString s);
+	inline QDate get_due_date() const {return _d_date;}
+	inline QDate get_threshold_date() const{return _t_date;}
 
-	QDate get_due_date() const;
-	QDate get_threshold_date() const;
-	QString get_priority() const;
-	QColor get_color() const;
+	inline QString get_priority() const{return _priority;}
+	inline QColor get_color() const{return _color;}
 	Qt::CheckState isComplete() const;
 	bool isActive() const;
-	uint get_utid() const;
+	inline QString get_tuid() const{return tuid.toString();}
 	QString getURL() const;
 	
-	QString get_raw() const; // used to export to todo_txt file
-	QString get_text_long() const;//text for edit in todour, =raw - leading dates - tuid
-	QString get_text() const; // text for display in todour, =text_long - color - etc
-	QString get_pure_text() const; // text for display in future tool. return only the descriptive part of the text, without t: due: color: utid: ...   TODO
+	inline QString get_raw() const{return raw;} // used to export to todo_txt file
+	QString get_display_text() const; // text for display in todour, =text_long - color - etc
+	QString get_description() const; // text for display in future tool. return only the descriptive part of the text, without t: due: color: utid: ...   TODO
 
-	
+protected:
+	void update(QString s);
+
+
 };
 
 #endif // TASK_H

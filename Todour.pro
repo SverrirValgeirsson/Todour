@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network widgets 
+QT       += core gui network widgets printsupport
 
 TARGET = Todour
 TEMPLATE = app

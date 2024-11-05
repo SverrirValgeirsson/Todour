@@ -1,9 +1,8 @@
-
 #include "todotxt.h"
+#include "def.h"
 
 // Todo.txt file format: https://github.com/ginatrapani/todo.txt-cli/wiki/The-Todo.txt-Format
 
-#include <QFile>
 #include <QTextStream>
 #include <QStringList>
 #include <QDate>
@@ -15,8 +14,8 @@
 #include <QDebug>
 #include <QUuid>
 #include <QDir>
+#include <QFile>
 #include <QFileSystemWatcher>  //Gaetandc 5/1/24
-#include "def.h"
 
 todotxt::todotxt()
 {
@@ -25,14 +24,21 @@ todotxt::todotxt()
     // and need manual cleanups.
     //cleanupUndoDir();
 
+// try to open todo.txt file
+// set the flag "ready"
+
+// NOTE : envisager une couche abstraite de gestion de fichier.
+
+
     QSettings settings;
     QString dir = settings.value(SETTINGS_DIRECTORY).toString();
+	_TodoFile = new QFile(dir + TODOFILE);
+	_DoneFile = new QFile(dir + DONEFILE);
+	_DeleteFile=new QFile(dir + DELETEDFILE);
+		
     _TodoFilePath = dir + TODOFILE;
     _DoneFilePath = dir + DONEFILE;
     _DeleteFilePath = dir + DELETEDFILE;
-
-
-
 
     undoDir = new QTemporaryDir();
     if(!undoDir->isValid()){
@@ -44,250 +50,121 @@ todotxt::todotxt()
 
 todotxt::~todotxt()
 {
-    if(undoDir)
-        delete undoDir;
+    if(undoDir) delete undoDir;
+
+	delete _TodoFile;
+	delete _DoneFile;
+	delete _DeleteFile;
+	
+
 }
-
-
-static QRegularExpression regex_project("\\s(\\+[^\\s]+)");
-static QRegularExpression regex_context("\\s(\\@[^\\s]+)");
-
-void todotxt::parse(){
-
-    // Before we do anything here, we make sure we have covered our bases with an undo save
-    // Note, that except for the first read, if we end up doing a save here, something has changed on disk
-    // outside of this program.
-    saveToUndo();
-
-    QSettings settings;
-    //qDebug()<<"todotxt::parse";
-    // parse the files todo.txt and done.txt (for now only todo.txt)
-    todo.clear();
-    active_contexts.clear();
-    active_projects.clear();
-
-    slurp(_TodoFilePath,todo);
-
-
-//this is not working:
-    if(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool()){
-        slurp(_DoneFilePath,todo);
-    }
-
-      if(settings.value(SETTINGS_THRESHOLD_LABELS).toBool()){
-          // Get all active tags with either a @ or a + sign infront of them, as they can be used for thresholds
-          foreach (auto line, todo) {
-              if(line.startsWith("x ")){
-                  continue; // Inactive so we don't care
-              } else {
-                auto matches = regex_project.globalMatch(line);
-                while(matches.hasNext()){
-                    auto match = matches.next();
-                    auto project = match.captured(1);
-                    active_projects.insert(project);
-                }
-                matches = regex_context.globalMatch(line);
-                while(matches.hasNext()){
-                    auto match = matches.next();
-                    active_contexts.insert(match.captured(1));
-                }
-              }
-
-          }
-      }
-}
-
-bool todotxt::isInactive(QString &text){
-    QSettings settings;
-    QString t=settings.value(SETTINGS_INACTIVE).toString();
-    if(t.isEmpty())
-        return false;
-    QStringList inactives = t.split(";");
-    for(int i=0;i<inactives.count();i++){
-        if(text.contains(inactives[i])){
-            return true;
-        }
-    }
-
-    if(settings.value(SETTINGS_THRESHOLD_INACTIVE).toBool()){
-        return threshold_hide(text);
-    }
-
-    return false;
-}
-
-/* Comparator function.. We need to remove all the junk in the beginning of the line */
-bool todotxt::lessThan(QString &s1,QString &s2){
-    return prettyPrint(s1).toLower() < prettyPrint(s2).toLower();
-}
-
-static QRegularExpression regex_threshold_date("t:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
-static QRegularExpression regex_threshold_project("t:(\\+[^\\s]+)");
-static QRegularExpression regex_threshold_context("t:(\\@[^\\s]+)");
-static QRegularExpression regex_due_date("due:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
-
-bool todotxt::threshold_hide(QString &t){
-    QSettings settings;
-    if(settings.value(SETTINGS_THRESHOLD).toBool()){
-        auto matches=regex_threshold_date.globalMatch(t);
-        while(matches.hasNext()){
-            QString today = QDate::currentDate().toString("yyyy-MM-dd");
-            QString td = matches.next().captured(1);
-            if(td.compare(today)>0){
-                return true; // Don't show this one since it's in the future
-            }
-
-        }
-    }
-
-//Gaetan modification 15/10/23: Consider showing the due task in the warning period.
-    // We can also choose to hide all due: labels the same way as t: for convenience
-    if(settings.value(SETTINGS_DUE_AS_THRESHOLD).toBool()){
-        auto matches=regex_due_date.globalMatch(t);
-        while(matches.hasNext()){
-            // QString today = QDate::currentDate().toString("yyyy-MM-dd");
-            QDate d = QDate::currentDate();
-            d = d.addDays(settings.value(SETTINGS_DUE_WARNING,DEFAULT_DUE_WARNING).toInt());
-            QString cdate = d.toString("yyyy-MM-dd");
-               
-            QString td = matches.next().captured(1);
-            if(td.compare(cdate)>0){
-                return true; // Don't show this one since it's in the future
-            }
-        }
-    }
-
-    if(settings.value(SETTINGS_THRESHOLD_LABELS).toBool()){
-        auto matches=regex_threshold_project.globalMatch(t);
-        while(matches.hasNext()){
-            QString project = matches.next().captured(1);
-            if(active_projects.count(project)==1)
-                return true; // There is an active project with this name, so we skip this
-        }
-
-        matches=regex_threshold_context.globalMatch(t);
-        while(matches.hasNext()){
-            QString project = matches.next().captured(1);
-            if(active_contexts.count(project)==1)
-                return true; // There is an active project with this name, so we skip this
-        }
-    }
-    return false;
-}
-
 
 void todotxt::getAllTask(vector<task> &output)
-// Load all tasks from file to "output"
+// Load all tasks from file to "output"  APPEND ???
+// Implement an error system, emit FileError
 {
-    vector<QString> todo;
-    slurp(_TodoFilePath,todo);
+    QSettings settings;
+    _TodoFile->open(QIODevice::ReadOnly | QIODevice::Text);
 
-    for(vector<QString>::iterator iter=todo.begin();iter!=todo.end();iter++){
-        QString line = (*iter); // For debugging
-		if(line.isEmpty())
-        	continue;
+    if (!_TodoFile->isOpen()){
+    	qDebug()<<"todotxt::getAllTask error opening file"<<endline;
+    	return;
+    }
+
+    QTextStream in(_TodoFile);
+    in.setCodec("UTF-8");
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+        if(settings.value(SETTINGS_REMOVE_DOUBLETS,DEFAULT_REMOVE_DOUBLETS).toBool()){
+            // This can be optimized by for example using a set<QString>
+            //if(std::find(content.begin(),content.end(),line) != content.end()){
+                // We found this line. So we ignore it
+            //    continue;
+            //}
+        }
+    //    qDebug()<<"todotxt::getAllTask: we push back "<<line<<endline;
+		output.push_back(line);
+     }
+	if (_TodoFile->isOpen()){
+    	_TodoFile->close();	
+	}
 	
-    	// Begin by checking for inactive, as there are two different ways of sorting those
-//    	qDebug()<<"todotxt::getAlltask : adding 1 task: "<<line<<endline;
-		output.push_back((*iter));
+	
+}
 
+// GDE-NTM need rework
+void todotxt::slurp(QFile* file,vector<QString>& content){
+    QSettings settings;
+    if (!file->open(QIODevice::ReadOnly | QIODevice::Text))
+        return;
+
+    QTextStream in(file);
+    in.setCodec("UTF-8");
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+        if(settings.value(SETTINGS_REMOVE_DOUBLETS,DEFAULT_REMOVE_DOUBLETS).toBool()){
+            // This can be optimized by for example using a set<QString>
+            if(std::find(content.begin(),content.end(),line) != content.end()){
+                // We found this line. So we ignore it
+                continue;
+            }
+        }
+        content.push_back(line);
+     }
+	if (file->isOpen()){
+    	file->close();	
 	}
 }
 
+int todotxt::write(vector<task>& content, filetype t, bool append)
+{
+//    qDebug()<<"todotxt::writeB("<<t<<"). append="<<append<<endline;
+    QTextStream out;
+	bool result;
+	switch (t){
+		case typetodofile:
+		    if (append) result=_TodoFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
+			else result =_TodoFile->open(QIODevice::WriteOnly | QIODevice::Text);
+			if (!result) return 1;
+			out.setDevice(_TodoFile);
+		    break;
+		case typedonefile:
+		    if (append) result=_DoneFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
+		    else result=_DoneFile->open(QIODevice::WriteOnly | QIODevice::Text);
+			if (!result) return 1;
+			out.setDevice(_DoneFile);
+		    break;
+		case typedeletefile:
+		    if (append) result=_DeleteFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
+		    else result=_DeleteFile->open(QIODevice::WriteOnly | QIODevice::Text);
+			if (!result) return 1;
+			out.setDevice(_DeleteFile);
+		    break;
+	default: return 2;
+	}
+
+     out.setCodec("UTF-8");
+     for(unsigned int i = 0; i<content.size(); i++)
+         out << content.at(i).get_raw() << "\n";
+
+	if (_TodoFile->isOpen()){
+	     _TodoFile->flush();
+   		 _TodoFile->close();
+	}
+	if (_DoneFile->isOpen()){
+     	_DoneFile->flush();
+    	_DoneFile->close();	
+	}
+	if (_DeleteFile->isOpen()){
+	     _DeleteFile->flush();
+	     _DeleteFile->close();	
+	}
+     return 0;
+}
+
 
 
 /*
-void todotxt::getAll(QString& filter,vector<QString> &output){
-        // Vectors are probably not the best here...
-        // old:  (normally not used anymore...)
-    Q_UNUSED(filter);
-    
-    qDebug()<<"todotxt:getAll   *********  DEPRECATED  *********"<<endline;
-        set<QString> prio;
-        vector<QString> open;
-        vector<QString> done;
-        vector<QString> inactive;
-        QSettings settings;
-        QString t=settings.value(SETTINGS_INACTIVE).toString();
-        QStringList inactives = t.split(";");
-        if(!t.contains(";")){
-            // There is really nothing here but inactives will still have one item. Lets just remove it
-            inactives.clear();
-        }
-
-        bool separateinactives = settings.value(SETTINGS_SEPARATE_INACTIVES).toBool();
-
-        for(vector<QString>::iterator iter=todo.begin();iter!=todo.end();iter++){
-            QString line = (*iter); // For debugging
-            if(line.isEmpty())
-                continue;
-
-            // Begin by checking for inactive, as there are two different ways of sorting those
-            bool inact=false;
-            for(int i=0;i<inactives.count();i++){
-                if((*iter).contains(inactives[i])){
-                    inact=true;
-                    break;
-
-                }
-            }
-
-            // If we are respecting thresholds, we should check for that
-            bool no_show_threshold = threshold_hide((*iter));
-
-
-            if(no_show_threshold){
-                if(settings.value(SETTINGS_THRESHOLD_INACTIVE).toBool()){
-                    inact=true;
-                } else {
-                    continue;
-                }
-            }
-
-
-            if(!(inact&&separateinactives) && (*iter).at(0) == '(' && (*iter).at(2) == ')'){
-                prio.insert((*iter));
-            } else if ( (*iter).at(0) == 'x'){
-                done.push_back((*iter));
-            } else if(inact){
-                inactive.push_back((*iter));
-            }
-            else {
-                open.push_back((*iter));
-            }
-        }
-
-        // Sort the open and done sections alphabetically if needed
-
-        if(settings.value(SETTINGS_SORT_ALPHA).toBool()){
-            std::sort(open.begin(),open.end(),lessThan);
-            std::sort(inactive.begin(),inactive.end(),lessThan);
-            std::sort(done.begin(),done.end(),lessThan);
-        }
-
-        for(set<QString>::iterator iter=prio.begin();iter!=prio.end();iter++)
-            output.push_back((*iter));
-        for(vector<QString>::iterator iter=open.begin();iter!=open.end();iter++)
-            output.push_back((*iter));
-        for(vector<QString>::iterator iter=inactive.begin();iter!=inactive.end();iter++)
-            output.push_back((*iter));
-        for(vector<QString>::iterator iter=done.begin();iter!=done.end();iter++)
-            output.push_back((*iter));
-}
-*/
-
-/*
-Qt::CheckState todotxt::getState(QString& row){
-    qDebug()<<"todotxt:getState   *********  DEPRECATED  *********"<<endline;
-
-    if(row.length()>1 && row.at(0)=='x' && row.at(1)==' '){
-        return Qt::Checked;
-    } else {
-        return Qt::Unchecked;
-    }
-}
-*/
-
 Q_DECLARE_METATYPE(QList<int>)
 
 QString todotxt::getRelativeDate(QString shortform,QDate d){
@@ -335,7 +212,9 @@ QString todotxt::getRelativeDate(QString shortform,QDate d){
     }
 }
 
+*/
 
+// GDE-NTM need rework
 void todotxt::restoreFiles(QString namePrefix){
 Q_UNUSED(namePrefix)
 /*
@@ -360,6 +239,8 @@ Q_UNUSED(namePrefix)
     }*/
 
 }
+
+// GDE-NTM need rework
 bool todotxt::undo()
 {
     // Check if we can
@@ -373,6 +254,7 @@ bool todotxt::undo()
     return false;
 }
 
+// GDE-NTM need rework
 bool todotxt::redo()
 {
     // Check if we can
@@ -386,6 +268,7 @@ bool todotxt::redo()
     return false;
 }
 
+// GDE-NTM need rework
 bool todotxt::undoPossible()
 {
     if((int) undoBuffer.size()>undoPointer+1){
@@ -394,6 +277,7 @@ bool todotxt::undoPossible()
     return false;
 }
 
+// GDE-NTM need rework
 bool todotxt::redoPossible()
 {
     if(undoPointer>0){
@@ -402,6 +286,7 @@ bool todotxt::redoPossible()
     return false;
 }
 
+// GDE-NTM need rework
 QString todotxt::getUndoDir()
 {
     if(undoDir->isValid()){
@@ -422,6 +307,7 @@ QString todotxt::getUndoDir()
     return dir;
 }
 
+// GDE-NTM need rework
 QString todotxt::getNewUndoNameDirAndPrefix()
 {
     // Make a file path that is made to have _todo.txt or _done.txt appended to it
@@ -431,6 +317,7 @@ QString todotxt::getNewUndoNameDirAndPrefix()
     return getUndoDir()+QUuid::createUuid().toString()+"_";
 }
 
+// GDE-NTM need rework
 void todotxt::cleanupUndoDir()
 {
     // Go through the directory and remove everything that is older than 14 days old.
@@ -457,7 +344,9 @@ void todotxt::cleanupUndoDir()
     }
 }
 
+
 // Returns true of there is a need for a new undo
+// GDE-NTM need rework
 bool todotxt::checkNeedForUndo(){
     // check if the todo.txt is any different from the lastUndo file
     vector<QString> todo;
@@ -469,8 +358,8 @@ bool todotxt::checkNeedForUndo(){
 
 
     QString undofile = undoBuffer.back()+(TODOFILE);
-    slurp(_TodoFilePath,todo);
-    slurp(undofile,lastUndo);
+    slurp(_TodoFile,todo);
+//    slurp(undofile,lastUndo);
     if(todo.size()!=lastUndo.size()){
         qDebug()<<"Sizes differ: "<<_TodoFilePath<<" vs "<<undofile<<endline;
         return true;
@@ -488,6 +377,7 @@ bool todotxt::checkNeedForUndo(){
     return false;
 }
 
+// GDE-NTM need rework
 void todotxt::saveToUndo()
 {
 /*
@@ -517,401 +407,6 @@ void todotxt::saveToUndo()
     }*/
 
 }
-
-QString todotxt::prettyPrint(QString& row,bool forEdit){
-    QString ret;
-    QSettings settings;
-
-    // Remove dates
-    todoline tl;
-    String2Todo(row,tl);
-
-    ret = tl.priority;
-    if(forEdit || settings.value(SETTINGS_SHOW_DATES).toBool()){
-        ret.append(tl.closedDate+tl.createdDate);
-    }
-
-    ret.append(tl.text);
-
-    // Remove all leading and trailing spaces
-    return ret.trimmed();
-}
-
-void todotxt::slurp(QString& filename,vector<QString>& content){
-    QSettings settings;
-    QFile file(filename);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return;
-
-    QTextStream in(&file);
-    in.setCodec("UTF-8");
-    while (!in.atEnd()) {
-        QString line = in.readLine();
-        if(settings.value(SETTINGS_REMOVE_DOUBLETS,DEFAULT_REMOVE_DOUBLETS).toBool()){
-            // This can be optimized by for example using a set<QString>
-            if(std::find(content.begin(),content.end(),line) != content.end()){
-                // We found this line. So we ignore it
-                continue;
-            }
-        }
-        content.push_back(line);
-     }
-}
-
-void todotxt::write(QString& filename,vector<task>&  content, bool append)
-//if append ==true, append the vector at the nd of file.
-// otherwise, replace the file.
-// undo to be managed ???
-{
-
-    qDebug()<<"todotxt::write("<<filename<<"). append="<<append<<endline;
-    QFile file(filename);
-    bool result;
-    if (append) result = file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
-    else result = file.open(QIODevice::WriteOnly | QIODevice::Text);
-    
-    if (!result)
-         return;
-
-     QTextStream out(&file);
-     out.setCodec("UTF-8");
-     for(unsigned int i = 0;	i<content.size(); i++)
-         out << content.at(i).get_raw() << "\n";
-   
-     file.flush();
-     file.close();
-}
-
-
-void todotxt::write(QString& filename,vector<QString>&  content){
-    // As we're about to write a change to the file, we have to consider what is now in the file as valid
-    // Thus we point the undo pointer to the last entry and check if we need to save what is now in the files before we overwrite it
-        qDebug()<<"todotxt:write   *********  DEPRECATED  *********"<<endline;
-
-    undoPointer=0;
-    saveToUndo();
-
-    //qDebug()<<"todotxt::write("<<filename<<")";
-    QFile file(filename);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Text))
-         return;
-
-        QTextStream out(&file);
-        out.setCodec("UTF-8");
-        for(unsigned int i = 0;	i<content.size(); i++)
-            out << content.at(i) << "\n";
-
-        // I have been having issues with the file being chopped off somewhat
-        // when saving it on nextcloud. This should be automatically handled in the
-        // destructor, but here is an attempt to be expicit and see if it works better.
-
-        file.flush();
-        file.close();
-
-}
-
-void todotxt::remove(QString line)
-{
-    // Remove the line, but perhaps saving it for later as well..
-    qDebug()<<"todotxt:remove   *********  DEPRECATED  *********"<<endline;
-
-    QSettings settings;
-    if(settings.value(SETTINGS_DELETED_FILE).toBool()){
-        vector<QString> deleteddata;
-        slurp(_DeleteFilePath,deleteddata);
-        deleteddata.push_back(line);
-        write(_DeleteFilePath,deleteddata);
-    }
-    QString tmp;
-    update(line,false,tmp);
-}
-
-void todotxt::archive(vector<task> &set)
-// Archive all the tasks marked "done" (isComplete() == true) to DoneFilePath()
-{
-//    QSettings settings;
-    vector<task> done_set;
-
-   for(vector<task>::iterator iter=set.begin();iter!=set.end();){
-        if((*iter).isComplete()){
-            done_set.push_back((*iter));
-            iter=set.erase(iter);
-        } else {
-            // No change
-            iter++;
-        }
-     }
-
-    write(_TodoFilePath,set,false);
-    write(_DoneFilePath,done_set,true);
-    parse();
-
-}
-
-void todotxt::archive()
-//
-{
-    qDebug()<<"todotxt:archive   *********  DEPRECATED  *********"<<endline;
-
-//old:
-/*
-    // Slurp the files
-    QSettings settings;
-    QString todofile = getTodoFilePath();
-    QString donefile = getDoneFilePath();
-    vector<QString> tododata;
-    vector<QString> donedata;
-    slurp(todofile,tododata);
-    slurp(donefile,donedata);
-    for(vector<QString>::iterator iter=tododata.begin();iter!=tododata.end();){
-        if((*iter).length()>0 && (*iter).at(0)=='x'){
-            donedata.push_back((*iter));
-            iter=tododata.erase(iter);
-        } else {
-            // No change
-            iter++;
-        }
-
-    }
-    write(todofile,tododata);
-    write(donefile,donedata);
-    parse();
-*/
-}
-
-void todotxt::refresh(){
-    parse();
-}
-
-void todotxt::update(QString &row, bool checked, QString &newrow){
-    // First slurp the file.
-    QSettings settings;
-    vector<QString> data;
-    slurp(_TodoFilePath,data);
-    QString additional_item = ""; // This is for recurrence. If there is a new item created, put it here since we have to add it after the file is written
-
-    // Preprocessing of the line
-    if(settings.value(SETTINGS_THRESHOLD).toBool()){
-        QRegularExpression threshold_shorthand("(t:\\+\\d+[dwmypb])");
-        QRegularExpressionMatch m = threshold_shorthand.match(newrow);
-        if(m.hasMatch()){
-            newrow = newrow.replace(m.captured(1),"t:"+getRelativeDate(m.captured(1).mid(2)));
-        }        
-    }
-
-    if(settings.value(SETTINGS_DUE).toBool()){
-        QRegularExpression due_shorthand("(due:\\+\\d+[dwmypb])");
-        QRegularExpressionMatch m = due_shorthand.match(newrow);
-        if(m.hasMatch()){
-            newrow = newrow.replace(m.captured(1),"due:"+getRelativeDate(m.captured(1).mid(2)));
-        }
-    }
-
-    if(row.isEmpty()){
-        todoline tl;
-        String2Todo(newrow,tl);
-        // Add a date to the line if where doing dates
-        if(settings.value(SETTINGS_DATES).toBool()){
-            QString today = QDate::currentDate().toString("yyyy-MM-dd")+" ";
-            tl.createdDate = today;
-        }
-
-        // Just add the line
-        data.push_back(Todo2String(tl));
-
-    } else {
-        for(vector<QString>::iterator iter=data.begin();iter!=data.end();iter++){
-            QString *r = &(*iter);
-            if(!r->compare(row)){
-                // Here it is.. Lets modify if we shouldn't remove it alltogether
-                if(newrow.isEmpty()){
-                    // Remove it
-                    iter=data.erase(iter);
-                    break;
-                }
-
-                if(checked && !r->startsWith("x ")){
-                    todoline tl;
-                    String2Todo(*r,tl);
-                    tl.checked=true;
-
-                    QString date;
-                    if(settings.value(SETTINGS_DATES).toBool()){
-                            date.append(QDate::currentDate().toString("yyyy-MM-dd")+" "); // Add a date if needed
-                    }
-                    tl.closedDate=date;
-
-                    // Handle recurrence
-                    //QRegularExpression rec_normal("(rec:\\d+[dwmyb])");
-                    QRegularExpression rec("(rec:\\+?\\d+[dwmybp])");
-
-                    // Get the "addition" from rec
-                    QRegularExpressionMatch m = rec.match(tl.text);
-                    if(m.hasMatch()){
-                        // Figure out what date we should use
-                        bool isStrict = true;
-                        QString rec_add = m.captured(1).mid(4);
-                        // Add a '+' if it's not there due to how getRelativeDate works
-                        if(rec_add.at(0)!= '+'){
-                            rec_add.insert(0,'+');
-                            isStrict = false;
-                        }
-
-
-
-                        // Make a copy. It's time to start altering that one
-                        if(!tl.priority.isEmpty()){
-                            additional_item = tl.priority+tl.text;
-                        } else {
-                            additional_item = tl.text;
-                        }
-
-                        // Handle the special case that we're in a rec but there is neither a due nor t
-                        if(!regex_threshold_date.match(tl.text).hasMatch() && !regex_due_date.match(tl.text).hasMatch()){
-                            // The rec doesn't have any real point without having a t or a due.
-                            // Add one with todays date
-                            additional_item.append(" "+settings.value(SETTINGS_DEFAULT_THRESHOLD,DEFAULT_DEFAULT_THRESHOLD).toString()+QDate::currentDate().toString("yyyy-MM-dd"));
-                        }
-
-
-                        // Get the t:
-                        auto mt = regex_threshold_date.globalMatch(additional_item);
-                        while(mt.hasNext()){
-                            QString old_t = mt.next().captured(1);
-                            QString newdate = isStrict?getRelativeDate(rec_add, QDate::fromString(old_t,"yyyy-MM-dd")):getRelativeDate(rec_add);
-                            additional_item.replace("t:"+old_t,"t:"+newdate);
-                        }
-                        // Get the due:
-                        auto md = regex_due_date.match(additional_item);
-                        if(md.hasMatch()){
-                            QString old_due = md.captured(1);
-                            QString newdate = isStrict?getRelativeDate(rec_add, QDate::fromString(old_due,"yyyy-MM-dd")):getRelativeDate(rec_add);
-                            additional_item.replace("due:"+old_due,"due:"+newdate);
-                        }
-                    }
-
-
-                    *r=Todo2String(tl);
-
-                }
-                else if(!checked && r->startsWith("x ")){
-                    todoline tl;
-                    String2Todo(*r,tl);
-                    tl.checked=false;
-                    tl.closedDate="";
-                    *r=Todo2String(tl);
-                } else {
-                    todoline tl;
-                    String2Todo(row,tl);
-                    todoline newtl;
-                    String2Todo(newrow,newtl);
-                    tl.priority=newtl.priority;
-                    tl.text=newtl.text;
-                    tl.createdDate = newtl.createdDate;
-                    tl.closedDate = newtl.closedDate;
-                    *r = Todo2String(tl);
-                }
-                break;
-            }
-        }
-    }
-
-    write(_TodoFilePath,data);
-    if(!additional_item.isEmpty()){
-        QString empty="";
-        this->update(empty,false,additional_item);
-    }
-    parse();
-}
-
-// A todo.txt line looks like this
-static QRegularExpression todo_line("(x\\s+)?(\\([A-Z]\\)\\s+)?(\\d\\d\\d\\d-\\d\\d-\\d\\d\\s+)?(\\d\\d\\d\\d-\\d\\d-\\d\\d\\s+)?(.*)");
-
-void todotxt::String2Todo(QString &line,todoline &t){
-    QRegularExpressionMatch match = todo_line.match(line);
-    if(match.hasMatch() && match.lastCapturedIndex()==5){
-
-        if(match.captured(1).isEmpty()){
-            t.checked=false;
-        } else {
-            t.checked=true;
-        }
-
-        t.priority=match.captured(2);
-        if(t.checked){
-            t.closedDate=match.captured(3);
-            t.createdDate=match.captured(4);
-        } else {
-            t.createdDate=match.captured(3); // No closed date on a line that isn't closed.
-        }
-        t.text = match.captured(5);
-
-
-    } else {
-        t.checked=false;
-        t.priority="";
-        t.closedDate="";
-        t.createdDate="";
-        t.text="";
-    }
-
-}
-
-QString todotxt::Todo2String(todoline &t){
-    QString ret;
-    QSettings settings;
-
-    // Yep, an ugly side effect, but it make sure we're having the right format all the time
-    if(t.checked && t.createdDate.isEmpty()){
-        t.createdDate = t.closedDate;
-    }
-
-    if(t.checked){
-        ret.append("x ");
-    } else {
-        // Priority shall only be written if we are active
-        ret.append(t.priority);
-    }
-    ret.append(t.closedDate);
-    ret.append(t.createdDate);
-    // Here we have to decide how to handle priority tag if we have one
-    if(t.checked && !t.priority.isEmpty()){
-        prio_on_close how = (prio_on_close) settings.value(SETTINGS_PRIO_ON_CLOSE,DEFAULT_PRIO_ON_CLOSE).toInt();
-        switch(how){
-            case prio_on_close::removeit:
-                break; // We do nothing. Just forget it exists
-            case prio_on_close::moveit:
-                ret.append(t.priority+" "); // Put the priority first in the text
-                break;
-            case prio_on_close::tagit:
-                if(t.priority.size()>2){
-                    ret.append("pri:");
-                    ret.append(t.priority.at(1));
-                    ret.append(" ");
-                }
-                break;
-        }
-    }
-
-    ret.append(t.text);
-    return ret;
-}
-
-/*
-//QRegularExpression regex_url("[a-zA-Z0-9_]+://[-a-zA-Z0-9@:%._\\+~#=]{2,256}\\.[a-z]{2,6}\\b([-a-zA-Z0-9@:%_\\+.~#?&//=\\(\\)]*)");
-static QRegularExpression regex_url("[a-zA-Z0-9_]+:\\/\\/([-a-zA-Z0-9@:%_\\+.~#?&\\/=\\(\\)\\{\\}\\\\]*)");
-
-QString todotxt::getURL(QString &line){
-    QRegularExpressionMatch m=regex_url.match(line);
-    if(m.hasMatch()){
-        //qDebug()<<"URL: "<<m.capturedTexts().at(0);
-        return m.capturedTexts().at(0);
-    }
-    else{
-        return "";
-    }
-}
-*/
 
 
 QFileSystemWatcher *watcher;

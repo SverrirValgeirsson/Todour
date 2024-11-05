@@ -6,18 +6,11 @@
 #include <uglobalhotkeys.h>
 #include <QSystemTrayIcon>
 #include <QMenu>
-#include <QNetworkAccessManager>
-#include <QNetworkRequest>
-#include <QNetworkReply>
-#include <memory>
 
-#ifdef Q_OS_OSX
-    #define VERSION_URL "https://nerdur.com/todour-latest_mac.php"
-#elif defined Q_OS_WIN
-    #define VERSION_URL "https://nerdur.com/todour-latest_windows.php"
-#else
-    #define VERSION_URL "https://nerdur.com/todour-latest.php"
-#endif
+#include <memory>
+#include "version.h"
+
+
 
 
 namespace Ui {
@@ -36,9 +29,10 @@ public:
     
 public slots:
     void fileModified(const QString& str);
-    void requestReceived(QNetworkReply* reply);
     void undo();
     void redo();
+//    void on_new_version();
+
 
 private slots:
     void on_lineEdit_2_textEdited(const QString &arg1);
@@ -92,6 +86,8 @@ private slots:
 
     void on_actionManual_triggered();
     
+    void on_actionPrint_triggered();
+
     
 //Gaetandc 4/1/24
    void on_actionEdit();
@@ -102,10 +98,15 @@ private slots:
    void on_actionPriorityB();
    void on_actionPriorityC();
    void on_actionPriorityD();
+//   void on_actionPrint();
+   
+   void new_version(QString);
+
 
 private:
+//	QSettings settings;
+
     void setFileWatch();
-    void requestPage(QString &s);
     void setTray();
     void clearFileWatch();
     void closeEvent(QCloseEvent *ev);
@@ -127,22 +128,23 @@ private:
     QAction *quitAction;
     
     QModelIndex currentIndex;
+	todour_version *Version;
+
     
 //Gaetandc 4/1/24    
-    QMenu *rClickMenu=NULL;
-    QMenu *priorityMenu=NULL;
+    QMenu* rClickMenu=NULL;
+    QMenu* priorityMenu=NULL;
 
-    QAction *editAction;
-    QAction *deleteAction;
-    QAction *postponeAction;
-    QAction *duplicateAction;
-   QAction *ApriorAction;
-   QAction *BpriorAction;
-   QAction *CpriorAction;
-   QAction *DpriorAction;
-
-
-
+    QAction* editAction;
+    QAction* deleteAction;
+    QAction* postponeAction;
+    QAction* duplicateAction;
+    QAction* ApriorAction;
+    QAction* BpriorAction;
+    QAction* CpriorAction;
+    QAction* DpriorAction;
+    QAction* actionPrint;
+    
 };
 
 #endif // MAINWINDOW_H

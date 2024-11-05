@@ -10,22 +10,23 @@ todour_version::~todour_version()
     delete networkaccessmanager;
 }
 
-todour_version::todour_version(QSettings* s)
+todour_version::todour_version()
 {
+	QSettings settings;
      networkaccessmanager = new QNetworkAccessManager(this);
-     settings = s;
      qDebug()<<"todour_version created."<<endline;
 }
 
 void todour_version::onlineCheck(bool forced)
 // This function stats an online check of the version.  This can be triggered manually (from Aboutbox) of automatically.
 {
-    if(forced || settings->value(SETTINGS_CHECK_UPDATES,!DEFAULT_CHECK_UPDATES).toBool()){
-        QString last_check = settings->value(SETTINGS_LAST_UPDATE_CHECK,"").toString();
+		QSettings settings;
+    if(forced || settings.value(SETTINGS_CHECK_UPDATES,!DEFAULT_CHECK_UPDATES).toBool()){
+        QString last_check = settings.value(SETTINGS_LAST_UPDATE_CHECK,"").toString();
         if(last_check.isEmpty()){
             // We set this up so that first check will be later, giving users ample time to turn off the feature.
             last_check = QDate::currentDate().toString("yyyy-MM-dd");
-            settings->setValue(SETTINGS_LAST_UPDATE_CHECK,last_check);
+            settings.setValue(SETTINGS_LAST_UPDATE_CHECK,last_check);
 
         }
         QDate lastCheck = QDate::fromString(last_check,"yyyy-MM-dd");
@@ -52,6 +53,8 @@ void todour_version::onlineCheck(bool forced)
 
 void todour_version::requestReceived(QNetworkReply* reply){
     QString replyText;
+   	QSettings settings;
+
     // Have a default showing that you are running the latest
    // versionBar->hide();
     if(reply->error()==QNetworkReply::NoError){
@@ -79,7 +82,7 @@ void todour_version::requestReceived(QNetworkReply* reply){
             emit NewVersion("You are up to date.");
             }
             // Update the last checked since we were successful
-            settings->setValue(SETTINGS_LAST_UPDATE_CHECK,QDate::currentDate().toString("yyyy-MM-dd"));
+            settings.setValue(SETTINGS_LAST_UPDATE_CHECK,QDate::currentDate().toString("yyyy-MM-dd"));
         }
     }
     else

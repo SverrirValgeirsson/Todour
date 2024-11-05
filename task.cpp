@@ -6,24 +6,19 @@
 
 static QRegularExpression todo_line("(x\\s+)?(\\([A-Z]\\)\\s+)?(\\d\\d\\d\\d-\\d\\d-\\d\\d\\s+)?(\\d\\d\\d\\d-\\d\\d-\\d\\d\\s+)?(.*)");
 static QRegularExpression regex_url("[a-zA-Z0-9_]+:\\/\\/([-a-zA-Z0-9@:%_\\+.~#?&\\/=\\(\\)\\{\\}\\\\]*)");
-
 static QRegularExpression regex_threshold_date("t:(\\d\\d\\d\\d-\\d\\d-\\d\\d) ");
 static QRegularExpression regex_due_date("due:(\\d\\d\\d\\d-\\d\\d-\\d\\d) ");
+static QRegularExpression regex_rec("rec:(\\w) ");
 static QRegularExpression regex_color("color:([a-z]*)");
 static QRegularExpression regex_priority("^\\((\\w)\\) +");
 static QRegularExpression regex_done("^(x )*");
-
-static QRegularExpression threshold_shorthand("(t:\\+\\d+[dwmypb]) ");
-static QRegularExpression due_shorthand("(due:\\+\\d+[dwmypb]) ");
-static QRegularExpression rec_shorthand("(rec:\\+?\\d+[dwmybp]) ");
-
-
+static QRegularExpression regex_threshold_short("(t:\\+\\d+[dwmypb]) "); //do not use; combine "threshold" and "reldate"
+static QRegularExpression regex_due_short("(due:\\+\\d+[dwmypb]) "); //do not use; combine "due" and "reldate"
+static QRegularExpression regex_rec_short("(rec:\\+?\\d+[dwmybp]) "); //do not use; combine "rec" and "reldate"
 static QRegularExpression regex_threshold_project("t:(\\+[^\\s]+) ");
 static QRegularExpression regex_threshold_context("t:(\\@[^\\s]+) ");
-
-
-static QRegularExpression reldateregex("\\+(\\d+)([dwmypb])");
-
+static QRegularExpression regex_reldate("\\+(\\d+)([dwmypb])");
+static QRegularExpression regex_tuid("tuid:(.\\{8\\}-.\\{4\\}-.\\{4\\}-.\\{4\\}-.\\{12\\})");  //xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 
 bool task::is_txt_compatible()
 // Some checks to do if a task can be saved as todo.txt.  usefull?
@@ -33,7 +28,7 @@ bool task::is_txt_compatible()
 task::task(QString s)
 {
 	// do some checks
-	// generate utid
+	// generate tuid
 	// save the raw	
 	// generate all the internal variables. to be externalised
 	update(s);
@@ -141,7 +136,7 @@ void task::set_color(QColor c)
 }
 
 
-void task::set_text(QString s)
+void task::set_description(QString s)
 //
 {
 	// a définir : que contient exactement le text?
@@ -167,6 +162,11 @@ void task::set_priority(QString c)
 		_priority=c;
 		raw.prepend("("+c+") ");
 	}
+}
+
+void task::set_raw(QString s)
+{
+update(s);
 }
 
 void task::set_complete(bool c)
@@ -200,61 +200,15 @@ bool task::isActive() const
 	return (QDate::currentDate()>_t_date && !isComplete());
 }
 
-uint task::get_utid() const
-//
-{
-return 98;
-}
-
-
-QDate task::get_due_date() const
-//
-{
-	return _d_date;
-}
-
-
-QDate task::get_threshold_date() const
-//
-{
-//	return threshold_date;
-	return _t_date;
-}
-
-QString task::get_raw() const
-// used to export to todo_txt file
-{
-	return raw;
-}
- 
-QString task::get_text_long() const
-//text for edit in todour, =raw - leading dates - tuid
+QString task::get_display_text() const
+//text for display in todour, =raw - color - leading_dates - leading x
 {
 	return raw;
 }
 
-QString task::get_text() const
-//text for display in todour, =text_long - color - etc
-{
-	return raw;
-}
-
-QString task::get_pure_text() const
-// return only the descriptive part of the text, without t: due: color: utid: ...   TODO
+QString task::get_description() const
+// return only the descriptive part of the text, without t: due: color: tuid: ...   TODO
 {
 	return raw;
 } 
-
-QString task::get_priority() const
-//
-{
-	return _priority;
-}
-
-
-QColor task::get_color() const
-// Returns a QColor as the "color" for task, typically used in background
-{
-	return _color;
-}
 

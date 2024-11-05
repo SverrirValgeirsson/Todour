@@ -7,7 +7,7 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include <QString>
-#include <QSettings>
+
 
 #ifdef Q_OS_OSX
     #define VERSION_URL "https://nerdur.com/todour-latest_mac.php"
@@ -23,7 +23,7 @@ class todour_version: public QObject{
  	Q_OBJECT
 
 	public:
-		explicit todour_version(QSettings* s);
+		explicit todour_version();
 		~todour_version();
 		
 		void onlineCheck(bool forced);
@@ -39,9 +39,7 @@ class todour_version: public QObject{
 	
 	private:
     	QNetworkAccessManager* networkaccessmanager;
-		void requestPage(QString &s);
-		QSettings* settings;
-	    
+		void requestPage(QString &s);    
 
 };
 

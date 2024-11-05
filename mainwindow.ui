@@ -279,6 +279,7 @@ border-radius: 5px;
      <string>File</string>
     </property>
     <addaction name="actionSettings"/>
+    <addaction name="actionPrint"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -311,6 +312,11 @@ border-radius: 5px;
   <action name="actionSettings">
    <property name="text">
     <string>Settings..</string>
+   </property>
+  </action>
+  <action name="actionPrint">
+   <property name="text">
+    <string>Print</string>
    </property>
   </action>
   <action name="actionAbout">

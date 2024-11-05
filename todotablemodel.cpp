@@ -1,5 +1,4 @@
 #include "todotablemodel.h"
-
 #include "def.h"
 
 #include <QFont>
@@ -12,7 +11,7 @@ TodoTableModel::TodoTableModel(QObject *parent) :
     QAbstractTableModel(parent)
 {
     todo = new todotxt();
-    todo->parse();
+   // todo->parse();
 	todo->getAllTask(task_set);
 }
 
@@ -34,12 +33,8 @@ int TodoTableModel::columnCount(const QModelIndex &parent) const {
     return 2;
 }
 
-//del
-    static QRegularExpression regex_due_date("due:(\\d\\d\\d\\d-\\d\\d-\\d\\d)");
-
 QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
     QSettings settings;
-
 
     if (!index.isValid())
              return QVariant();
@@ -53,7 +48,7 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
 
     if (role == Qt::DisplayRole || role==Qt::ToolTipRole) {
         if(index.column()==1){
-            QString s=task_set.at(index.row()).get_text();
+            QString s=task_set.at(index.row()).get_display_text();
             return s;
         }
 
@@ -61,7 +56,7 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
 
     if (role == Qt::EditRole) {
         if(index.column()==1){
-            QString s=task_set.at(index.row()).get_text_long();   //ATTENTION : il faut ici afficher plus (color,...) mais pas tout!
+            QString s=task_set.at(index.row()).get_raw();   //ATTENTION : il faut ici afficher plus (color,...) mais pas tout!
 
             return s;
         }
@@ -145,61 +140,75 @@ QVariant TodoTableModel::headerData(int section, Qt::Orientation orientation, in
   return QVariant::Invalid;
 }
 
+
+
+//WORK ONGOING HERE. NEED REWRITE ;-)
 bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
 {
-//qDebug()<<"todotablemodel::setData value= "<<value.toString()<<endline;
-    QSettings settings;
-
     if(index.column()==0 && role == Qt::CheckStateRole)
     {
-	    QAbstractItemModel::beginResetModel();
-	    // manage undo
+//        beginResetModel();
         task_set.at(index.row()).set_complete(value.toBool());
-
-		//write changes?
-		QAbstractItemModel::endResetModel();
-		emit dataChanged(index, index); 
-
+		todo->write(task_set, typetodofile, false);
     }
     else if(index.column()==1 && role == Qt::EditRole){
-        QAbstractItemModel::beginResetModel();
-        // manage undo
-		task_set.at(index.row()).update(value.toString());
-		
-		//write changes?				
-		QAbstractItemModel::endResetModel();
-		emit dataChanged(index, index); 
-
-    } else {
+//        beginResetModel();
+		task_set.at(index.row()).set_raw(value.toString());
+		todo->write(task_set, typetodofile, false);
+    }
+    else {
         // Nothing changed
         return false;
     }
 
+//  endResetModel();
 
+  emit dataChanged(index,index); // Detta innebär ju också att denna item är den som är selected just nu så vi kan lyssna på den signalen
 
-  return true;
+ return true;
 }
+
 
 void TodoTableModel::add(QString text){
     QAbstractItemModel::beginResetModel();
     // manage undo
 	task_set.push_back(*new task(text.replace('\n',' ')));
-	beginResetModel();
+	todo->write(task_set, typetodofile, false);
+//       emit dataChanged(index, index);
+
     QAbstractItemModel::endResetModel();
 }
 
 void TodoTableModel::remove(const QModelIndex &index){
+	// manage display + undo + internal taskset + file
 	QAbstractItemModel::beginResetModel();
-	// manage undo
     task_set.erase(task_set.begin()+index.row());
+    // If we want to use "deleted file", here is the right place.
+	todo->write(task_set, typetodofile,false);
+    emit dataChanged(index, index);
+
     QAbstractItemModel::endResetModel();
 }
 
 void TodoTableModel::archive(){
-    QAbstractItemModel::beginResetModel();
-    todo->archive(task_set);
+//    QAbstractItemModel::beginResetModel();
+    vector<task> done_set;
 
-    QAbstractItemModel::endResetModel();
+   for(vector<task>::iterator iter=task_set.begin();iter!=task_set.end();){
+        if((*iter).isComplete()){
+            done_set.push_back((*iter));
+            iter=task_set.erase(iter);
+        } else {
+            // No change
+            iter++;
+        }
+     }
+
+    todo->write(task_set,typetodofile,false);
+    todo->write(done_set,typedonefile,true);
+//   emit dataChanged(index, index);
+
+//    QAbstractItemModel::endResetModel();
 }
 
 void TodoTableModel::refresh()
@@ -223,14 +232,14 @@ void TodoTableModel::refresh()
 Qt::ItemFlags TodoTableModel::flags(const QModelIndex& index) const
 {
   Qt::ItemFlags returnFlags = QAbstractTableModel::flags(index);
-
-  if (index.column() == 0)
-  {
+  if (index.column() == 0)  {
     returnFlags |= Qt::ItemIsUserCheckable;
   }
-  if (index.column()==1){
+  if (index.column() == 1)  {
      returnFlags |= Qt::ItemIsEditable | Qt::ItemNeverHasChildren;
   }
+//qDebug()<<"TodoTableModel::flags"<<returnFlags<<endline;
+
   return returnFlags;
 }
 
@@ -290,14 +299,14 @@ void TodoTableModel::setFileWatch(QObject *parent)
 
 void TodoTableModel::append(const QModelIndex & index, QString data)
 {
-   QAbstractItemModel::beginResetModel();
+//   QAbstractItemModel::beginResetModel();
 //   QString str=todo_data.at(index.row());
-   QString str=task_set.at(index.row()).get_raw();
-   str = str + " " + data;
+    QString str=task_set.at(index.row()).get_raw();
+    str = str + " " + data;
 
-	task_set.at(index.row()).update(str);
-   emit dataChanged(index, index);
-   QAbstractItemModel::endResetModel();
+	task_set.at(index.row()).set_raw(str);
+    emit dataChanged(index, index);
+//    QAbstractItemModel::endResetModel();
 
 }
 
@@ -305,12 +314,15 @@ void TodoTableModel::setPriority(const QModelIndex & index,QString prio)
 // This should make heavy use of CommonTodoModel isCompleted(), setPriority(), ...
 // in first instance, lets try to make it by the text.
 {
-	QAbstractItemModel::beginResetModel();
+//	QAbstractItemModel::beginResetModel();
 	if (! task_set.at(index.row()).isComplete())
 	{
 		task_set.at(index.row()).set_priority(prio);
+	    emit dataChanged(index, index);
+		todo->write(task_set,typetodofile,false);
+
 	}
-   QAbstractItemModel::endResetModel();
+  // QAbstractItemModel::endResetModel();
 
 }
 

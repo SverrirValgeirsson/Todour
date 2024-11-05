@@ -21,6 +21,9 @@
 #include <QSystemTrayIcon>
 #include <QDesktopServices>
 #include <QUuid>
+#include <QPrinter>
+#include <QPrintDialog>
+#include <QTextDocument>
 
 TodoTableModel *model=NULL;
 QString saved_selection; // Used for selection memory
@@ -33,19 +36,24 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
     QString title=this->windowTitle();
 
-#ifdef QT_NO_DEBUG
     QCoreApplication::setOrganizationName("Nerdur");
     QCoreApplication::setOrganizationDomain("nerdur.com");
     QCoreApplication::setApplicationName("Todour");
-    title.append("-");
+
+
+#ifdef QT_NO_DEBUG
+//    QCoreApplication::setOrganizationName("Nerdur");
+//    QCoreApplication::setOrganizationDomain("nerdur.com");
+//    QCoreApplication::setApplicationName("Todour");
+//    title.append("-");
 #else
-    QCoreApplication::setOrganizationName("Nerdur-debug");
-    QCoreApplication::setOrganizationDomain("nerdur-debug.com");
-    QCoreApplication::setApplicationName("Todour-Debug");
+//    QCoreApplication::setOrganizationName("Nerdur-debug");
+//    QCoreApplication::setOrganizationDomain("nerdur-debug.com");
+//    QCoreApplication::setApplicationName("Todour-Debug");
     title.append("-DEBUG-");
     qDebug()<<"Hello, we should be in debug mode."<<endline;
 #endif
-
+	QSettings settings;
 	
     title.append(todour_version::get_version());
     baseTitle=title;
@@ -58,8 +66,8 @@ MainWindow::MainWindow(QWidget *parent) :
         qDebug()<<"Setting ini file path to: "<<QDir::currentPath()<<endline;
     }
 
-   // hotkey = new UGlobalHotkeys();
-   // setHotkey();
+   hotkey = new UGlobalHotkeys();
+   setHotkey();
 
     // Restore the position of the window
         restoreGeometry(settings.value( SETTINGS_GEOMETRY, saveGeometry() ).toByteArray());
@@ -159,6 +167,8 @@ MainWindow::MainWindow(QWidget *parent) :
    connect(CpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityC()));
    connect(DpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityD()));
 
+//	connect(actionPrint,SIGNAL(triggered()),this,SLOT(on_actionPrint_triggered()));
+
     rClickMenu->addAction(deleteAction);
     rClickMenu->addAction(duplicateAction);
     rClickMenu->addAction(editAction);
@@ -170,7 +180,7 @@ MainWindow::MainWindow(QWidget *parent) :
  
 
     // Version check
-    Version = new todour_version(&settings);
+    Version = new todour_version();
 //    connect(Version,&todour_version::NewVersion,this,&MainWindow::on_new_version);
     connect(Version,SIGNAL(NewVersion(QString)),this,SLOT(new_version(QString)));
 	Version->onlineCheck(false);
@@ -185,8 +195,8 @@ void MainWindow::dataInModelChanged(QModelIndex i1,QModelIndex i2){
     Q_UNUSED(i2);
     //qDebug()<<"Data in Model changed emitted:"<<i1.data(Qt::UserRole)<<"::"<<i2.data(Qt::UserRole)<<endl;
     //qDebug()<<"Changed:R="<<i1.row()<<":C="<<i1.column()<<endl;
-    saved_selection = i1.data(Qt::UserRole).toString();
-    resetTableSelection();
+//    saved_selection = i1.data(Qt::UserRole).toString();
+//    resetTableSelection();
     updateTitle();
 
 }
@@ -231,7 +241,7 @@ void delay()
 void MainWindow::fileModified(const QString &str){
     Q_UNUSED(str);
     //qDebug()<<"MainWindow::fileModified  "<<watcher->files()<<" --- "<<str;
-    saveTableSelection();
+//    saveTableSelection();  // This should be maintained???
     model->refresh();
     if(model->count()==0){
         // This sometimes happens when the file is being updated. We have gotten the signal a bit soon so the file is still empty. Wait and try again
@@ -239,7 +249,7 @@ void MainWindow::fileModified(const QString &str){
         model->refresh();
         updateTitle();
     }
-    resetTableSelection();
+//    resetTableSelection();  // This should be maintained???
     setFileWatch();
 }
 
@@ -248,11 +258,10 @@ void MainWindow::clearFileWatch(){
 }
 
 void MainWindow::setFileWatch(){
+QSettings settings;
     if(settings.value(SETTINGS_AUTOREFRESH).toBool()==false)
            return;
-
     model->clearFileWatch();
-
    model->setFileWatch((QObject*) this);
 }
 
@@ -275,6 +284,7 @@ void MainWindow::parse_todotxt(){
 void MainWindow::on_lineEdit_2_textEdited(const QString &arg1)
 // This is the filter field
 {
+	QSettings settings;
     Q_UNUSED(arg1);
     bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
     if(!ui->actionShow_All->isChecked() && liveUpdate){
@@ -285,6 +295,7 @@ void MainWindow::on_lineEdit_2_textEdited(const QString &arg1)
 void MainWindow::on_cb_threshold_inactive_stateChanged(int arg1)
 // This is the "Show threshold" selection switch
 {
+	QSettings settings;
     settings.setValue(SETTINGS_THRESHOLD_INACTIVE,arg1);
 //    on_pushButton_4_clicked(); // don't activate refresh, but act as a filter change.
 	updateSearchResults();
@@ -296,7 +307,7 @@ void MainWindow::updateSearchResults(){
     //(?=.*match1)(?=.*match2)(?!.*match3) - all escaped of course
     
     // Shouldn't we integrate the "show threshold "
-    
+	QSettings settings;    
     QChar search_not_char = settings.value(SETTINGS_SEARCH_NOT_CHAR,DEFAULT_SEARCH_NOT_CHAR).toChar();
     QStringList words = ui->lineEdit_2->text().split(QRegularExpression("\\s+"));
     bool show_thr = (ui->cb_threshold_inactive->checkState() == Qt::Checked);
@@ -319,6 +330,7 @@ void MainWindow::updateSearchResults(){
 
 void MainWindow::on_lineEdit_2_returnPressed()
 {
+	QSettings settings;
     bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
 
     if(!liveUpdate || ui->actionShow_All->isChecked()){
@@ -338,6 +350,7 @@ void MainWindow::on_hotkey(){
 }
 
 void MainWindow::setHotkey(){
+	QSettings settings;
     if(settings.value(SETTINGS_HOTKEY_ENABLE).toBool()){
         hotkey->registerHotkey(settings.value(SETTINGS_HOTKEY,DEFAULT_HOTKEY).toString());
         connect(hotkey,&UGlobalHotkeys::activated,[=](size_t id){
@@ -347,6 +360,7 @@ void MainWindow::setHotkey(){
     } else {
         hotkey->unregisterAllHotkeys();
     }
+
 }
 
 void MainWindow::on_actionAbout_triggered(){
@@ -358,6 +372,7 @@ void MainWindow::on_actionAbout_triggered(){
 }
 
 void MainWindow::on_actionSettings_triggered()
+// Which acton is this ??? ??? ???
 {
     SettingsDialog d;
     d.setModal(true);
@@ -370,16 +385,18 @@ void MainWindow::on_actionSettings_triggered()
         ui->tableView->setModel(proxyModel);
         ui->tableView->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
         ui->tableView->resizeColumnToContents(0);
-        saveTableSelection();
+//        saveTableSelection();
         model->refresh();// Not 100% sure why this is needed.. Should be done by re-setting the model above
-        resetTableSelection();
+//        resetTableSelection();
         setFileWatch();
         setTray();
         setFontSize();
+        setHotkey();
     }
 }
 
 void MainWindow::setFontSize(){
+	QSettings settings;
     int size = settings.value(SETTINGS_FONT_SIZE).toInt();
     if(size >0){
         auto f = qApp->font();
@@ -399,6 +416,7 @@ void MainWindow::stayOnTop()
 }
 
 void MainWindow::setTray(){
+	QSettings settings;
     if(settings.value(SETTINGS_TRAY_ENABLED,DEFAULT_TRAY_ENABLED).toBool()){
         // We should be showing a tray icon. Are we?
         if(trayicon==NULL){
@@ -480,27 +498,27 @@ void MainWindow::on_lineEdit_returnPressed()
 }
 
 void MainWindow::on_pushButton_3_clicked()
+// Archive action.
 {
-    // Archive
-    saveTableSelection();
+//    saveTableSelection();
     model->archive();
-    resetTableSelection();
+//    resetTableSelection();
     updateTitle();
 }
 
 void MainWindow::on_pushButton_4_clicked()
 // This is the Refresh button
 {
-    saveTableSelection();
+//    saveTableSelection();
     model->refresh();
-    resetTableSelection();
+//    resetTableSelection();
     updateTitle();
 }
 
 
-
-void MainWindow::saveTableSelection(){
-    qDebug()<<"   ---Launched saveTableSelection "<<endline;
+//   GDE-NTM   REWORK NEEDED, no direct access to data.
+/*void MainWindow::saveTableSelection(){
+    qDebug()<<"   ---Launched saveTableSelection. Skipped --- "<<endline;
     //auto index = ui->tableView->selectionModel()->selectedIndexes();
     auto index = ui->tableView->selectionModel()->currentIndex();
 //    if(index.count()>0){
@@ -515,8 +533,8 @@ void MainWindow::saveTableSelection(){
 }
 
 void MainWindow::resetTableSelection(){
-    qDebug()<<"   ---Launched resetTableSelection "<<endline;
-    if(saved_selection.size()>0){
+    qDebug()<<"   ---Launched resetTableSelection. Skipped --- "<<endline;
+/*    if(saved_selection.size()>0){
         // Set the selection again
         QModelIndexList foundIndexes = model->match(QModelIndex(),Qt::UserRole,saved_selection);
         if(foundIndexes.count()>0){
@@ -536,9 +554,10 @@ void MainWindow::resetTableSelection(){
     }
     saved_selection="";
 
-}
+}*/
 
 void MainWindow::cleanup(){
+	QSettings settings;
 
     settings.setValue( SETTINGS_GEOMETRY, saveGeometry() );
     settings.setValue( SETTINGS_SAVESTATE, saveState() );
@@ -565,12 +584,14 @@ void MainWindow::closeEvent(QCloseEvent *ev){
 
 void MainWindow::on_btn_Alphabetical_toggled(bool checked)
 {
+	QSettings settings;
     settings.setValue(SETTINGS_SORT_ALPHA,checked);
     on_pushButton_4_clicked(); // Refresh
 }
 
 void MainWindow::on_context_lock_toggled(bool checked)
 {
+	QSettings settings;
     settings.setValue(SETTINGS_CONTEXT_LOCK,checked);
 }
 
@@ -638,12 +659,14 @@ void MainWindow::on_actionRedo_triggered()
 
 void MainWindow::on_actionShow_All_changed()
 {
+	QSettings settings;
     settings.setValue(SETTINGS_SHOW_ALL,ui->actionShow_All->isChecked());
     on_pushButton_4_clicked();
 }
 
 void MainWindow::on_actionStay_On_Top_changed()
 {
+	QSettings settings;
     settings.setValue(SETTINGS_STAY_ON_TOP,ui->actionStay_On_Top->isChecked());
     stayOnTop();
 }
@@ -666,7 +689,7 @@ void MainWindow::on_actionEdit()
 void MainWindow::on_actionDelete()
 {
    // Remove the selected item
-   saveTableSelection();
+//   saveTableSelection();
     QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
     // Only support for deleting one item at a time
     if(!indexes.empty()){
@@ -682,7 +705,7 @@ void MainWindow::on_actionDelete()
 void MainWindow::on_actionPostpone()
 //
 {
-   saveTableSelection();
+//   saveTableSelection();
    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
     if(!indexes.empty()){
         QModelIndex i=indexes.at(0);
@@ -696,13 +719,12 @@ void MainWindow::on_actionPostpone()
 void MainWindow::on_actionDuplicate()
 //
 {
-
-	saveTableSelection();
+//	saveTableSelection();
 	if(!saved_selection.isEmpty()){
 		saved_selection +=" bis";
         model->add(saved_selection);
    }
-   resetTableSelection();
+//   resetTableSelection();
    updateTitle();
    
    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
@@ -748,3 +770,32 @@ void MainWindow::on_actionDuplicate()
 		ui->newVersionView->show();
     }
 
+void MainWindow::on_actionPrint_triggered()
+/* Print the selection of tasks
+*/
+{
+	qDebug()<<"on_actionPrint_triggered()"<<endline;
+    auto selection = ui->tableView->selectionModel();
+//    if(index.count()>0){
+    if(selection->hasSelection()){
+	qDebug()<<"on_actionPrint_triggered(): step1"<<endline;
+		QPrinter printer;
+		
+		QPrintDialog dialog(&printer, this);
+		dialog.setWindowTitle(tr("Print Tasks"));
+//		dialog.addEnabledOption(index);
+		if (dialog.exec() != QDialog::Accepted)
+			return;
+		QString txt_str;
+		QModelIndexList list=selection->selection().indexes();
+		for (QList<QModelIndex>::iterator i=list.begin(); i!=list.end();++i)
+		{
+			txt_str=txt_str + "<br>";
+			txt_str=txt_str+i->data(Qt::DisplayRole).toString();
+		}
+		qDebug()<<"on_actionPrint_triggered(): txt_str"<<txt_str<<endline;
+		QTextDocument text(this);
+		text.setHtml(txt_str);
+		text.print(&printer);
+	}
+}

@@ -84,15 +84,15 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
     // Fix some font-awesome stuff
-    QtAwesome* awesome = new QtAwesome(qApp);
+    fa::QtAwesome* awesome = new fa::QtAwesome(qApp);
     awesome->initFontAwesome();     // This line is important as it loads the font and initializes the named icon map
     awesome->setDefaultOption("scale-factor",0.9);
-    ui->btn_Alphabetical->setIcon(awesome->icon( fa::sortalphaasc ));
-    ui->archiveButton->setIcon(awesome->icon( fa::signout ));
-    ui->refreshButton->setIcon(awesome->icon( fa::refresh ));
-    ui->addButton->setIcon(awesome->icon( fa::plus ));
-    ui->context_lock->setIcon(awesome->icon(fa::lock));
-    ui->pb_closeVersionBar->setIcon(awesome->icon(fa::times));
+    ui->btn_Alphabetical->setIcon(awesome->icon(fa::fa_solid, fa::fa_arrow_down_a_z ));
+    ui->archiveButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_right_from_bracket));
+    ui->refreshButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_arrows_rotate ));
+    ui->addButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_plus ));
+    ui->context_lock->setIcon(awesome->icon(fa::fa_solid, fa::fa_lock));
+    ui->pb_closeVersionBar->setIcon(awesome->icon(fa::fa_solid, fa::fa_xmark));
 
     // Set some defaults if they dont exist
     if(!settings.contains(SETTINGS_LIVE_SEARCH)){

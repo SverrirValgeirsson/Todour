@@ -31,7 +31,7 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QPushButton" name="pushButton_3">
+       <widget class="QPushButton" name="archiveButton">
         <property name="toolTip">
          <string>Archive</string>
         </property>
@@ -41,7 +41,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_4">
+       <widget class="QPushButton" name="refreshButton">
         <property name="toolTip">
          <string>Refresh</string>
         </property>
@@ -54,7 +54,7 @@
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
-        </property>
+        </property>  
         <property name="sizeHint" stdset="0">
          <size>
           <width>10</width>
@@ -84,7 +84,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="lineEdit_2">
+       <widget class="QLineEdit" name="lineEditFilter">
         <property name="minimumSize">
          <size>
           <width>0</width>
@@ -170,7 +170,7 @@ border-radius: 5px;
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QLineEdit" name="lineEdit">
+       <widget class="QLineEdit" name="lineEditNew">
         <property name="placeholderText">
          <string>New (ctrl-n)</string>
         </property>
@@ -180,7 +180,7 @@ border-radius: 5px;
       </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="addButton">
         <property name="toolTip">
          <string>Add item</string>
         </property>
@@ -213,30 +213,7 @@ border-radius: 5px;
        <item>
         <widget class="QLabel" name="lbl_newVersion">
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;New version is available at &lt;a href=&quot;http://nerdur.com/todour-pl&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://nerdur.com/todour-pl&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::RichText</enum>
-         </property>
-         <property name="openExternalLinks">
-          <bool>true</bool>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="lbl_latestVersion">
-         <property name="text">
-          <string>You are running latest version</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="txtLatestVersion">
-         <property name="text">
-          <string/>
+          <string> </string>
          </property>
         </widget>
        </item>
@@ -374,12 +351,11 @@ border-radius: 5px;
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <tabstops>
-  <tabstop>lineEdit</tabstop>
-  <tabstop>pushButton</tabstop>
-  <tabstop>pushButton_2</tabstop>
-  <tabstop>lineEdit_2</tabstop>
-  <tabstop>pushButton_3</tabstop>
-  <tabstop>pushButton_4</tabstop>
+  <tabstop>lineEditNew</tabstop>
+  <tabstop>addButton</tabstop>
+  <tabstop>lineEditFilter</tabstop>
+  <tabstop>archiveButton</tabstop>
+  <tabstop>refreshButton</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>

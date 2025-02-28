@@ -16,6 +16,7 @@
 #include <QDate>
 #include <QTemporaryDir>
 #include <QFile>
+#include <QObject>
 
 #include "task.h"
 
@@ -23,8 +24,26 @@ using namespace std;
 
 typedef enum {typetodofile,typedonefile,typedeletefile} filetype;
 
-class todotxt
+class todotxt : public QObject
 {
+    Q_OBJECT
+public:
+    explicit todotxt(QObject *parent = 0);
+    ~todotxt();
+//used by new model:
+    void getAllTask(vector<task> &output);
+
+   void clearFileWatch(); //gaetan 5/1/24
+   void setFileWatch(QObject *parent); //gaetan 5/1/24
+
+    // Undo and Redo
+public:
+    bool undo();   // Go backwards in the undo buffer without adding to it
+    bool redo();  // go forward in the undo buffor without adding to it
+    bool undoPossible(); // Say if undo is possible or not
+    bool redoPossible(); // Say if redo is possible or not
+	int write(vector<task>& content, filetype t, bool append);
+
 protected:
     vector<QString> todo;
     vector<QString> done;
@@ -42,22 +61,6 @@ protected:
 
 	bool _ready;
 
-public:
-    todotxt();
-    ~todotxt();
-//used by new model:
-    void getAllTask(vector<task> &output);
-
-   void clearFileWatch(); //gaetan 5/1/24
-   void setFileWatch(QObject *parent); //gaetan 5/1/24
-
-    // Undo and Redo
-public:
-    bool undo();   // Go backwards in the undo buffer without adding to it
-    bool redo();  // go forward in the undo buffor without adding to it
-    bool undoPossible(); // Say if undo is possible or not
-    bool redoPossible(); // Say if redo is possible or not
-	int write(vector<task>& content, filetype t, bool append);
 
 protected:
 //used by new model:
@@ -75,6 +78,11 @@ protected:
 	
 private:
     void slurp(QFile* filename,vector<QString>&  content);
+    
+    
+public slots:
+	void fileModified(QString str);
+
 };
 
 #endif // TODOTXT_H

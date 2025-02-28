@@ -18,10 +18,10 @@ todour_version::todour_version()
 }
 
 void todour_version::onlineCheck(bool forced)
-// This function stats an online check of the version.  This can be triggered manually (from Aboutbox) of automatically.
+// This function stats an online check of the version.  This can be triggered manually=forced (from Aboutbox) of automatically.
 {
-		QSettings settings;
-    if(forced || settings.value(SETTINGS_CHECK_UPDATES,!DEFAULT_CHECK_UPDATES).toBool()){
+	QSettings settings;
+    if(settings.value(SETTINGS_CHECK_UPDATES,!DEFAULT_CHECK_UPDATES).toBool()){
         QString last_check = settings.value(SETTINGS_LAST_UPDATE_CHECK,"").toString();
         if(last_check.isEmpty()){
             // We set this up so that first check will be later, giving users ample time to turn off the feature.
@@ -34,7 +34,7 @@ void todour_version::onlineCheck(bool forced)
 
  //       qDebug()<<"Last update check date: "<<last_check<<" and next is "<<nextCheck.toString("yyyy-MM-dd")<<endline;
         int daysToNextcheck = QDate::currentDate().daysTo(nextCheck);
-        if(daysToNextcheck<0){
+        if(forced || daysToNextcheck<0){
             QString URL = VERSION_URL;
  			connect(networkaccessmanager,SIGNAL(finished(QNetworkReply*)),this,SLOT(requestReceived(QNetworkReply*)));
 			networkaccessmanager->get(QNetworkRequest(QUrl(URL)));
@@ -56,7 +56,6 @@ void todour_version::requestReceived(QNetworkReply* reply){
    	QSettings settings;
 
     // Have a default showing that you are running the latest
-   // versionBar->hide();
     if(reply->error()==QNetworkReply::NoError){
 
         // Get the http status code
@@ -66,20 +65,12 @@ void todour_version::requestReceived(QNetworkReply* reply){
             replyText = reply->readAll();
             double latest_version = replyText.toDouble();
             double this_version = QString(VER).toDouble();
-            qDebug()<<"Checked version - Latest: "<<latest_version<<" this version "<<this_version<<endline;
             if(latest_version>this_version){
-//                if(latest_version > this_version){
-                   // versionBar->show();
-//                } else {
-                 //   versionBar->show();
-  //              }
-                //versionBar->setText("(v"+QString::number(latest_version,'f',2)+")");
-                //versionBar->show();
-                emit NewVersion("New version available.");
+                emit NewVersion("New version available: "+QString::number(latest_version));
             }
             else
             {
-            emit NewVersion("You are up to date.");
+            	emit NewVersion("You are up to date.");
             }
             // Update the last checked since we were successful
             settings.setValue(SETTINGS_LAST_UPDATE_CHECK,QDate::currentDate().toString("yyyy-MM-dd"));
@@ -92,4 +83,4 @@ void todour_version::requestReceived(QNetworkReply* reply){
     }
     reply->deleteLater();
 }
-  
+ 

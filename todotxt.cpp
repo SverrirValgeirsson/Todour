@@ -5,19 +5,19 @@
 
 #include <QTextStream>
 #include <QStringList>
-#include <QDate>
 #include <set>
 #include <QSettings>
 #include <QList>
 #include <QVariant>
-#include <QRegularExpression>
+// #include <QRegularExpression>
 #include <QDebug>
 #include <QUuid>
 #include <QDir>
-#include <QFile>
+
 #include <QFileSystemWatcher>  //Gaetandc 5/1/24
 
-todotxt::todotxt()
+todotxt::todotxt(QObject *parent) :
+	QObject(parent)
 {
     // This is part of the old implementation where we'd have a constant undoDir that could
     // be shared by many applications.  I leave it here in case we end up with using too much storage
@@ -72,7 +72,7 @@ void todotxt::getAllTask(vector<task> &output)
     }
 
     QTextStream in(_TodoFile);
-    in.setCodec("UTF-8");
+    in.setEncoding(QStringConverter::Utf8);
     while (!in.atEnd()) {
         QString line = in.readLine();
         if(settings.value(SETTINGS_REMOVE_DOUBLETS,DEFAULT_REMOVE_DOUBLETS).toBool()){
@@ -99,7 +99,7 @@ void todotxt::slurp(QFile* file,vector<QString>& content){
         return;
 
     QTextStream in(file);
-    in.setCodec("UTF-8");
+    in.setEncoding(QStringConverter::Utf8);
     while (!in.atEnd()) {
         QString line = in.readLine();
         if(settings.value(SETTINGS_REMOVE_DOUBLETS,DEFAULT_REMOVE_DOUBLETS).toBool()){
@@ -143,7 +143,7 @@ int todotxt::write(vector<task>& content, filetype t, bool append)
 	default: return 2;
 	}
 
-     out.setCodec("UTF-8");
+     out.setEncoding(QStringConverter::Utf8);
      for(unsigned int i = 0; i<content.size(); i++)
          out << content.at(i).get_raw() << "\n";
 
@@ -164,55 +164,6 @@ int todotxt::write(vector<task>& content, filetype t, bool append)
 
 
 
-/*
-Q_DECLARE_METATYPE(QList<int>)
-
-QString todotxt::getRelativeDate(QString shortform,QDate d){
-    QString extra = "";
-    // The short form supported for now is +\\dd
-    QRegularExpression reldateregex("\\+(\\d+)([dwmypb])");
-    QRegularExpressionMatch m = reldateregex.match(shortform);
-    if(m.hasMatch()){
-        if(m.captured(2).contains('d')){
-            d= d.addDays(m.captured(1).toInt());
-        } else if(m.captured(2).contains('w')){
-            d= d.addDays(m.captured(1).toInt()*7);
-        } else if(m.captured(2).contains('m')){
-            d= d.addMonths(m.captured(1).toInt());
-        } else if(m.captured(2).contains('y')) {
-            d= d.addYears(m.captured(1).toInt());
-        } else if(m.captured(2).contains('p')){
-            // Ok. This is the procrastination 'feature'. Add a random number of days and also say that this was procrastrinated
-            d = d.addDays(rand()%m.captured(1).toInt()+1);
-            //extra = " +procrastinated";
-        } else if (m.captured(2).contains('b')){
-            // Business days. Naive implementation
-            QSettings settings;
-            QList<int> business_days = settings.value(SETTINGS_BUSINESS_DAYS, QVariant::fromValue(QList<int>())).value<QList<int> >();
-            if(business_days.size()==0){
-                // Hard code some defaults
-                for(int i=DEFAULT_BUSINESS_DAYS_FIRST;i<=DEFAULT_BUSINESS_DAYS_LAST;i++){
-                    business_days<<i;
-                }
-            }
-            // 1=Monday, 6=Sat, 7=sun
-            int days=0;
-            int addDays = m.captured(1).toInt();
-            while(days<addDays){
-                d = d.addDays(1); // add one at a time
-                if(business_days.contains(d.dayOfWeek())){
-                    days++;
-                }
-            }
-
-        }
-        return d.toString("yyyy-MM-dd")+extra;
-    } else {
-        return shortform; // Don't know what to do.. so just put the string back
-    }
-}
-
-*/
 
 // GDE-NTM need rework
 void todotxt::restoreFiles(QString namePrefix){
@@ -423,7 +374,48 @@ void todotxt::setFileWatch(QObject *parent)
     watcher = new QFileSystemWatcher();
     watcher->removePaths(watcher->files()); // Make sure this is empty. Should only be this file we're using in this program, and only one instance
     watcher->addPath(_TodoFilePath);
-    QObject::connect(watcher, SIGNAL(fileChanged(QString)), parent, SLOT(fileModified(QString)));
+    QObject::connect(watcher, SIGNAL(fileChanged(QString)), this, SLOT(fileModified(QString)));
 
 }
 
+
+void todotxt::fileModified(QString str)
+/*
+*/
+{
+qDebug()<<"DEBUG : todotxt::fileModified detected !!"<<endline;
+
+/*   COPY FROM MAINWINDOW.CPP:
+void MainWindow::fileModified(const QString &str)
+  
+    Q_UNUSED(str);
+    //qDebug()<<"MainWindow::fileModified  "<<watcher->files()<<" --- "<<str;
+//    saveTableSelection();  // This should be maintained???
+    model->refresh();
+    if(model->count()==0){
+        // This sometimes happens when the file is being updated. We have gotten the signal a bit soon so the file is still empty. Wait and try again
+        delay();
+        model->refresh();
+        updateTitle();
+    }
+//    resetTableSelection();  // This should be maintained???
+    setFileWatch();
+    }
+    
+    
+    
+    void delay()
+ A simple delay function I pulled of the 'net.. Need to delay reading a file a little bit.. A second seems to be enough
+  really don't like this though as I have no idea of knowing when a second is enough.
+  Having more than one second will impact usability of the application as it changes the focus.
+
+{
+qDebug()<<"  DEPRECATED: MainWindow::delay()"<<endline;
+    QTime dieTime= QTime::currentTime().addSecs(1);
+    while( QTime::currentTime() < dieTime )
+    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+}
+
+*/
+
+}

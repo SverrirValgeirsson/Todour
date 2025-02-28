@@ -38,6 +38,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->cb_removeDoublets->setChecked(settings.value(SETTINGS_REMOVE_DOUBLETS,DEFAULT_REMOVE_DOUBLETS).toBool());
     ui->search_not_char->setText(settings.value(SETTINGS_SEARCH_NOT_CHAR,DEFAULT_SEARCH_NOT_CHAR).toChar());
     ui->cb_default_threshold->setCurrentText(settings.value(SETTINGS_DEFAULT_THRESHOLD,DEFAULT_DEFAULT_THRESHOLD).toString());
+    ui->default_priority->setText(settings.value(SETTINGS_DEFAULT_PRIORITY,DEFAULT_DEFAULT_PRIORITY).toString());
 
     // Business days
     QList<int> business_days = settings.value(SETTINGS_BUSINESS_DAYS, QVariant::fromValue(QList<int>())).value<QList<int> >();
@@ -109,6 +110,7 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue(SETTINGS_REMOVE_DOUBLETS,ui->cb_removeDoublets->isChecked());
     if(ui->search_not_char->text().size()>0)
         settings.setValue(SETTINGS_SEARCH_NOT_CHAR,ui->search_not_char->text().at(0));
+	settings.setValue(SETTINGS_DEFAULT_PRIORITY,ui->default_priority->text().at(0));
 
     // Handle business days
     QList<int> business_days;

@@ -6,6 +6,8 @@
 #include <uglobalhotkeys.h>
 #include <QSystemTrayIcon>
 #include <QMenu>
+#include <QTimer> //used for hiding version bar
+#include <QSortFilterProxyModel>
 
 #include <memory>
 #include "version.h"
@@ -24,68 +26,43 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     void parse_todotxt();
-    void addTodo(QString &s);
+    void addTodo(QString &s, QString context);
     ~MainWindow();
     
 public slots:
-    void fileModified(const QString& str);
     void undo();
     void redo();
 //    void on_new_version();
 
 
 private slots:
-    void on_lineEdit_2_textEdited(const QString &arg1);
-
+    void on_lineEditFilter_textEdited(const QString &arg1);
     void on_actionSettings_triggered();
-
     void on_actionAbout_triggered();
-
-    void on_pushButton_clicked();
-
-    void on_lineEdit_returnPressed();
-
-//    void on_pushButton_2_clicked();
-
-    void on_pushButton_3_clicked();
-
-    void on_pushButton_4_clicked();
-
+    void on_addButton_clicked();
+    void on_lineEditNew_returnPressed();
+    void on_archiveButton_clicked();
+    void on_refreshButton_clicked();
     void dataInModelChanged(QModelIndex i1,QModelIndex i2);
-
     void on_btn_Alphabetical_toggled(bool checked);
-
-    void on_lineEdit_2_returnPressed();
-
+    void on_lineEditFilter_returnPressed();
     void on_hotkey();
-
     void on_context_lock_toggled(bool checked);
 
 
     void on_cb_threshold_inactive_stateChanged(int arg1);
-
     void iconActivated(QSystemTrayIcon::ActivationReason reason);
     void cleanup(); // Need to have a quit slot of my own to save settings and so on.
 
-
     void on_pb_closeVersionBar_clicked();
-
     void on_actionCheck_for_updates_triggered();
-
     void on_tableView_customContextMenuRequested(const QPoint &pos);
-
     void on_actionQuit_triggered();
-
     void on_actionUndo_triggered();
-
     void on_actionRedo_triggered();
-
     void on_actionShow_All_changed();
-
     void on_actionStay_On_Top_changed();
-
-    void on_actionManual_triggered();
-    
+    void on_actionManual_triggered();    
     void on_actionPrint_triggered();
 
     
@@ -117,9 +94,14 @@ private:
     void updateTitle();
     void setFontSize();
     void stayOnTop();
-    QString baseTitle;
+
     UGlobalHotkeys *hotkey;
     void setHotkey();
+
+
+	QTimer *versionTimer;
+
+    QString baseTitle;
     QSystemTrayIcon *trayicon = NULL;
     QMenu *traymenu=NULL;
     QAction *minimizeAction;
@@ -145,6 +127,9 @@ private:
     QAction* DpriorAction;
     QAction* actionPrint;
     
+    
+    QSortFilterProxyModel *proxyModel;
+
 };
 
 #endif // MAINWINDOW_H

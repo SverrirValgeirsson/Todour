@@ -8,6 +8,7 @@
 #include <QMenu>
 #include <QTimer> //used for hiding version bar
 #include <QSortFilterProxyModel>
+#include <QDesktopServices> //used for showing the online user manual.
 
 #include <memory>
 #include "version.h"
@@ -32,7 +33,6 @@ public:
 public slots:
     void undo();
     void redo();
-//    void on_new_version();
 
 
 private slots:
@@ -40,11 +40,10 @@ private slots:
     void on_actionSettings_triggered();
     void on_actionAbout_triggered();
     void on_addButton_clicked();
-    void on_lineEditNew_returnPressed();
+    inline void on_lineEditNew_returnPressed()
+    		{on_addButton_clicked();}
     void on_archiveButton_clicked();
     void on_refreshButton_clicked();
-    void dataInModelChanged(QModelIndex i1,QModelIndex i2);
-    void on_btn_Alphabetical_toggled(bool checked);
     void on_lineEditFilter_returnPressed();
     void on_hotkey();
     void on_context_lock_toggled(bool checked);
@@ -55,14 +54,17 @@ private slots:
     void cleanup(); // Need to have a quit slot of my own to save settings and so on.
 
     void on_pb_closeVersionBar_clicked();
-    void on_actionCheck_for_updates_triggered();
+    inline void on_actionCheck_for_updates_triggered()
+    		{Version->onlineCheck(true);}
     void on_tableView_customContextMenuRequested(const QPoint &pos);
-    void on_actionQuit_triggered();
+    inline void on_actionQuit_triggered()
+    		{cleanup();}
     void on_actionUndo_triggered();
     void on_actionRedo_triggered();
     void on_actionShow_All_changed();
     void on_actionStay_On_Top_changed();
-    void on_actionManual_triggered();    
+    inline void on_actionManual_triggered()
+    		{QDesktopServices::openUrl(QUrl("https://sverrirvalgeirsson.github.io/Todour"));};    
     void on_actionPrint_triggered();
 
     
@@ -75,14 +77,13 @@ private slots:
    void on_actionPriorityB();
    void on_actionPriorityC();
    void on_actionPriorityD();
-//   void on_actionPrint();
+  
+   void on_actionSortAZ();
+   void on_actionSortDate();
    
    void new_version(QString);
 
-
 private:
-//	QSettings settings;
-
     void setFileWatch();
     void setTray();
     void clearFileWatch();
@@ -97,7 +98,6 @@ private:
 
     UGlobalHotkeys *hotkey;
     void setHotkey();
-
 
 	QTimer *versionTimer;
 
@@ -114,19 +114,23 @@ private:
 
     
 //Gaetandc 4/1/24    
-    QMenu* rClickMenu=NULL;
-    QMenu* priorityMenu=NULL;
-
-    QAction* editAction;
-    QAction* deleteAction;
-    QAction* postponeAction;
-    QAction* duplicateAction;
-    QAction* ApriorAction;
-    QAction* BpriorAction;
-    QAction* CpriorAction;
-    QAction* DpriorAction;
     QAction* actionPrint;
-    
+
+    QMenu* rClickMenu=NULL;
+	    QAction* editAction;
+   		QAction* deleteAction;
+    	QAction* postponeAction;
+    	QAction* duplicateAction;
+
+    QMenu* priorityMenu=NULL;
+    	QAction* ApriorAction;
+    	QAction* BpriorAction;
+    	QAction* CpriorAction;
+    	QAction* DpriorAction;
+
+	QMenu* sortMenu=NULL;    
+    	QAction* sortAzAction;
+    	QAction* sortDateAction;
     
     QSortFilterProxyModel *proxyModel;
 

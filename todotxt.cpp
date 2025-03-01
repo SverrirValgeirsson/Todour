@@ -9,27 +9,16 @@
 #include <QSettings>
 #include <QList>
 #include <QVariant>
-// #include <QRegularExpression>
 #include <QDebug>
 #include <QUuid>
 #include <QDir>
+#include <deque>
 
-#include <QFileSystemWatcher>  //Gaetandc 5/1/24
+#include <QFileSystemWatcher>
 
 todotxt::todotxt(QObject *parent) :
 	QObject(parent)
 {
-    // This is part of the old implementation where we'd have a constant undoDir that could
-    // be shared by many applications.  I leave it here in case we end up with using too much storage
-    // and need manual cleanups.
-    //cleanupUndoDir();
-
-// try to open todo.txt file
-// set the flag "ready"
-
-// NOTE : envisager une couche abstraite de gestion de fichier.
-
-
     QSettings settings;
     QString dir = settings.value(SETTINGS_DIRECTORY).toString();
 	_TodoFile = new QFile(dir + TODOFILE);
@@ -82,18 +71,17 @@ void todotxt::getAllTask(vector<task> &output)
             //    continue;
             //}
         }
-    //    qDebug()<<"todotxt::getAllTask: we push back "<<line<<endline;
-		output.push_back(line);
+		task* newt = new task(line,true);
+		output.push_back(*newt);
      }
 	if (_TodoFile->isOpen()){
     	_TodoFile->close();	
 	}
-	
-	
 }
 
 // GDE-NTM need rework
-void todotxt::slurp(QFile* file,vector<QString>& content){
+void todotxt::slurp(QFile* file,vector<QString>& content){ //  NOT USED.
+qDebug()<<" use of deprecated todotxt::slurp"<<endline;
     QSettings settings;
     if (!file->open(QIODevice::ReadOnly | QIODevice::Text))
         return;
@@ -118,7 +106,8 @@ void todotxt::slurp(QFile* file,vector<QString>& content){
 
 int todotxt::write(vector<task>& content, filetype t, bool append)
 {
-//    qDebug()<<"todotxt::writeB("<<t<<"). append="<<append<<endline;
+    qDebug()<<"todotxt::writeB("<<t<<"). append="<<append<<endline;
+    saveToUndo();
     QTextStream out;
 	bool result;
 	switch (t){
@@ -145,7 +134,7 @@ int todotxt::write(vector<task>& content, filetype t, bool append)
 
      out.setEncoding(QStringConverter::Utf8);
      for(unsigned int i = 0; i<content.size(); i++)
-         out << content.at(i).get_raw() << "\n";
+         out << content.at(i).toString() << "\n";
 
 	if (_TodoFile->isOpen()){
 	     _TodoFile->flush();
@@ -162,13 +151,10 @@ int todotxt::write(vector<task>& content, filetype t, bool append)
      return 0;
 }
 
-
-
-
 // GDE-NTM need rework
 void todotxt::restoreFiles(QString namePrefix){
 Q_UNUSED(namePrefix)
-/*
+/*  #TODO  do not work with files, but reload the content of good file.
     qDebug()<<"Restoring: "<<namePrefix<<endline;
     qDebug()<<"Pointer: "<<undoPointer<<endline;
     // Copy back files from the undo
@@ -191,49 +177,47 @@ Q_UNUSED(namePrefix)
 
 }
 
-// GDE-NTM need rework
 bool todotxt::undo()
 {
     // Check if we can
-    if((int) undoBuffer.size()>undoPointer+1){
-        // yep. there is more in the buffer.
-        // Ok. Here it is obvious that I should have implemented undoBuffer as a vector and probably have the pointer to be a negative index
-        undoPointer++;
-        restoreFiles(undoBuffer[undoBuffer.size()-(1+undoPointer)]);
+    if(undoPossible()){
+		restoreFiles(undoBuffer.back());
+		
+		redoBuffer.push_back(undoBuffer.back());
+		undoBuffer.pop_back();
+		
         return true;
     }
     return false;
 }
 
-// GDE-NTM need rework
 bool todotxt::redo()
 {
     // Check if we can
-    if(undoPointer>0){
-        // yep. there is more in the buffer.
-        // Ok. Here it is obvious that I should have implemented undoBuffer as a vector and probably have the pointer to be a negative index
-        undoPointer--;
-        restoreFiles(undoBuffer[undoBuffer.size()-(1+undoPointer)]);
+    if(redoPossible()){
+        restoreFiles(redoBuffer.back());
+		
+		undoBuffer.push_back(redoBuffer.back());
+		redoBuffer.pop_back();        
         return true;
     }
     return false;
 }
 
-// GDE-NTM need rework
+
 bool todotxt::undoPossible()
 {
-    if((int) undoBuffer.size()>undoPointer+1){
-        return true;
-    }
+    if((int) undoBuffer.size()>0)
+     	   return true;
+    
     return false;
 }
 
-// GDE-NTM need rework
 bool todotxt::redoPossible()
 {
-    if(undoPointer>0){
-        return true;
-    }
+    if((int) redoBuffer.size()>0)
+        	return true;
+    
     return false;
 }
 
@@ -331,33 +315,28 @@ bool todotxt::checkNeedForUndo(){
 // GDE-NTM need rework
 void todotxt::saveToUndo()
 {
-/*
     // This should be called every time we will read todo.txt
 
-    // if we're moving around the undoBuffer, we should not be doing anything
-    if(undoPointer)
-        return;
+	if (undoBuffer.size()>20)
+			undoBuffer.pop_front();
+		
+	if (redoBuffer.size()>0)
+			redoBuffer.clear();
+	
+    QString namePrefix = getNewUndoNameDirAndPrefix();
+    QString newtodo = namePrefix+TODOFILE;
+    QString newdone = namePrefix+DONEFILE;
+    QString newdeleted = namePrefix+DELETEDFILE;
 
-    // Start with checking if there is a change in the file compared to the last one in the undoBuffer
-    // (or if the undoBuffer is empty)
-    if(checkNeedForUndo() ){
-        // Creating a new undo is pretty simple.
-        // Just copy the todo.txt and the done.txt to the undo directory under a new name and save the filename in the undoBuffer
-        QString namePrefix = getNewUndoNameDirAndPrefix();
-        QString newtodo = namePrefix+TODOFILE;
-        QString newdone = namePrefix+DONEFILE;
-        QString newdeleted = namePrefix+DELETEDFILE;
+    QFile::copy(_TodoFilePath,newtodo);
+    QFile::copy(_DoneFilePath,newdone);
+    QFile::copy(_DeleteFilePath,newdeleted);
 
-        QFile::copy(getTodoFilePath(),newtodo);
-        QFile::copy(getDoneFilePath(),newdone);
-        QFile::copy(getDeletedFilePath(),newdeleted);
-
-        undoBuffer.push_back(namePrefix);
-        qDebug()<<"Added to undoBuffer: "<<namePrefix<<endline;
-        qDebug()<<"Buffer is now: "<<undoBuffer.size()<<endline;
-    }*/
-
-}
+    undoBuffer.push_back(namePrefix);
+    qDebug()<<"Added to undoBuffer: "<<namePrefix<<endline;
+    qDebug()<<"Buffer is now: "<<undoBuffer.size()<<endline;
+    }
+	
 
 
 QFileSystemWatcher *watcher;
@@ -371,6 +350,7 @@ void todotxt::clearFileWatch()
 
 void todotxt::setFileWatch(QObject *parent)
 {
+	Q_UNUSED(parent);
     watcher = new QFileSystemWatcher();
     watcher->removePaths(watcher->files()); // Make sure this is empty. Should only be this file we're using in this program, and only one instance
     watcher->addPath(_TodoFilePath);
@@ -383,7 +363,8 @@ void todotxt::fileModified(QString str)
 /*
 */
 {
-qDebug()<<"DEBUG : todotxt::fileModified detected !!"<<endline;
+	Q_UNUSED(str);
+	qDebug()<<"DEBUG : todotxt::fileModified detected !!"<<endline;
 
 /*   COPY FROM MAINWINDOW.CPP:
 void MainWindow::fileModified(const QString &str)
@@ -401,21 +382,5 @@ void MainWindow::fileModified(const QString &str)
 //    resetTableSelection();  // This should be maintained???
     setFileWatch();
     }
-    
-    
-    
-    void delay()
- A simple delay function I pulled of the 'net.. Need to delay reading a file a little bit.. A second seems to be enough
-  really don't like this though as I have no idea of knowing when a second is enough.
-  Having more than one second will impact usability of the application as it changes the focus.
-
-{
-qDebug()<<"  DEPRECATED: MainWindow::delay()"<<endline;
-    QTime dieTime= QTime::currentTime().addSecs(1);
-    while( QTime::currentTime() < dieTime )
-    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
-}
-
-*/
-
+*/    
 }

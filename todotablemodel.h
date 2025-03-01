@@ -30,18 +30,20 @@ public:
  	bool setData(const QModelIndex & index, const QVariant & value, int role);
     int count();
 
-    void addTask(QString text,QString context="",QString priority="");
+    void addTask(QString text,QString context="");
     void removeTasks(QModelIndexList &index);
     void archive();
     void refresh();
     void postponeTasks(QModelIndexList & index, QString data);
     void setPriorityTasks(QModelIndexList & index,QString prio);
 
-    inline bool undo(){    return todo->undo();};
-    inline bool redo(){    return todo->redo();};
+    bool undo();
+    bool redo();
     inline bool undoPossible(){    return todo->undoPossible();}; // Say if undo is possible or not
     inline bool redoPossible(){    return todo->redoPossible();}; // Say if redo is possible or not
-
+    void    saveToUndo();
+    
+    
    inline void clearFileWatch(){   todo->clearFileWatch();}; //gaetan 5/1/24
    inline void setFileWatch(QObject *parent){   todo->setFileWatch(parent);}; //gaetan 5/1/24
 
@@ -50,6 +52,10 @@ signals:
 public slots:
     
 private:
+
+    vector<task> undoBuffer; // A buffer with base filenames for undos
+    int 	undoPointer = 0; // Pointer into the undo buffer for undo and redo. Generally should be 0
+
 
 };
 

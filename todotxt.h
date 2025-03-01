@@ -10,7 +10,8 @@
 #define DONEFILE "done.txt"
 #define DELETEDFILE "deleted.txt"
 
-#include <vector>
+#include <vector>   // can be removed?
+#include <deque>
 #include <set>
 #include <QString>
 #include <QDate>
@@ -30,26 +31,14 @@ class todotxt : public QObject
 public:
     explicit todotxt(QObject *parent = 0);
     ~todotxt();
-//used by new model:
-    void getAllTask(vector<task> &output);
 
-   void clearFileWatch(); //gaetan 5/1/24
-   void setFileWatch(QObject *parent); //gaetan 5/1/24
-
-    // Undo and Redo
-public:
-    bool undo();   // Go backwards in the undo buffer without adding to it
-    bool redo();  // go forward in the undo buffor without adding to it
-    bool undoPossible(); // Say if undo is possible or not
-    bool redoPossible(); // Say if redo is possible or not
+	void getAllTask(vector<task> &output);
+	void clearFileWatch(); //gaetan 5/1/24
+	void setFileWatch(QObject *parent); //gaetan 5/1/24
 	int write(vector<task>& content, filetype t, bool append);
 
 protected:
-    vector<QString> todo;
-    vector<QString> done;
-    set<QString> active_projects;
-    set<QString> active_contexts;
-    QTemporaryDir *undoDir;
+   QTemporaryDir *undoDir;
     
     QString _TodoFilePath;
     QString _DoneFilePath;
@@ -62,9 +51,29 @@ protected:
 	bool _ready;
 
 
+
+// trash
+    vector<QString> todo;
+    vector<QString> done;
+    set<QString> active_projects;
+    set<QString> active_contexts;
+ 
+private:
+    void slurp(QFile* filename,vector<QString>&  content);
+    
+    
+public slots:
+	void fileModified(QString str);
+
+ 
+ // =============== UNDO / REDO ====================
+public: 
+    bool undo();   // Go backwards in the undo buffer without adding to it
+    bool redo();  // go forward in the undo buffor without adding to it
+    bool undoPossible(); // Say if undo is possible or not
+    bool redoPossible(); // Say if redo is possible or not
+
 protected:
-//used by new model:
-	
     QString getUndoDir(); // get the directory where we save undo stuff
     QString getNewUndoNameDirAndPrefix(); // get a new prefix to be used for creating new undo files
     void    cleanupUndoDir(); // Remove old files in the undo directory (not accessed for a while?)
@@ -72,16 +81,11 @@ protected:
     bool    checkNeedForUndo();
     void    restoreFiles(QString);
 
+private:	
+	deque<QString> undoBuffer; // A buffer with base filenames for undos
+	deque<QString> redoBuffer; // A buffer with base filenames for redos
+//    int 	undoPointer = 0; // Pointer into the undo buffer for undo and redo. Generally should be 0
 	
-    	vector<QString> undoBuffer; // A buffer with base filenames for undos
-    int 	undoPointer = 0; // Pointer into the undo buffer for undo and redo. Generally should be 0
-	
-private:
-    void slurp(QFile* filename,vector<QString>&  content);
-    
-    
-public slots:
-	void fileModified(QString str);
 
 };
 

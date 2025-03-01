@@ -8,17 +8,14 @@
 #include "aboutbox.h"
 #include "def.h"
 
-#include <QFileSystemWatcher>
 #include <QTime>
 #include <QDebug>
 #include <QSettings>
 #include <QShortcut>
 #include <QCloseEvent>
-#include <QtAwesome.h>
-//#include <QDesktopWidget>
+#include <QtAwesome.h>	//used for fonts and icons
 #include <QDir>
 #include <QSystemTrayIcon>
-#include <QDesktopServices>
 #include <QUuid>
 #include <QPrinter> //used for printing
 #include <QPrintDialog> //used for printing
@@ -156,6 +153,17 @@ MainWindow::MainWindow(QWidget *parent) :
     priorityMenu->addAction(BpriorAction);
     priorityMenu->addAction(CpriorAction);
     priorityMenu->addAction(DpriorAction);
+    
+    sortMenu=new QMenu("sort",this);
+    sortAzAction=new QAction("Sort alphabetically",this);
+    sortDateAction=new QAction("Sort by Input date",this);
+    connect(sortAzAction, SIGNAL(triggered()), this, SLOT(on_actionSortAZ()));
+    connect(sortDateAction, SIGNAL(triggered()), this, SLOT(on_actionSortDate()));
+	sortMenu->addAction(sortAzAction);
+	sortMenu->addAction(sortDateAction);
+    ui->btn_Alphabetical->setMenu(sortMenu);
+    ui->btn_Alphabetical->setPopupMode( QToolButton::InstantPopup);
+    
  
     // Version check
     Version = new todour_version();
@@ -183,13 +191,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 // This method is for making sure we're re-selecting the item that has been edited
-void MainWindow::dataInModelChanged(QModelIndex i1,QModelIndex i2){
-    Q_UNUSED(i2);
-    Q_UNUSED(i1);
-qDebug()<<"  DEPRECATED: MainWindow::dataInModelChanged"<<endline;
+//void MainWindow::dataInModelChanged(QModelIndex i1,QModelIndex i2){
+//    Q_UNUSED(i2);
+//    Q_UNUSED(i1);
+//qDebug()<<"  DEPRECATED: MainWindow::dataInModelChanged"<<endline;
 //    updateTitle();
-
-}
+//}
 
 MainWindow::~MainWindow()
 {
@@ -269,7 +276,10 @@ void MainWindow::on_lineEditFilter_textEdited(const QString &arg1)
 }
 
 void MainWindow::on_cb_threshold_inactive_stateChanged(int arg1)
-/* This is the "Show threshold" selection switch
+/* This is the "Show threshold" selection switch. 
+	- when changed, refresh the list
+	- when inactive, hide all "inactive" tasks
+	- when active, show all "inactive" tasks
 */
 {
 	QSettings settings;
@@ -303,17 +313,36 @@ void MainWindow::updateSearchResults()
         regexpstring += start+QRegularExpression::escape(word)+".*$)";
     }
 
-    if (!settings.value(SETTINGS_THRESHOLD_INACTIVE,DEFAULT_THRESHOLD_INACTIVE).toBool())
+    if (!settings.value(SETTINGS_THRESHOLD_INACTIVE,DEFAULT_THRESHOLD_INACTIVE).toBool() 
+    			|| ui->cb_threshold_inactive->checkState()==Qt::Unchecked)
     {
     	regexpstring +=start+TODOUR_INACTIVE+".*$)";	 
     } 
     
-    QRegularExpression regexp(regexpstring);
-//	qDebug()<< "MainWindow::updateSearchResults : regexpstring="<<regexpstring<<endline;	
+    QRegularExpression regexp(regexpstring);	
     proxyModel->setFilterRegularExpression(regexp);
     proxyModel->setFilterKeyColumn(1);
     updateTitle();
 }
+
+void MainWindow::on_actionSortAZ()
+/* sorts the list A to Z
+*/
+{
+	proxyModel->setSortRole(Qt::DisplayRole);
+	proxyModel->sort(1,Qt::AscendingOrder);
+}
+
+void MainWindow::on_actionSortDate()
+/* sorts the list by input date DECREASING
+ #TODO
+*/
+{
+	proxyModel->setSortRole(Qt::UserRole+1);
+	proxyModel->sort(1,Qt::DescendingOrder);
+
+}
+
 
 void MainWindow::on_lineEditFilter_returnPressed()
 {
@@ -479,17 +508,9 @@ void MainWindow::addTodo(QString &s, QString cont)
 {
    	QSettings settings;
     QString prio="";
-    if(!settings.value(SETTINGS_DEFAULT_PRIORITY,DEFAULT_DEFAULT_PRIORITY).toString().isEmpty()){
-    	prio=settings.value(SETTINGS_DEFAULT_PRIORITY,DEFAULT_DEFAULT_PRIORITY).toString();
-    	}
     	
-    model->addTask(s,cont,prio);
+    model->addTask(s,cont);
     updateTitle();
-}
-
-void MainWindow::on_lineEditNew_returnPressed()
-{
-    on_addButton_clicked();
 }
 
 void MainWindow::on_archiveButton_clicked()
@@ -532,13 +553,6 @@ void MainWindow::closeEvent(QCloseEvent *ev){
 
 }
 
-void MainWindow::on_btn_Alphabetical_toggled(bool checked)
-{
-	QSettings settings;
-    settings.setValue(SETTINGS_SORT_ALPHA,checked);
-    updateSearchResults(); // Refresh the filter.
-}
-
 void MainWindow::on_context_lock_toggled(bool checked)
 {
 	QSettings settings;
@@ -562,33 +576,16 @@ void MainWindow::redo()
         model->refresh();
 }
 
-void MainWindow::on_actionCheck_for_updates_triggered()
-/* User clicked on "Check for update". We force a check.
-*/
-{
-	Version->onlineCheck(true);
-}
-
-void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
-/* User has righ-clicked. We show the r-click menu, all the actions are already mapped
-*/
-{
-    rClickMenu->popup(ui->tableView->viewport()->mapToGlobal(pos));
-}
-
-void MainWindow::on_actionQuit_triggered()
-{
-    cleanup();
-}
-
 void MainWindow::on_actionUndo_triggered()
 {
+	qDebug()<<"Use of deprecated function MainWindow::on_actionUndo_triggered"<<endline;
     undo();
     updateTitle();
 }
 
 void MainWindow::on_actionRedo_triggered()
 {
+	qDebug()<<"Use of deprecated function MainWindow::on_actionRedo_triggered"<<endline;
     redo();
     updateTitle();
 }
@@ -605,13 +602,6 @@ void MainWindow::on_actionStay_On_Top_changed()
 	QSettings settings;
     settings.setValue(SETTINGS_STAY_ON_TOP,ui->actionStay_On_Top->isChecked());
     stayOnTop();
-}
-
-void MainWindow::on_actionManual_triggered()
-/* User requested to see the online user manual.
-*/
-{
-    QDesktopServices::openUrl(QUrl("https://sverrirvalgeirsson.github.io/Todour"));
 }
 
 void MainWindow::on_actionEdit()
@@ -685,6 +675,14 @@ void MainWindow::on_actionPriorityD()
    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
     if(!indexes.empty()) model->setPriorityTasks(indexes,"D");
 }
+
+void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
+/*
+*/
+{
+	rClickMenu->popup(ui->tableView->viewport()->mapToGlobal(pos));
+}
+
 
 void MainWindow::new_version(QString text)
 /* show "alarm" of new version available (status bar? Notification? balloon tooltip?)

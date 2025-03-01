@@ -14,7 +14,6 @@ TodoTableModel::TodoTableModel(QObject *parent) :
     todo = new todotxt();
 	todo->getAllTask(task_set);
 	//re-order task_set to have the active tasks first.  This allows to keep only 1 task_set and fast display.
-	//   need a possibility to sort the tasks in the display...
 }
 
 TodoTableModel::~TodoTableModel()
@@ -32,6 +31,35 @@ int TodoTableModel::rowCount(const QModelIndex &parent) const {
 int TodoTableModel::columnCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
     return 2;
+}
+
+QVariant TodoTableModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+    Q_UNUSED(orientation);
+    if(role == Qt::DisplayRole)
+    {
+      if(section==0) return "Done";
+      if(section==1) return "Todo";
+    }
+  return QVariant::Invalid;
+}
+
+
+Qt::ItemFlags TodoTableModel::flags(const QModelIndex& index) const
+{
+  Qt::ItemFlags returnFlags = QAbstractTableModel::flags(index);
+  if (index.column() == 0)  {
+    returnFlags |= Qt::ItemIsUserCheckable;
+  }
+  if (index.column() == 1)  {
+     returnFlags |= Qt::ItemIsEditable | Qt::ItemNeverHasChildren;
+  }
+
+  return returnFlags;
+}
+
+int TodoTableModel::count(){
+    return this->rowCount(QModelIndex());
 }
 
 QVariant TodoTableModel::data(const QModelIndex &index, int role) const
@@ -55,7 +83,7 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
 
     if (role == Qt::EditRole) {
         if(index.column()==1){
-            QString s=task_set.at(index.row()).get_raw();   //ATTENTION : il faut ici afficher plus (color,...) mais pas tout!
+            QString s=task_set.at(index.row()).get_edit_text();   //ATTENTION : il faut ici afficher plus (color,...) mais pas tout!
 //			if (s.length()>30){
 //				QItemEditorFactory::registerEditor(QVariant::String,QItemEditorFactory::createEditor(QVariant::String,this->parent()->ui));
 //			}
@@ -118,35 +146,27 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
 			return QVariant::fromValue(task_set.at(index.row()).get_color().lighter(180));
 	}
 
-		//Qt::UserRole is used for sorting. To use the power of regexp and QProxyModel, we will add a 
+		//Qt::UserRole is used for sorting. To use the power of regexp and QProxyModel, we will add a special code TODOUR_INACTIVE
     if(role == Qt::UserRole)
 	{
 	
 	   	if (task_set.at(index.row()).isActive())
 	    {
-	    	return task_set.at(index.row()).get_raw()+" "+TODOUR_INACTIVE;
+	    	return task_set.at(index.row()).get_edit_text()+" "+TODOUR_INACTIVE;
 	    }
 	    else
 	    {
-	    	return task_set.at(index.row()).get_raw();
+	    	return task_set.at(index.row()).get_edit_text();
 	    }
 	 }
-//	if(role == Qt::UserRole+1) return task_set.at(index.row()).getURL();
+
+	if(role == Qt::UserRole+1)  //UserRole+1 is used to sort by inputdate.
+	{
+		return task_set.at(index.row()).get_input_date().toString("yyyy-MM-dd");
+	}
+
 	return QVariant();
 }
-
-
-QVariant TodoTableModel::headerData(int section, Qt::Orientation orientation, int role) const
-{
-    Q_UNUSED(orientation);
-    if(role == Qt::DisplayRole)
-    {
-      if(section==0) return "Done";
-      if(section==1) return "Todo";
-    }
-  return QVariant::Invalid;
-}
-
 
 bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, int role)
 {
@@ -172,12 +192,11 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
 }
 
 
-void TodoTableModel::addTask(QString text,QString context,QString priority){
+void TodoTableModel::addTask(QString text,QString context){
     Q_UNUSED(context);
     QAbstractItemModel::beginResetModel();
     // manage undo ...
     task *t=new task(text);
-    if (t->get_priority().isEmpty()) t->set_priority(priority);
 	task_set.push_back(*t);
 
 	todo->write(task_set, typetodofile, false);
@@ -210,7 +229,7 @@ void TodoTableModel::archive(){
 	qDebug()<<"TodoTableModel::archive vector "<<task_set.size()<<endline;
     for(vector<task>::const_iterator iter=task_set.begin();iter!=task_set.end();){
         if(iter->isComplete()){
-        	qDebug()<<"TodoTableModel::archive move task "<<iter->get_raw()<<endline;
+        	qDebug()<<"TodoTableModel::archive move task "<<iter->get_edit_text()<<endline;
             done_set.push_back((*iter));
             iter=task_set.erase(iter);
         } else {
@@ -242,22 +261,7 @@ void TodoTableModel::refresh()
 //    QAbstractItemModel::endResetModel();
 }
 
-Qt::ItemFlags TodoTableModel::flags(const QModelIndex& index) const
-{
-  Qt::ItemFlags returnFlags = QAbstractTableModel::flags(index);
-  if (index.column() == 0)  {
-    returnFlags |= Qt::ItemIsUserCheckable;
-  }
-  if (index.column() == 1)  {
-     returnFlags |= Qt::ItemIsEditable | Qt::ItemNeverHasChildren;
-  }
 
-  return returnFlags;
-}
-
-int TodoTableModel::count(){
-    return this->rowCount(QModelIndex());
-}
 
 void TodoTableModel::postponeTasks(QModelIndexList & index, QString data)
 /* postpone the task index by data.
@@ -268,7 +272,7 @@ void TodoTableModel::postponeTasks(QModelIndexList & index, QString data)
     	task_set.at(i->row()).set_threshold_date(data);
     }
 
-
+	todo->write(task_set,typetodofile,false);
     emit dataChanged(index.first(), index.last());
 }
 
@@ -283,5 +287,27 @@ void TodoTableModel::setPriorityTasks(QModelIndexList & index,QString prio)
 	emit dataChanged(index.first(), index.last());
 	todo->write(task_set,typetodofile,false);
 	}
+
+
+bool TodoTableModel::undo()
+/*
+*/
+{
+	QAbstractItemModel::beginResetModel();
+	return todo->undo();
+	QAbstractItemModel::endResetModel();
+}
+
+bool TodoTableModel::redo()
+/*
+*/
+{
+	QAbstractItemModel::beginResetModel();
+	return todo->redo();
+	QAbstractItemModel::endResetModel();
+	}
+
+
+
 
 

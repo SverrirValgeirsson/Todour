@@ -10,8 +10,7 @@
 #define DONEFILE "done.txt"
 #define DELETEDFILE "deleted.txt"
 
-#include <vector>   // can be removed?
-#include <deque>
+#include <vector>
 #include <set>
 #include <QString>
 #include <QDate>
@@ -38,7 +37,7 @@ public:
 	int write(vector<task>& content, filetype t, bool append);
 
 protected:
-   QTemporaryDir *undoDir;
+//   QTemporaryDir *undoDir;
     
     QString _TodoFilePath;
     QString _DoneFilePath;
@@ -49,9 +48,6 @@ protected:
 	QFile* _DeleteFile;
 
 	bool _ready;
-
-
-
 // trash
     vector<QString> todo;
     vector<QString> done;
@@ -66,27 +62,11 @@ public slots:
 	void fileModified(QString str);
 
  
- // =============== UNDO / REDO ====================
 public: 
-    bool undo();   // Go backwards in the undo buffer without adding to it
-    bool redo();  // go forward in the undo buffor without adding to it
-    bool undoPossible(); // Say if undo is possible or not
-    bool redoPossible(); // Say if redo is possible or not
 
 protected:
-    QString getUndoDir(); // get the directory where we save undo stuff
-    QString getNewUndoNameDirAndPrefix(); // get a new prefix to be used for creating new undo files
-    void    cleanupUndoDir(); // Remove old files in the undo directory (not accessed for a while?)
-    void    saveToUndo();      // Adds the current changes to the undo buffer. Also moves the undo pointer to the last item (cementing whatever changes have been done with undoredo)
-    bool    checkNeedForUndo();
-    void    restoreFiles(QString);
 
 private:	
-	deque<QString> undoBuffer; // A buffer with base filenames for undos
-	deque<QString> redoBuffer; // A buffer with base filenames for redos
-//    int 	undoPointer = 0; // Pointer into the undo buffer for undo and redo. Generally should be 0
-	
-
 };
 
 #endif // TODOTXT_H

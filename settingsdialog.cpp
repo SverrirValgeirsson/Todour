@@ -19,7 +19,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->lineEdit->setText(settings.value(SETTINGS_DIRECTORY,DEFAULT_DIRECTORY).toString());
     ui->lineEdit_2->setText(settings.value(SETTINGS_INACTIVE,DEFAULT_INACTIVE).toString());
     ui->cb_autorefresh->setChecked(settings.value(SETTINGS_AUTOREFRESH,DEFAULT_AUTOREFRESH).toBool());
-    ui->cb_separate->setChecked(settings.value(SETTINGS_SEPARATE_INACTIVES,DEFAULT_SEPARATE_INACTIVES).toBool());
+//    ui->cb_separate->setChecked(settings.value(SETTINGS_SEPARATE_INACTIVES,DEFAULT_SEPARATE_INACTIVES).toBool());
     ui->cb_deletedfile->setChecked(settings.value(SETTINGS_DELETED_FILE,DEFAULT_DELETED_FILE).toBool());
     ui->cb_threshold->setChecked(settings.value(SETTINGS_THRESHOLD,DEFAULT_THRESHOLD).toBool());
     ui->cb_threshold_label->setChecked(settings.value(SETTINGS_THRESHOLD_LABELS,DEFAULT_THRESHOLD_LABELS).toBool());
@@ -86,7 +86,7 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue(SETTINGS_DIRECTORY,dir);
     settings.setValue(SETTINGS_INACTIVE,ui->lineEdit_2->text());
     settings.setValue(SETTINGS_AUTOREFRESH,ui->cb_autorefresh->isChecked());
-    settings.setValue(SETTINGS_SEPARATE_INACTIVES,ui->cb_separate->isChecked());
+//    settings.setValue(SETTINGS_SEPARATE_INACTIVES,ui->cb_separate->isChecked());
     settings.setValue(SETTINGS_DATES,ui->cb_dates->isChecked());
     settings.setValue(SETTINGS_SHOW_DATES,ui->cb_showdates->isChecked());
     settings.setValue(SETTINGS_LIVE_SEARCH,ui->cb_liveSearch->isChecked());

@@ -35,7 +35,8 @@ SOURCES += main.cpp\
     aboutbox.cpp \
     quickadddialog.cpp \
     task.cpp \
-    version.cpp
+    version.cpp \
+    todo_undo.cpp
     
 
 HEADERS  += mainwindow.h \
@@ -46,7 +47,8 @@ HEADERS  += mainwindow.h \
     quickadddialog.h \
     def.h \
     task.h \
-    version.h
+    version.h \
+    todo_undo.h
 
 FORMS    += mainwindow.ui \
     settingsdialog.ui \

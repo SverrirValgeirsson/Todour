@@ -272,16 +272,6 @@
            </property>
           </widget>
          </item>
-         <item>
-          <widget class="QCheckBox" name="cb_separate">
-           <property name="enabled">
-            <bool>true</bool>
-           </property>
-           <property name="text">
-            <string>Sort all inactives last</string>
-           </property>
-          </widget>
-         </item>
         </layout>
        </item>
        <item>

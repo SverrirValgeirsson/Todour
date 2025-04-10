@@ -1,83 +1,143 @@
 #include "todo_undo.h"
+#include "def.h"
+#include <QDebug>
 
-
-AddCommand::AddCommand(task _t, QUndoCommand *parent)
-    : QUndoCommand(parent)
+AddCommand::AddCommand(TodoTableModel* model, task* _t, QUndoCommand *parent)
+    : QUndoCommand(parent), _model(model)
 {
-    static int itemCount = 0;
-
-//    myDiagramItem = new DiagramItem(addType);
-//    initialPosition = QPointF((itemCount * 15) % int(scene->width()),
-//                              (itemCount * 15) % int(scene->height()));
-//    scene->update();
-    ++itemCount;
-    setText("Text");
-    _task = _t;
-//        .arg(createCommandString(myDiagramItem, initialPosition)));
+    _task = new task(_t);
+	setText("New task");
 }
 
+AddCommand::~AddCommand(){}
 
 void AddCommand::undo()
+/* undo() of addCommand is a remove
+*/
 {
-//    myGraphicsScene->removeItem(myDiagramItem);
-//    myGraphicsScene->update();
+	_model->removeTask(_task->getTuid());
 }
 
 void AddCommand::redo()
+/* redo() add is adding again
+*/
 {
-//    myGraphicsScene->addItem(myDiagramItem);
-//    myDiagramItem->setPos(initialPosition);
-//    myGraphicsScene->clearSelection();
-//    myGraphicsScene->update();
+	//_taskset->push_back(_task);
+	_model->addTask(_task);
 }
 
+int AddCommand::id() const
+{return -1;}
+
+bool AddCommand::mergeWith(const QUndoCommand *other)
+{Q_UNUSED(other);
+return false;}
 
 
-DeleteCommand::DeleteCommand(task _t, QUndoCommand *parent)
-    : QUndoCommand(parent)
+// §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+
+DeleteCommand::DeleteCommand(TodoTableModel* model, QUuid index, QUndoCommand *parent)
+    : QUndoCommand(parent), _model(model), _tuid(index)
 {
-//    QList<QGraphicsItem *> list = myGraphicsScene->selectedItems();
-//    list.first()->setSelected(false);
-//    myDiagramItem = static_cast<DiagramItem *>(list.first());
-//    setText(QObject::tr("Delete %1")
-//        .arg(createCommandString(myDiagramItem, myDiagramItem->pos())));
-	_task = _t;
+//	_task = is initialised in the redo
+	setText("Delete");
 }
+
+DeleteCommand::~DeleteCommand(){}
 
 void DeleteCommand::undo()
+/* UNDO DELETE means we have to add a task in the list.
+*/
 {
-//    myGraphicsScene->addItem(myDiagramItem);
-//    myGraphicsScene->update();
+	_model->addTask(_task);
+
 }
 
 void DeleteCommand::redo()
 {
-//    myGraphicsScene->removeItem(myDiagramItem);
+	_task=new task(_model->getTask(_tuid));
+	_model->removeTask(_tuid);
 }
 
+int DeleteCommand::id() const
+{return -1;}
 
-
-EditCommand::EditCommand(task _to, task _tn, QUndoCommand *parent)
-    : QUndoCommand(parent)
+bool DeleteCommand::mergeWith(const QUndoCommand *other)
 {
-//    QList<QGraphicsItem *> list = myGraphicsScene->selectedItems();
-//    list.first()->setSelected(false);
-//    myDiagramItem = static_cast<DiagramItem *>(list.first());
-//    setText(QObject::tr("Delete %1")
-//        .arg(createCommandString(myDiagramItem, myDiagramItem->pos())));
+Q_UNUSED(other);
+return false;}
 
-	_old = _to;
-	_new = _tn;
 
+// §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+
+EditCommand::EditCommand(TodoTableModel* model, task* t, QString new_raw, QUndoCommand *parent)
+    :QUndoCommand(parent), _task(t), _model(model)
+{
+	_old_raw = t->getRaw();
+	 _new_raw = new_raw;
+
+	setText("Edit");
 }
+EditCommand::~EditCommand()
+{}
 
 void EditCommand::undo()
 {
-//    myGraphicsScene->addItem(myDiagramItem);
-//    myGraphicsScene->update();
+	_task->setRaw(_old_raw);
+	_model->refresh();
 }
 
 void EditCommand::redo()
 {
-//    myGraphicsScene->removeItem(myDiagramItem);
+	_task->setRaw(_new_raw);
+	_model->refresh();
+}
+
+int EditCommand::id() const
+/**/
+{
+	return -1;
+}
+
+bool EditCommand::mergeWith(const QUndoCommand *other)
+/* */
+{
+	Q_UNUSED(other);
+	return false;
+}
+
+// §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+
+CompleteCommand::CompleteCommand(TodoTableModel* model, task* t, bool complete, QUndoCommand *parent)
+    :QUndoCommand(parent), _task(t),_complete(complete), _model(model)
+{
+
+	setText("Complete");
+}
+CompleteCommand::~CompleteCommand()
+{}
+
+void CompleteCommand::undo()
+{
+	_task->setComplete(!_complete);
+	_model->refresh();
+}
+
+void CompleteCommand::redo()
+{
+	_task->setComplete(_complete);
+	_model->refresh();
+}
+
+int CompleteCommand::id() const
+/**/
+{
+	return -1;
+}
+
+bool CompleteCommand::mergeWith(const QUndoCommand *other)
+/* */
+{
+	Q_UNUSED(other);
+	return false;
 }

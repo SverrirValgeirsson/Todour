@@ -536,7 +536,15 @@ void MainWindow::on_addButton_clicked()
          }
         }
     }
-   addTodo(txt,context);
+    if (txt.contains((QChar) QChar::LineFeed)){
+    	QStringList mlines = txt.split((QChar) QChar::LineFeed, Qt::SkipEmptyParts);
+    	for (QList<QString>::iterator it=mlines.begin();it!=mlines.end();++it){
+    		addTodo(*it,context);
+    		}
+    	}
+    else{
+	   addTodo(txt,context);
+	   }
    ui->lineEditNew->clear();
 }
 

@@ -70,8 +70,8 @@ task::task(QString s, QString context, bool loaded)
     		 setInputDate(QDate::currentDate());
     		 }
 	
-		if (getPriority().isEmpty()){ // there was no priority in the newly created task
-			setPriority(settings.value(SETTINGS_DEFAULT_PRIORITY,DEFAULT_DEFAULT_PRIORITY).toString());			
+		if (getPriority().isNull()){ // there was no priority in the newly created task
+			setPriority(settings.value(SETTINGS_DEFAULT_PRIORITY,DEFAULT_DEFAULT_PRIORITY).toChar());			
     		}
 	}
 
@@ -83,6 +83,7 @@ task::task(task* copy)
 	_tuid=copy->getTuid();
 //	qDebug()<<"task:task from existing. raw="<<_raw<<endline;	
 	parse(_raw,true); // usefull? should not be ;-)
+	setInputDate(QDate::currentDate());
 }
 
 task::~task()
@@ -159,38 +160,38 @@ void task::setThresholdDate(QString d, bool strict)
 }
 
 void task::setInputDate(QDate d)
-/* place a date at beginning, but after priority.*/
+/* place a date at beginning, but after priority.
+If a date is present, remove it first !*/
 {
-	//qDebug()<<"task::set_nputdate, raw="<<_raw<<"  d="<<d<<endline;
-	if (!getPriority().isEmpty())
+	_raw.remove(regex_inputdate);
+	if (!getPriority().isNull())
 		_raw.insert(4,d.toString("yyyy-MM-dd")+" ");
 	else 
 		_raw.insert(0,d.toString("yyyy-MM-dd")+" ");
-	//qDebug()<<"task::setInputDate, raw="<<_raw<<endline;
 
 }
 
-void task::setColor(QString c)
 /* set / change the color.  if a color is present, it is updated,  if multiple colors are present, they got cleaned
  */
+void task::setColor(QString c)
 {
 	_raw.remove(regex_color);
 	_color=c;
 }
 
-void task::setColor(QColor c)
 /* No direct function for this in QT, must be rewritten...  :-(*/
+void task::setColor(QColor c)
 {
 qDebug()<<"   task::setColor not implemented"<<endline;
 	Q_UNUSED(c);
 	return;
 }
 
-void task::setDescription(QString s)
 /*
 NOT WORKING IN THIS STATE
 #IDEA: we should rebuilt the _raw, based on the new "description", + all the fields that we have.
 */
+void task::setDescription(QString s)
 {
 qDebug()<<"   task::setDescription not implemented"<<endline;
 	// a définir : que contient exactement le text?
@@ -199,15 +200,17 @@ qDebug()<<"   task::setDescription not implemented"<<endline;
     Q_UNUSED(s);
 }
 
-
-void task::setPriority(QString c)
 /* Set the priority of task
 #BUG: il faut enlever tout ce qui ressemble à une priorité. Si il y en a 2 d'affilée, on enleve les 2.
 */
+void task::setPriority(QChar c)
 {
 	_raw.remove(regex_priority);	
-	if (!c.isEmpty())
-			_raw.prepend("("+c+") ");
+	if (c.isLetter()){
+		_raw.prepend(") ");
+		_raw.prepend(c);
+		_raw.prepend("(");
+	}
 }
 
 void task::setRaw(QString s)
@@ -367,18 +370,18 @@ QDate task::getInputDate() const
 	return QDate();
 }
 
-QString task::getPriority() const
+QChar task::getPriority() const
 /**/
 {
-	QString c;
+	QChar c;
 	
 	auto matches = regex_priority.globalMatch(_raw);
 	while (matches.hasNext())
 	{
-		return matches.next().captured(1);
+		return matches.next().captured(1).at(0);
 	}
 
-	return "";
+	return QChar::Null;
 }
 
 QColor task::getColor() const
@@ -530,9 +533,9 @@ qDebug()<<"t is Active: "<<t->isActive()<<endline;
 //qDebug()<<"t utid: "<<t->getTuid()<<endline;
 
 
-t->setPriority("A");
+t->setPriority('A');
 qDebug()<<"t raw: "<<t->toString()<<endline;
-t->setPriority("Z");
+t->setPriority('Z');
 qDebug()<<"t raw: "<<t->toString()<<endline;
 
 qDebug()<<"u raw: "<<u->toString()<<endline;

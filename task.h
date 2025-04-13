@@ -28,7 +28,7 @@ private:
 	QDate _input_date;
 	QDate _complete_date;
 	QString _color;
-	QString _priority;
+	QChar _priority;
 //	bool _completed;
 	QString _desc;
 	
@@ -44,14 +44,15 @@ public:
 	void setColor(QString c);
 	void setColor(QColor c);
 	void setDescription(QString s);
-	void setPriority(QString c);
+//	void setPriority(QString c);
+	void setPriority(QChar c);
 	task* setComplete(bool c = true);
 	void setRaw(QString s);
 
 	QDate getDueDate() const;
 	QDate getThresholdDate() const;
 	QDate getInputDate() const;
-	QString getPriority() const;
+	QChar getPriority() const;
 	QColor getColor() const;
 	inline QUuid getTuid() const{return _tuid;}
 	QString getURL() const;

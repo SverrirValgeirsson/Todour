@@ -23,6 +23,7 @@ public:
 private:
     task* _task;
     TodoTableModel* _model;
+
 };
 
 
@@ -39,8 +40,8 @@ public:
 private:
 	task* _task;
 	TodoTableModel* _model;
+ 	QUuid _tuid;
 //	vector<task>* _taskset;
-	QUuid _tuid;
 
 };
 
@@ -60,7 +61,7 @@ private:
 	QString _old_raw;
 	QString _new_raw;
 	TodoTableModel* _model;
-};
+    };
 
 
 class CompleteCommand : public QUndoCommand
@@ -77,7 +78,25 @@ private:
 	task* _task;
 	bool _complete;
 	TodoTableModel* _model;
+
 };
 
+class PriorityCommand : public QUndoCommand
+{
+public:
+    explicit PriorityCommand(TodoTableModel* model, task* t, QChar prio, QUndoCommand *parent = nullptr);
+	~PriorityCommand();
+    void undo() override;
+    void redo() override;
+	int id() const;
+	bool mergeWith(const QUndoCommand *other);
+	
+private:
+	task* _task;
+	QChar _priority;
+	QChar _p_priority;
+	TodoTableModel* _model;
+
+};
 
 #endif // TODOUNDO_H

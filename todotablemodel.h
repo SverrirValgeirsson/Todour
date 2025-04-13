@@ -39,9 +39,7 @@ public:
 
     void archive();
     void refresh();
-    void postponeTasks(QModelIndexList & index, QString data);
-    void setPriorityTasks(QModelIndexList & index,QString prio);  
-        
+            
    inline void clearFileWatch(){   todo->clearFileWatch();}; //gaetan 5/1/24
    inline void setFileWatch(QObject *parent){   todo->setFileWatch(parent);}; //gaetan 5/1/24
 

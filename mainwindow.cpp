@@ -111,7 +111,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 //    auto contextshortcut = new QShortcut(QKeySequence(tr("Ctrl+l")),this);
 //    QObject::connect(contextshortcut,SIGNAL(activated()),ui->context_lock,SLOT(setChecked(!(ui->context_lock->isChecked()))));
-    QObject::connect(model,SIGNAL(dataChanged (const QModelIndex , const QModelIndex )),this,SLOT(dataInModelChanged(QModelIndex,QModelIndex)));
+
  
     rClickMenu=new QMenu(this);
     	editAction = new QAction("&Edit", this);
@@ -153,27 +153,35 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	//undo
 	_undoStack = new QUndoStack(this);
-		undoAction = _undoStack->createUndoAction(this, tr("&Undo"));
+		undoAction = new QAction(tr("&Undo"),this);
+		undoAction->setEnabled(_undoStack->canUndo());				
 		undoAction->setIcon(QIcon(":/icons/undo.png"));
     	undoAction->setShortcuts(QKeySequence::Undo);
-    	redoAction = _undoStack->createRedoAction(this, tr("&Redo"));
+		connect(_undoStack, SIGNAL(canUndoChanged(bool)), undoAction, SLOT(setEnabled(bool)));
+	    connect(_undoStack, SIGNAL(undoTextChanged(QString)),undoAction, SLOT(setPrefixedText(QString)));
+		connect(undoAction, SIGNAL(triggered()), this, SLOT(on_actionUndo()));
+		
+//    	redoAction = _undoStack->createRedoAction(this, tr("&Redo"));
+		redoAction = new QAction(tr("&Redo"),this);
+		redoAction->setEnabled(_undoStack->canRedo());				
 		redoAction->setIcon(QIcon(":/icons/redo.png"));
     	redoAction->setShortcuts(QKeySequence::Redo);
 		ui->menuEdit->addAction(undoAction);
 		ui->menuEdit->addAction(redoAction);
-		connect(_undoStack,SIGNAL(canUndoChanged(bool)),undoAction,SLOT(setEnabled(bool)));
-		connect(_undoStack,SIGNAL(canRedoChanged(bool)),redoAction,SLOT(setEnabled(bool)));
+		connect(_undoStack, SIGNAL(canRedoChanged(bool)), redoAction, SLOT(setEnabled(bool)));
+	    connect(_undoStack, SIGNAL(redoTextChanged(QString)),redoAction, SLOT(setPrefixedText(QString)));
+		connect(redoAction, SIGNAL(triggered()), this, SLOT(on_actionRedo()));
 		
 	// Copy:
-		copyAction = new QAction("&Copy",this);
+		copyAction = new QAction(tr("&Copy"),this);
 		copyAction->setShortcuts(QKeySequence::Copy);
 	    ui->menuEdit->addAction(copyAction);
 	    connect(copyAction,SIGNAL(triggered()),this,SLOT(on_actionCopy()));
 	    
     sortMenu=new QMenu("sort",this);
-	    sortAzAction = new QAction("Sort alphabetically",this);
-    	sortDateAction = new QAction("Sort by Input date",this);
-    	sortInactiveAction = new QAction("Sort inactive last",this);
+	    sortAzAction = new QAction(tr("Sort alphabetically"),this);
+    	sortDateAction = new QAction(tr("Sort by Input date"),this);
+    	sortInactiveAction = new QAction(tr("Sort inactive last"),this);
     	sortAzAction->setCheckable(true);
     	sortDateAction->setCheckable(true);
     	sortInactiveAction->setCheckable(true);
@@ -211,11 +219,7 @@ MainWindow::MainWindow(QWidget *parent) :
 //	updateSearchResults();
 
     setFileWatch();
-
-
-    // Do this late as it triggers action using data
-    //ui->btn_Alphabetical->setChecked(settings.value(SETTINGS_SORT_ALPHA).toBool());
-    ui->context_lock->setChecked(settings.value(SETTINGS_CONTEXT_LOCK,DEFAULT_CONTEXT_LOCK).toBool());
+	ui->context_lock->setChecked(settings.value(SETTINGS_CONTEXT_LOCK,DEFAULT_CONTEXT_LOCK).toBool());
 
     ui->lv_activetags->hide(); //  Not being used yet
     ui->newVersionView->hide(); // This defaults to not being shown
@@ -225,6 +229,12 @@ MainWindow::MainWindow(QWidget *parent) :
     stayOnTop();
     setTray();
     setFontSize();
+    
+
+    // Do this late as it triggers action using data
+    //ui->btn_Alphabetical->setChecked(settings.value(SETTINGS_SORT_ALPHA).toBool());
+    QObject::connect(model,SIGNAL(dataChanged (const QModelIndex , const QModelIndex )), this, 
+    		SLOT(dataInModelChanged(QModelIndex,QModelIndex)));
     updateSearchResults(); // Since we may have set a value in the search window
 	on_actionSortAZ();
 	
@@ -233,19 +243,14 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 
 void MainWindow::dataInModelChanged(QModelIndex i1,QModelIndex i2)
-/* dataInModelChanged informs us that data has changed. This replace the UpdateTitle()
-We need to update the title, update undo / redo
+/* dataInModelChanged informs us that data has changed.
+We need to update the title + ?
 */
 {
     Q_UNUSED(i2);
     Q_UNUSED(i1);
-qDebug()<<"                  MainWindow::datainModelChanged"<<endline;
-    if(proxyModel != NULL){
-        int visible = proxyModel->rowCount();
-        int total = proxyModel->sourceModel()->rowCount();
-
-        this->setWindowTitle(baseTitle+" ("+QString::number(visible)+"/"+QString::number(total)+")");
-    }
+	this->updateTitle();
+    
 }
 
 MainWindow::~MainWindow()
@@ -254,17 +259,34 @@ MainWindow::~MainWindow()
     delete model;
 }
 
-void MainWindow::clearFileWatch()
+/* */
+void MainWindow::updateTitle()
+{
+    if(proxyModel != NULL){
+        int visible = proxyModel->rowCount();
+        int total = proxyModel->sourceModel()->rowCount();
+
+        this->setWindowTitle(baseTitle+" ("+QString::number(visible)+"/"+QString::number(total)+")");
+	}
+}
+
+/* */
+void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
+{
+	rClickMenu->popup(ui->tableView->viewport()->mapToGlobal(pos));
+}
+
 /* Disable the fileWatching. If disabled, the subsystem should not update the display if file is changed.
 */
+void MainWindow::clearFileWatch()
 {
 	qDebug()<<" DEPRECATED :   MainWindow::clearFileWatch()"<<endline;
    model->clearFileWatch();
 }
 
-void MainWindow::setFileWatch()
 /* Activate the filewatching. when enabled, subsystem should monitor the file and keep the display up to date.
 */
+void MainWindow::setFileWatch()
 {
 QSettings settings;
     model->clearFileWatch();
@@ -288,9 +310,9 @@ void MainWindow::setHotkey(){
 }
 
 
-void MainWindow::on_lineEditFilter_textEdited(const QString &arg1)
 /* User edited the "filter" field. If liveupdate settings is activates, we have to inform the Proxymodel of the change
 */
+void MainWindow::on_lineEditFilter_textEdited(const QString &arg1)
 {
 	QSettings settings;
     Q_UNUSED(arg1);
@@ -299,23 +321,34 @@ void MainWindow::on_lineEditFilter_textEdited(const QString &arg1)
     }
 }
 
-void MainWindow::on_cb_threshold_inactive_stateChanged(int arg1)
 /* This is the "Show threshold" selection switch. 
 	- when changed, refresh the list
 	- when inactive, hide all "inactive" tasks
 	- when active, show all "inactive" tasks
 */
+void MainWindow::on_cb_threshold_inactive_stateChanged(int arg1)
 {
 	QSettings settings;
     settings.setValue(SETTINGS_THRESHOLD_INACTIVE,arg1);
 	updateSearchResults();
 }
 
+/* 
+*/
+void MainWindow::on_lineEditFilter_returnPressed()
+{
+	QSettings settings;
+    bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
 
-void MainWindow::updateSearchResults()
+    if(!liveUpdate || ui->actionShow_All->isChecked()){
+        updateSearchResults();
+    }
+}
+
 /* For any reason, the filters have changed (toggle_threshold, text filter, ...)
 	We need to adapt.
 */
+void MainWindow::updateSearchResults()
 {
     // Take the text of the format of match1 match2 !match3 and turn it into
     //(?=.*match1)(?=.*match2)(?!.*match3) - all escaped of course   
@@ -351,11 +384,11 @@ void MainWindow::updateSearchResults()
     QRegularExpression regexp(regexpstring);	
     proxyModel->setFilterRegularExpression(regexp);
     proxyModel->setFilterKeyColumn(1);
-//    updateTitle();
+    updateTitle();
 }
 
-void MainWindow::on_actionSortAZ()
 /* sorts the list A to Z*/
+void MainWindow::on_actionSortAZ()
 {
 	sortDateAction->setChecked(false);
 	sortAzAction->setChecked(true);
@@ -363,17 +396,17 @@ void MainWindow::on_actionSortAZ()
 	updateSort();
 }
 
-void MainWindow::on_actionSortDate()
 /* sorts the list by input date DECREASING*/
+void MainWindow::on_actionSortDate()
 {
 	sortAzAction->setChecked(false);
 	sortDateAction->setChecked(true);
 	updateSort();
 }
 
-void MainWindow::on_actionSortInactive()
 /*
 */
+void MainWindow::on_actionSortInactive()
 {
 	QSettings settings;
 	settings.setValue(SETTINGS_SEPARATE_INACTIVES,sortInactiveAction->isChecked());
@@ -398,8 +431,8 @@ void MainWindow::updateSort()
 	}
 }
 
-void MainWindow::on_actionCopy()
 /* Copy the selected tasks to clipboard*/
+void MainWindow::on_actionCopy()
 {
     QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
     if (!indexes.isEmpty()){
@@ -414,18 +447,8 @@ void MainWindow::on_actionCopy()
 		}
 }
 
-
-void MainWindow::on_lineEditFilter_returnPressed()
-{
-	QSettings settings;
-    bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
-
-    if(!liveUpdate || ui->actionShow_All->isChecked()){
-        updateSearchResults();
-    }
-
-}
-
+/*
+*/
 void MainWindow::on_hotkey(){
     auto dlg = new QuickAddDialog();
     dlg->setModal(true);
@@ -444,29 +467,20 @@ void MainWindow::on_actionAbout_triggered(){
     //myanalytics->check_update();
 }
 
+/* Opens settings dialog.
+ */
 void MainWindow::on_actionSettings_triggered()
-// Which acton is this ??? ??? ???
-// Maybe we just need to do a refresh / full reload ?
 {
     SettingsDialog d;
     d.setModal(true);
     d.show();
     d.exec();
-//    if(d.refresh){
-//        delete model;
-//        model = new TodoTableModel(this);
-//        proxyModel->setSourceModel(model);
-//        ui->tableView->setModel(proxyModel);
-//        ui->tableView->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
-//        ui->tableView->resizeColumnToContents(0);
-//        model->refresh();// Not 100% sure why this is needed.. Should be done by re-setting the model above
-//        setFileWatch();
-//        setTray();
-//        setFontSize();
-//        setHotkey();
-//    }
+
+	model->refresh();
+	updateTitle();
 }
 
+/* */
 void MainWindow::setFontSize(){
 	QSettings settings;
     int size = settings.value(SETTINGS_FONT_SIZE).toInt();
@@ -477,6 +491,7 @@ void MainWindow::setFontSize(){
     }
 }
 
+/* */
 void MainWindow::stayOnTop()
 {
     if(ui->actionStay_On_Top->isChecked()){
@@ -487,6 +502,7 @@ void MainWindow::stayOnTop()
     show(); // This is needed as setWindowFlags can hide the window
 }
 
+/* */
 void MainWindow::setTray(){
 	QSettings settings;
     if(settings.value(SETTINGS_TRAY_ENABLED,DEFAULT_TRAY_ENABLED).toBool()){
@@ -524,6 +540,7 @@ void MainWindow::setTray(){
     }
 }
 
+/* */
 void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
 {
     switch (reason) {
@@ -540,6 +557,7 @@ void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
     }
 }
 
+/* */
 void MainWindow::on_addButton_clicked()
 {
     // Adding a new value into the model
@@ -556,6 +574,7 @@ void MainWindow::on_addButton_clicked()
          }
         }
     }
+    // Manage multiline input:
     if (txt.contains((QChar) QChar::LineFeed)){
     	QStringList mlines = txt.split((QChar) QChar::LineFeed, Qt::SkipEmptyParts);
     	for (QList<QString>::iterator it=mlines.begin();it!=mlines.end();++it){
@@ -568,33 +587,36 @@ void MainWindow::on_addButton_clicked()
    ui->lineEditNew->clear();
 }
 
-
+/* */
 void MainWindow::addTodo(QString &s, QString cont)
 {
    	QSettings settings;
     QString prio="";
     task* t = new task(s,cont);
  	_undoStack->push(new AddCommand(model,t));
-//    model->addTask(s,cont);
-//    updateTitle();
+	model->refresh();
+    updateTitle();
 }
 
+/* // Archive action.
+*/
 void MainWindow::on_archiveButton_clicked()
-// Archive action.
 {
     model->archive();
     _undoStack->clear();
 	//_undoStack->setClean();
-//    updateTitle();
+    updateTitle();
 }
 
+/*// This is the Refresh button
+*/
 void MainWindow::on_refreshButton_clicked()
-// This is the Refresh button
 {
     model->refresh();
- //   updateTitle();
+    updateTitle();
 }
 
+/* */
 void MainWindow::cleanup(){
 	QSettings settings;
 
@@ -609,9 +631,9 @@ void MainWindow::cleanup(){
     qApp->quit();
 }
 
-void MainWindow::closeEvent(QCloseEvent *ev){
 /*
 */
+void MainWindow::closeEvent(QCloseEvent *ev){
     if (trayicon != NULL && trayicon->isVisible()) {
             hide();
             ev->ignore();
@@ -621,18 +643,24 @@ void MainWindow::closeEvent(QCloseEvent *ev){
     }
 }
 
+/*
+*/
 void MainWindow::on_context_lock_toggled(bool checked)
 {
 	QSettings settings;
     settings.setValue(SETTINGS_CONTEXT_LOCK,checked);
 }
 
+/*
+*/
 void MainWindow::on_pb_closeVersionBar_clicked()
 {
     ui->newVersionView->hide();
 }
 
 
+/*
+*/
 void MainWindow::on_actionShow_All_changed()
 {
 	QSettings settings;
@@ -640,6 +668,8 @@ void MainWindow::on_actionShow_All_changed()
     on_refreshButton_clicked();
 }
 
+/*
+*/
 void MainWindow::on_actionStay_On_Top_changed()
 {
 	QSettings settings;
@@ -647,20 +677,37 @@ void MainWindow::on_actionStay_On_Top_changed()
     stayOnTop();
 }
 
-void MainWindow::on_actionEdit()
+/*
+*/
+void MainWindow::on_actionUndo()
+{
+	_undoStack->undo();
+	model->refresh();
+	updateTitle();
+}
+
+/*
+*/
+void MainWindow::on_actionRedo()
+{
+	_undoStack->redo();
+	model->refresh();
+	updateTitle();
+}
+
 /* User clicked on "Edit". We enable the editing of the line.
 */
+void MainWindow::on_actionEdit()
 {
    QModelIndex index = proxyModel->mapToSource(ui->tableView->selectionModel()->selection().indexes().first());
     if(!index.isValid()){
         ui->tableView->edit(index);
     }
-//    updateTitle();
 }
 
-void MainWindow::on_actionComplete()
 /* user clicked "Complete" on a set of tasks. 
 */
+void MainWindow::on_actionComplete()
 {
 	_undoStack->beginMacro("completion");	
 	
@@ -669,74 +716,90 @@ void MainWindow::on_actionComplete()
 		_undoStack->push(new CompleteCommand(model,model->getTask(proxyModel->mapToSource(*i)),true));
 		}
 		
-	_undoStack->endMacro();    
-//    updateTitle();
+	_undoStack->endMacro(); 
+	model->refresh();   
+    updateTitle();
 
 }
 
-
-void MainWindow::on_actionDelete()  // CHANGE TO REMOVE_ROWS()
 /* User clicked on "Delete". We remove the selected items
 */
+void MainWindow::on_actionDelete()
 {
-	_undoStack->beginMacro("deletion");	
 	
     QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
-    //QModelIndex L_index;
     QList<QUuid> tuidL;
-	for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
-	    //L_index=;
-	    tuidL.push_back(model->getTask(proxyModel->mapToSource(*i))->getTuid());
-	    }
-	
-	for (QList<QUuid>::iterator j=tuidL.begin();j!=tuidL.end();++j){
-		_undoStack->push(new DeleteCommand(model,*j));
-}
+	if (!indexes.isEmpty()){
+		for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
+		    tuidL.push_back(model->getTask(*i)->getTuid());
+		}
+
+		_undoStack->beginMacro("deletion");			
+		for (QList<QUuid>::iterator j=tuidL.begin();j!=tuidL.end();++j){
+			_undoStack->push(new DeleteCommand(model,*j));
+		}
 		
-	_undoStack->endMacro();    
-//    updateTitle();
+		_undoStack->endMacro();    
+		model->refresh();
+    	updateTitle();
+    }
 }
 
-void MainWindow::on_actionPostpone()
 /* User clicked on Postpone. We postpone the task for a default value.
   Issue: make a setting for this default postpone.
 */
+void MainWindow::on_actionPostpone()
 {
-   QModelIndexList indexes = proxyModel->mapSelectionToSource(ui->tableView->selectionModel()->selection()).indexes();
-    if(!indexes.empty()) model->postponeTasks(indexes,"t:+10d");
-//    updateTitle();
+    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+    if(!indexes.empty()){
+ 		_undoStack->beginMacro("postpone");			   
+		for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
+			//model->postponeTasks(indexes,"t:+10d");
+			_undoStack->push(new EditCommand(model, model->getTask(*i), model->getTask(*i)->getEditText()+" t:+10d"));
+		}
+		_undoStack->endMacro();    
+		model->refresh();
+	    updateTitle();
+    }
 }
 
-void MainWindow::on_actionDuplicate()
 /* User has clicked on "Duplicate". We need to make a copy of task and 
 */
+void MainWindow::on_actionDuplicate()
 {
-   QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
-   if(!indexes.empty()){
-      model->addTask(new task(model->data(proxyModel->mapToSource(indexes.first()),Qt::DisplayRole).toString()));
-      }
- //     updateTitle();
+	
+	
+    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+	if (! indexes.isEmpty()){
+		_undoStack->beginMacro("completion");
+		for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
+			_undoStack->push(new AddCommand(model,new task(model->getTask(proxyModel->mapToSource(*i)))));
+		}
+		_undoStack->endMacro();   
+		model->refresh(); 
+		updateTitle();
+	}
  }
 
-void MainWindow::on_actionPriority(QChar p)
 /* */
+void MainWindow::on_actionPriority(QChar p)
 {
    QModelIndexList indexes = proxyModel->mapSelectionToSource(ui->tableView->selectionModel()->selection()).indexes();
-    if(!indexes.empty()) model->setPriorityTasks(indexes,p);
-//    updateTitle();
+    if(!indexes.empty()){
+   		_undoStack->beginMacro("completion");
+	    for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
+			_undoStack->push(new PriorityCommand(model,model->getTask(*i), p));
+		}
+
+		_undoStack->endMacro();   
+	    model->refresh();
+	    updateTitle();
+	   }
 }
 
-void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
-/*
-*/
-{
-	rClickMenu->popup(ui->tableView->viewport()->mapToGlobal(pos));
-}
-
-
-void MainWindow::new_version(QString text)
 /* show "alarm" of new version available (status bar? Notification? balloon tooltip?)
 */
+void MainWindow::new_version(QString text)
 {
 	ui->lbl_newVersion->setText(text+"  "+NEW_VERSION_STRING);
 	ui->lbl_newVersion->setTextFormat(Qt::RichText);
@@ -746,20 +809,16 @@ void MainWindow::new_version(QString text)
 	versionTimer->start(10000);
 }
 
-void MainWindow::on_actionPrint_triggered()
 /* The user has clicked on "Print". We print the selected tasks
 */
+void MainWindow::on_actionPrint_triggered()
 {
-//	qDebug()<<"on_actionPrint_triggered()"<<endline;
     auto selection = ui->tableView->selectionModel();
-//    if(index.count()>0){
     if(selection->hasSelection()){
-//	qDebug()<<"on_actionPrint_triggered(): step1"<<endline;
 		QPrinter printer;
 		
 		QPrintDialog dialog(&printer, this);
 		dialog.setWindowTitle(tr("Print Tasks"));
-//		dialog.addEnabledOption(index);
 		if (dialog.exec() != QDialog::Accepted)
 			return;
 		QString txt_str;
@@ -769,7 +828,6 @@ void MainWindow::on_actionPrint_triggered()
 			txt_str=txt_str + "<br>";
 			txt_str=txt_str+i->data(Qt::DisplayRole).toString();
 		}
-//		qDebug()<<"on_actionPrint_triggered(): txt_str"<<txt_str<<endline;
 		QTextDocument text(this);
 		text.setHtml(txt_str);
 		text.print(&printer);

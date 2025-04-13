@@ -78,6 +78,9 @@ private slots:
    void on_actionSortDate();
    void on_actionSortInactive();
    void on_actionCopy();
+   
+   void on_actionUndo();
+   void on_actionRedo();
       
    void new_version(QString);
 

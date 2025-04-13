@@ -190,12 +190,11 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
 void TodoTableModel::addTask(task *_t)
 /* */
 {
-	QAbstractItemModel::beginResetModel();
- 	if (_t!=0)
-		    task_set.push_back(*_t);
-
-    QAbstractItemModel::endResetModel();
-
+ 	if (_t!=0){
+//		QAbstractItemModel::beginResetModel();
+ 	    task_set.push_back(*_t);
+//	    QAbstractItemModel::endResetModel();
+	    }
 }
 
 void TodoTableModel::removeTask(QUuid tuid)
@@ -203,10 +202,10 @@ void TodoTableModel::removeTask(QUuid tuid)
 {
 	for (vector<task>::iterator i=task_set.begin();i!=task_set.end();++i){
 		if (i->getTuid() == tuid){
-			QAbstractItemModel::beginResetModel();
+//			QAbstractItemModel::beginResetModel();
 			i=task_set.erase(i);
-			emit dataChanged(QModelIndex(),QModelIndex());
-			QAbstractItemModel::endResetModel();
+//			emit dataChanged(QModelIndex(),QModelIndex());
+//			QAbstractItemModel::endResetModel();
 			return;
 			}
 			
@@ -232,10 +231,10 @@ task* TodoTableModel::getTask(QModelIndex index)
 }
 
 
-void TodoTableModel::archive(){
 /* Remove all the "finished" tasks and move them to the "done" file.
-#TODO  use UndoCommands
+#TODO  use UndoCommands ???
 */
+void TodoTableModel::archive(){
 	QAbstractItemModel::beginResetModel();
 
     vector<task> done_set;
@@ -257,48 +256,24 @@ void TodoTableModel::archive(){
 }
 
 
-
-void TodoTableModel::postponeTasks(QModelIndexList & index, QString data)
-/* postpone the task index by data.
-*/
-{
-	for (QList<QModelIndex>::iterator i=index.begin();i!=index.end();++i)
-	{
-		// #TODO use UndoCommands
-    	task_set.at(i->row()).setThresholdDate(data);
-    }
-
-	todo->write(task_set,typetodofile,false);
-    emit dataChanged(index.first(), index.last());
-}
-
-void TodoTableModel::setPriorityTasks(QModelIndexList & index,QString prio)
-/* This should make heavy use of CommonTodoModel isCompleted(), setPriority(), ...
- in first instance, lets try to make it by the text.*/
-{
-	for (QList<QModelIndex>::iterator i=index.begin();i!=index.end();++i){
-	// #TODO use UndoCommands
-		if (! task_set.at(i->row()).isComplete()) task_set.at(i->row()).setPriority(prio);
-	}
-	
-	emit dataChanged(index.first(), index.last());
-	todo->write(task_set,typetodofile,false);
-	}
-
-
-void TodoTableModel::refresh()
 // what is exactly the scope of this?
 // it is activated by the click on "Reresh" button, requesting to reload the file from disk.
 // This is only possible if we trust more the file than our internal info.
 // Options : remove, de-activate
 //		or make a check of the file, if different, propose to reload
 //		or consider that we are saving any change immediately, and the file is trusted.
+void TodoTableModel::refresh()
 {
 // For the moment, do nothing
 
 //    QAbstractItemModel::beginResetModel();
 //    todo->refresh();
 //    todo_data.clear();
+
+    QAbstractItemModel::beginResetModel();
+    QAbstractItemModel::endResetModel();
+
+
     emit dataChanged(QModelIndex(),QModelIndex());
 
 //    QAbstractItemModel::endResetModel();

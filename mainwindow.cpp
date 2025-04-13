@@ -16,6 +16,7 @@
 #include <QShortcut>
 #include <QCloseEvent>
 #include <QtAwesome.h>	//used for fonts and icons
+#include <QPalette>
 #include <QDir>
 #include <QSystemTrayIcon>
 #include <QUuid>
@@ -86,11 +87,15 @@ MainWindow::MainWindow(QWidget *parent) :
     fa::QtAwesome* awesome = new fa::QtAwesome(qApp);
     awesome->initFontAwesome();     // This line is important as it loads the font and initializes the named icon map
     awesome->setDefaultOption("scale-factor",0.9);
+    QVariantMap options;
+	options.insert("color-active" , QColor(255, 0 ,0));
+	options.insert("color-active-off",QApplication::palette().color(QPalette::Normal, QPalette::ButtonText));
+	
     ui->btn_Alphabetical->setIcon(awesome->icon(fa::fa_solid, fa::fa_arrow_down_a_z ));
     ui->archiveButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_right_from_bracket));
     ui->refreshButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_arrows_rotate ));
     ui->addButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_plus ));
-    ui->context_lock->setIcon(awesome->icon(fa::fa_solid, fa::fa_lock));
+    ui->context_lock->setIcon(awesome->icon(fa::fa_solid, fa::fa_lock, options));
     ui->pb_closeVersionBar->setIcon(awesome->icon(fa::fa_solid, fa::fa_xmark));
 
     // Set some defaults if they dont exist

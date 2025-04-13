@@ -10,6 +10,7 @@
 #include <QSortFilterProxyModel>
 #include <QDesktopServices> //used for showing the online user manual.
 #include <QUndoStack>
+#include <QClipboard>
 
 #include <memory>
 #include "version.h"
@@ -76,10 +77,13 @@ private slots:
    void on_actionSortAZ();
    void on_actionSortDate();
    void on_actionSortInactive();
+   void on_actionCopy();
       
    void new_version(QString);
 
 private:
+    QSortFilterProxyModel *proxyModel;
+
     void setFileWatch();
     void setTray();
     void clearFileWatch();
@@ -132,12 +136,10 @@ private:
     	QAction* sortDateAction;
     	QAction* sortInactiveAction;
     
+    // Edit Menu
+        QAction* undoAction;
+    	QAction* redoAction;
+    	QAction* copyAction;
     
-    QAction* undoAction;
-    QAction* redoAction;
-    
-    QSortFilterProxyModel *proxyModel;
-
 };
-
 #endif // MAINWINDOW_H

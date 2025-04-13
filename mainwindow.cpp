@@ -164,6 +164,11 @@ MainWindow::MainWindow(QWidget *parent) :
 		connect(_undoStack,SIGNAL(canUndoChanged(bool)),undoAction,SLOT(setEnabled(bool)));
 		connect(_undoStack,SIGNAL(canRedoChanged(bool)),redoAction,SLOT(setEnabled(bool)));
 		
+	// Copy:
+		copyAction = new QAction("&Copy",this);
+		copyAction->setShortcuts(QKeySequence::Copy);
+	    ui->menuEdit->addAction(copyAction);
+	    connect(copyAction,SIGNAL(triggered()),this,SLOT(on_actionCopy()));
 	    
     sortMenu=new QMenu("sort",this);
 	    sortAzAction = new QAction("Sort alphabetically",this);
@@ -393,6 +398,21 @@ void MainWindow::updateSort()
 	}
 }
 
+void MainWindow::on_actionCopy()
+/* Copy the selected tasks to clipboard*/
+{
+    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+    if (!indexes.isEmpty()){
+    	QString text = "";
+		for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
+			text+=model->getTask(proxyModel->mapToSource(*i))->getEditText();
+			text+="\n";
+			}
+		QClipboard *clipboard = QGuiApplication::clipboard();
+		clipboard->setText(text, QClipboard::Clipboard);
+
+		}
+}
 
 
 void MainWindow::on_lineEditFilter_returnPressed()

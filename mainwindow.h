@@ -11,6 +11,7 @@
 #include <QDesktopServices> //used for showing the online user manual.
 #include <QUndoStack>
 #include <QClipboard>
+#include <QCompleter>
 
 #include <memory>
 #include "version.h"
@@ -143,6 +144,8 @@ private:
         QAction* undoAction;
     	QAction* redoAction;
     	QAction* copyAction;
+    
+    QCompleter* _taglist;
     
 };
 #endif // MAINWINDOW_H

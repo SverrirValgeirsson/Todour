@@ -9,7 +9,7 @@
 int main(int argc, char *argv[])
 {
 	qDebug()<<"Hello, debug mode."<<endline;
-	//task::taskTestSession();
+//	task::taskTestSession();
     QApplication appl(argc, argv);
     MainWindow w;
     appl.setWindowIcon(QIcon(":/icons/todour.png"));

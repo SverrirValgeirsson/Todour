@@ -20,7 +20,7 @@ public:
     int id() const;
 	bool mergeWith(const QUndoCommand *other);
 	
-private:
+protected:
     task* _task;
     TodoTableModel* _model;
 
@@ -37,7 +37,7 @@ public:
 	int id() const;
 	bool mergeWith(const QUndoCommand *other);
 	
-private:
+protected:
 	task* _task;
 	TodoTableModel* _model;
  	QUuid _tuid;
@@ -56,7 +56,7 @@ public:
 	int id() const;
 	bool mergeWith(const QUndoCommand *other);
 	
-private:
+protected:
 	task* _task;
 	QString _old_raw;
 	QString _new_raw;
@@ -74,7 +74,7 @@ public:
 	int id() const;
 	bool mergeWith(const QUndoCommand *other);
 	
-private:
+protected:
 	task* _task;
 	bool _complete;
 	TodoTableModel* _model;
@@ -91,12 +91,24 @@ public:
 	int id() const;
 	bool mergeWith(const QUndoCommand *other);
 	
-private:
+protected:
 	task* _task;
 	QChar _priority;
 	QChar _p_priority;
 	TodoTableModel* _model;
 
 };
+
+class PostponeCommand : public EditCommand
+{
+public:
+    explicit PostponeCommand(TodoTableModel* model, task* t, QString _postp, QUndoCommand *parent = nullptr);
+	~PostponeCommand();
+	
+private:
+
+};
+
+
 
 #endif // TODOUNDO_H

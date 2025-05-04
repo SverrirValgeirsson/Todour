@@ -98,6 +98,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->context_lock->setIcon(awesome->icon(fa::fa_solid, fa::fa_lock, options));
     ui->pb_closeVersionBar->setIcon(awesome->icon(fa::fa_solid, fa::fa_xmark));
 
+
     // Set some defaults if they dont exist
     if(!settings.contains(SETTINGS_LIVE_SEARCH)){
         settings.setValue(SETTINGS_LIVE_SEARCH,DEFAULT_LIVE_SEARCH);
@@ -163,7 +164,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		undoAction->setIcon(QIcon(":/icons/undo.png"));
     	undoAction->setShortcuts(QKeySequence::Undo);
 		connect(_undoStack, SIGNAL(canUndoChanged(bool)), undoAction, SLOT(setEnabled(bool)));
-	    connect(_undoStack, SIGNAL(undoTextChanged(QString)),undoAction, SLOT(setPrefixedText(QString)));
+//	    connect(_undoStack, SIGNAL(undoTextChanged(QString)),undoAction, SLOT(setPrefixedText(QString)));
 		connect(undoAction, SIGNAL(triggered()), this, SLOT(on_actionUndo()));
 		
 //    	redoAction = _undoStack->createRedoAction(this, tr("&Redo"));
@@ -174,7 +175,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		ui->menuEdit->addAction(undoAction);
 		ui->menuEdit->addAction(redoAction);
 		connect(_undoStack, SIGNAL(canRedoChanged(bool)), redoAction, SLOT(setEnabled(bool)));
-	    connect(_undoStack, SIGNAL(redoTextChanged(QString)),redoAction, SLOT(setPrefixedText(QString)));
+//	    connect(_undoStack, SIGNAL(redoTextChanged(QString)),redoAction, SLOT(setText(QString)));
 		connect(redoAction, SIGNAL(triggered()), this, SLOT(on_actionRedo()));
 		
 	// Copy:
@@ -234,14 +235,25 @@ MainWindow::MainWindow(QWidget *parent) :
     stayOnTop();
     setTray();
     setFontSize();
-    
+
+		QStringList wordList;
+		wordList << "alpha" << "omega" << "omicron" << "zeta";
+		_taglist = new QCompleter(wordList, this);
+		_taglist->setCaseSensitivity(Qt::CaseInsensitive);
+		ui->lineEditFilter->setCompleter(_taglist);
+
+
 
     // Do this late as it triggers action using data
     //ui->btn_Alphabetical->setChecked(settings.value(SETTINGS_SORT_ALPHA).toBool());
     QObject::connect(model,SIGNAL(dataChanged (const QModelIndex , const QModelIndex )), this, 
     		SLOT(dataInModelChanged(QModelIndex,QModelIndex)));
+
     updateSearchResults(); // Since we may have set a value in the search window
 	on_actionSortAZ();
+
+
+
 	
 	qDebug()<<"mainwindow initialised"<<endline;	
 
@@ -625,6 +637,8 @@ void MainWindow::on_refreshButton_clicked()
 void MainWindow::cleanup(){
 	QSettings settings;
 
+	qDebug()<<"Clean up ..."<<endline;	
+
     settings.setValue( SETTINGS_GEOMETRY, saveGeometry() );
     settings.setValue( SETTINGS_SAVESTATE, saveState() );
     settings.setValue( SETTINGS_MAXIMIZED, isMaximized() );
@@ -755,12 +769,13 @@ void MainWindow::on_actionDelete()
 */
 void MainWindow::on_actionPostpone()
 {
+// #TODO  Get the postpone value from QSettings...
     QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
     if(!indexes.empty()){
  		_undoStack->beginMacro("postpone");			   
 		for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
 			//model->postponeTasks(indexes,"t:+10d");
-			_undoStack->push(new EditCommand(model, model->getTask(*i), model->getTask(*i)->getEditText()+" t:+10d"));
+			_undoStack->push(new PostponeCommand(model, model->getTask(proxyModel->mapToSource(*i)), " t:+10d"));
 		}
 		_undoStack->endMacro();    
 		model->refresh();
@@ -768,13 +783,11 @@ void MainWindow::on_actionPostpone()
     }
 }
 
+void MainWindow::on_actionDuplicate()
 /* User has clicked on "Duplicate". We need to make a copy of task and 
 */
-void MainWindow::on_actionDuplicate()
 {
-	
-	
-    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+   QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
 	if (! indexes.isEmpty()){
 		_undoStack->beginMacro("completion");
 		for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){

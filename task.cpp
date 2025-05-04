@@ -13,20 +13,25 @@ static QRegularExpression regex_reldate("(?<rdate>"+RDATE_PAT+")(?:\\s*|$)");
 static QRegularExpression regex_tuid("\\s+tuid:(?<tuid>.{8}-.{4}-.{4}-.{4}-.{12})(?:\\s*|$)");  //xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 static QRegularExpression regex_url("[a-zA-Z0-9_]+:\\/\\/([-a-zA-Z0-9@:%_\\+.~#?&\\/=\\(\\)\\{\\}\\\\]*)");
 static QRegularExpression regex_color("\\s*color:([a-z]*)");
-static QRegularExpression regex_priority("^(?:x\\s(?:"+DATE_PAT+"\\s*)?)?\\((?<prio>[A-Z])\\)(?:\\s*|$)"); //(B)
-static QRegularExpression regex_inputdate("(?<idate>\\b"+DATE_PAT+")\\s+|$");
 static QRegularExpression regex_threshold_project("t:(\\+[^\\s]+)(?:\\s*|$)");
 static QRegularExpression regex_threshold_context("t:(\\@[^\\s]+)(?:\\s*|$)");
-static QRegularExpression regex_threshold_date("\\s+t:((" + DATE_PAT + "(?:\\s*|$)|" + RDATE_PAT+"))(?:\\s*|$)");
-static QRegularExpression regex_due_date("\\s+due:(" + DATE_PAT + ")(?:\\s+|$)");
+static QRegularExpression regex_threshold_date("\\s+(t:" + DATE_PAT + ")(?=\\s*|$)");
+static QRegularExpression regex_threshold_date_r("\\s+(t:" + RDATE_PAT + ")(?=\\s*|$)");
+
+static QRegularExpression     regex_due_date("\\s+(due:" + DATE_PAT + ")(?=\\s*|$)");
+static QRegularExpression     regex_due_date_r("\\s+(due:" + RDATE_PAT + ")(?=\\s*|$)");
+
 static QRegularExpression regex_rec("(rec:" + RDATE_PAT+")(?:\\s*|$)"); 
 
-static QRegularExpression regex_done        ("^(?:x )+("+DATE_PAT+"(?:\\s+|$))?"); // x 2025-03-01
-static QRegularExpression regex_completedate("^(?:x )+("+DATE_PAT+"(?:\\s+|$))");
-
-static QRegularExpression regex_preamble("^(?:x\\s*)*(?:"+DATE_PAT+"\\s*)*(?:\\([A-Z]\\)\\s*)*(?:"+DATE_PAT+")*(?:\\s*|$)");
+//preamble    //^(?:x\s+(?:\d\d\d\d-\d\d-\d\d\s)?)?(?:\(\w\)\s+)?(?:\d\d\d\d-\d\d-\d\d\s+)?
+static QRegularExpression regex_preamble("^(?<pxd>x\\s+"+DATE_PAT+"\\s)?(?<px>x\\s)?\\s*(?<ppr>\\(\\w\\)\\s)?\\s*(?<pid>"+DATE_PAT+"\\s)?\\s*(?<ptk>.*)$");
+static QRegularExpression regex_done        ("^(x\\s+)"); // x 2025-03-01
+static QRegularExpression regex_completedate("^(?=x\\s+("+DATE_PAT+")?)");
+static QRegularExpression regex_priority("^(?=x\\s+(?="+DATE_PAT+")?)?(\\(\\w\\)\\s+)"); //(B)
+static QRegularExpression regex_inputdate("^(?:x\\s)?(?:x\\s+"+DATE_PAT+"\\s)?\\s*(?:\\(\\w\\)\\s)?\\s*(?<p>"+DATE_PAT+")");
 
 static QRegularExpression regex_todo_line("((^(?:x )+("+DATE_PAT+"(?:\\s+|$))?)+(?<donedate>"+DATE_PAT+"(?:\\s*|$))?)?(?<priority>"+regex_priority.pattern()+")?(?<inputdate>"+DATE_PAT+"(?:\\s*|$))?(.*)");
+
 
 
 bool task::is_txt_compatible()
@@ -63,40 +68,50 @@ task::task(QString s, QString context, bool loaded)
 		_tuid=QUuid::createUuid();
 
 		if (!context.isEmpty())
-			ret = ret+" "+context;
+				ret = ret+" "+context;
+				
 		parse(ret,true);
 
-    	if(!getInputDate().isValid()&&(settings.value(SETTINGS_DATES).toBool())){
-    		 setInputDate(QDate::currentDate());
-    		 }
+    	if(!inputD.isValid()&&(settings.value(SETTINGS_DATES).toBool()))
+    		 	setInputDate(QDate::currentDate());
 	
-		if (getPriority().isNull()){ // there was no priority in the newly created task
-			setPriority(settings.value(SETTINGS_DEFAULT_PRIORITY,DEFAULT_DEFAULT_PRIORITY).toChar());			
-    		}
+		if (priority.isNull()) // there was no priority in the newly created task
+				setPriority(settings.value(SETTINGS_DEFAULT_PRIORITY,DEFAULT_DEFAULT_PRIORITY).toChar());			
+    		
 	}
 
 }
 
 task::task(task* copy)
+/* */
 {
 	setRaw(copy->getRaw());
 	_tuid=copy->getTuid();
 //	qDebug()<<"task:task from existing. raw="<<_raw<<endline;	
-	parse(_raw,true); // usefull? should not be ;-)
+//	parse(_raw,true); // usefull? should not be ;-)
 	setInputDate(QDate::currentDate());
 }
 
 task::~task()
-{ // nothing to do
+/*  nothing to do */
+{
 }
 
 void task::parse(QString s,bool strict)
 /* Update the fields because the "text" has changed.  Only tak care of relative dates...
 */
 {
+//	qDebug()<<"task::parse started. s="<<s<<endline;
+	QSettings settings;
 	_raw=s;
 
 	auto matches = regex_due_date.globalMatch(s);
+	while (matches.hasNext())
+	{
+		this->setDueDate(matches.next().captured(1),strict);
+	}
+
+	matches = regex_due_date_r.globalMatch(s);
 	while (matches.hasNext())
 	{
 		this->setDueDate(matches.next().captured(1),strict);
@@ -107,9 +122,49 @@ void task::parse(QString s,bool strict)
 	{
 		this->setThresholdDate(matches.next().captured(1),strict);
 	}
-	
 
+	matches = regex_threshold_date_r.globalMatch(s);
+	while (matches.hasNext())
+	{
+		this->setThresholdDate(matches.next().captured(1),strict);
+	}
+
+
+	matches = regex_preamble.globalMatch(_raw);
+	if (matches.hasNext()){
+		auto nn=matches.next();
+		if(!nn.captured("px").isNull() | !nn.captured("pxd").isNull())
+				this->complete=Qt::Checked;
+		else
+				this->complete=Qt::Unchecked;
+			
+		QDate d=QDate::fromString(nn.captured("pid"),"yyyy-MM-dd");
+		if (d.isValid())
+			inputD=d;
+		else
+			inputD=QDate();
+		
+		if (!nn.captured("ppr").isNull())
+				priority=nn.captured("ppr").at(1);
+		else
+			priority = QChar::Null;
+	}
+	
+	QString c;
+	matches = regex_color.globalMatch(_raw);
+	if (matches.hasNext()){
+		c = matches.next().captured(1);
+		if (QColor::isValidColorName(c)){
+			color=QColor::fromString(c);
+		}
+	}
+	else
+		color=QColor::fromString("White");
+
+
+	qDebug()<<"task::parse "<<toString()<<endline;
 }
+
 
 void task::setDueDate(QString d, bool strict)
 /* Update the due_date from String, with interpretation.
@@ -117,24 +172,24 @@ void task::setDueDate(QString d, bool strict)
   if strict=false, change _d_date only if new date is sooner
 */
 {
-//qDebug()<<"task::setDueDate input="<<d<<endline;
-	QDate td;
-	td = task::getRelativeDate(d);
-	if(! td.isValid()){
-		QRegularExpressionMatch rdate = regex_date.match(d);
-		if (rdate.hasMatch())
-		{
-			td = QDate::fromString(d,"yyyy-MM-dd");
-		}
+	Q_UNUSED(strict);
+	
+	QRegularExpressionMatch rdate = regex_date.match(d);
+	if (rdate.hasMatch()){
+		dueD = QDate::fromString(d.remove(0,4),"yyyy-MM-dd");
+//		qDebug()<<"task::setDueData found a due date"<<d<<endline;
+		return;
 	}
-	if (td.isValid()){ //if new date is not valid, do nothing.
-			_raw.remove(regex_due_date);
-//			_d_date=td;
-			_raw.append(" due:"+td.toString("yyyy-MM-dd"));
 			
+	QDate td = task::getRelativeDate(d);
+	if (td.isValid()){ //if new date is not valid, do nothing.
+			_raw.remove(regex_due_date_r);
+			_raw.append(" due:"+td.toString("yyyy-MM-dd"));
+//			qDebug()<<"task::setDueData found a due date r"<<d<<endline;
+			dueD=td;		
 	}
-}
 
+}
 
 void task::setThresholdDate(QString d, bool strict)
 /* Update the threshold_date from String, with interpretation.
@@ -142,56 +197,68 @@ void task::setThresholdDate(QString d, bool strict)
   if strict=false, change _t_date only if new date is later
 */
 {
-//qDebug()<<d<<endline;
-	QDate td;
-	td = task::getRelativeDate(d);
-	if(! td.isValid()){
-		QRegularExpressionMatch rdate = regex_date.match(d);
-		if (rdate.hasMatch())
-		{
-			td = QDate::fromString(d,"yyyy-MM-dd");
-		}
+	Q_UNUSED(strict);
+	QRegularExpressionMatch rdate = regex_date.match(d);
+	if (rdate.hasMatch()){
+		thrD = QDate::fromString(d,"yyyy-MM-dd");
+		return;
 	}
+	
+	QDate td = task::getRelativeDate(d);
 	if (td.isValid()){ //if new date is not valid, do nothing
-			_raw.remove(regex_threshold_date);
-//			_t_date=td;
-			_raw.append(" t:"+td.toString("yyyy-MM-dd"));
+		_raw.remove(regex_threshold_date_r);
+		_raw.append(" t:"+td.toString("yyyy-MM-dd"));
+		thrD = td;
 	}
+
 }
 
 void task::setInputDate(QDate d)
 /* place a date at beginning, but after priority.
 If a date is present, remove it first !*/
 {
-	_raw.remove(regex_inputdate);
-	if (!getPriority().isNull())
-		_raw.insert(4,d.toString("yyyy-MM-dd")+" ");
-	else 
-		_raw.insert(0,d.toString("yyyy-MM-dd")+" ");
-
+	QString traw = _raw;
+	
+	auto matches = regex_preamble.globalMatch(traw);
+	if (matches.hasNext())	{
+		auto nn=matches.next();
+		traw=nn.captured("ptk");
+		traw.prepend(d.toString("yyyy-MM-dd")+" ");
+		traw.prepend(nn.captured("ppr"));
+		traw.prepend(nn.captured("pxd"));
+		traw.prepend(nn.captured("px"));
+		_raw=traw;
+	}
+	
+	inputD=d;
 }
 
-/* set / change the color.  if a color is present, it is updated,  if multiple colors are present, they got cleaned
- */
 void task::setColor(QString c)
+/* set / change the color.  if a color is present, it is updated,  if multiple colors are present, they got cleaned */
 {
 	_raw.remove(regex_color);
-	_color=c;
+	auto matches = regex_color.globalMatch(_raw);
+	if (matches.hasNext()){
+		c = matches.next().captured(1);
+		if (QColor::isValidColorName(c)){
+			color=QColor::fromString(c);
+		}
+	}
+	else
+		color=QColor::fromString("White");
+
 }
 
-/* No direct function for this in QT, must be rewritten...  :-(*/
 void task::setColor(QColor c)
 {
-qDebug()<<"   task::setColor not implemented"<<endline;
-	Q_UNUSED(c);
-	return;
+	color=c;	
 }
 
+void task::setDescription(QString s)
 /*
 NOT WORKING IN THIS STATE
 #IDEA: we should rebuilt the _raw, based on the new "description", + all the fields that we have.
 */
-void task::setDescription(QString s)
 {
 qDebug()<<"   task::setDescription not implemented"<<endline;
 	// a définir : que contient exactement le text?
@@ -200,16 +267,18 @@ qDebug()<<"   task::setDescription not implemented"<<endline;
     Q_UNUSED(s);
 }
 
+void task::setPriority(QChar c)
 /* Set the priority of task
 #BUG: il faut enlever tout ce qui ressemble à une priorité. Si il y en a 2 d'affilée, on enleve les 2.
 */
-void task::setPriority(QChar c)
 {
 	_raw.remove(regex_priority);	
 	if (c.isLetter()){
 		_raw.prepend(") ");
 		_raw.prepend(c);
 		_raw.prepend("(");
+		priority=c;
+		
 	}
 }
 
@@ -217,21 +286,8 @@ void task::setRaw(QString s)
 /* Set raw text, by first interpreting it.
 */
 {
-	_raw=s;
 	parse(s);
 }
-
-Qt::CheckState task::isComplete() const
-/* */
-{
-	auto matches = regex_done.globalMatch(_raw);
-	while (matches.hasNext())
-	{
-		return Qt::Checked;
-	}
-	return Qt::Unchecked;
-}
-
 
 task* task::setComplete(bool c)
 /* Mark the task as completed.
@@ -246,24 +302,26 @@ task* task::setComplete(bool c)
 //	_raw.remove(regex_done);
 	if (c){
 		auto matches = regex_rec.globalMatch(_raw);
-		while (matches.hasNext())
-		{
+		while (matches.hasNext())			{
 			ret = new task(_raw); // we use the normal constructor to get a new tuid.
 			if (settings.value(SETTINGS_DEFAULT_THRESHOLD,DEFAULT_DEFAULT_THRESHOLD) == "t:"){
 				ret->setThresholdDate(matches.next().captured(1),true);
-			}else{	
+				}
+			else{	
 				ret->setDueDate(matches.next().captured(1),true);
+				}
 			}
-		}
-    if(settings.value(SETTINGS_DATES).toBool())
- 			_raw.prepend("x "+QDate::currentDate().toString("yyyy-MM-dd")+" ");
- 	else
- 			_raw.prepend("x ");
+    	if(settings.value(SETTINGS_DATES).toBool())
+ 				_raw.prepend("x "+QDate::currentDate().toString("yyyy-MM-dd")+" ");
+ 		else
+ 				_raw.prepend("x ");
+ 		complete=Qt::Checked;
 	}
 	else{
 		_raw.remove(regex_done);
+		complete=Qt::Unchecked;
 	}
-	
+
 	return ret;
 }
 
@@ -280,44 +338,32 @@ QString task::getURL() const
     }
 }
 
-QString task::getRaw() const
-/* returns the full text, used for copying. TUID not included. */
-{
-  return _raw;
-}
-
-
-QString task::getEditText() const
-/* returns text for display in todour, = priority + dates? + _raw + color       = raw ? 
-*/
-{
-	return _raw;
-}
-
-
 QString task::getDisplayText() const
-/* returns text for display in todour, = priority + dates? + _raw
-	returns raw - complete - dates? - color
-*/
+/* text for display in todour*/
 {
 	QSettings settings;
-	QString ret = _raw;
-	
-	if (! settings.value(SETTINGS_SHOW_DATES,DEFAULT_SHOW_DATES).toBool()){
-		ret.remove(regex_inputdate);
-		ret.remove(regex_completedate);
-		}
-
-	ret.remove(regex_color);
-	ret.remove(regex_done);
-	
-	return ret;
+	QString display = _raw;	
+	auto matches = regex_preamble.globalMatch(_raw);
+	if (matches.hasNext())
+	{
+		auto nn=matches.next();
+		display=nn.captured("ptk");
+		if (settings.value(SETTINGS_SHOW_DATES,DEFAULT_SHOW_DATES).toBool())
+				display.prepend(nn.captured("pid"));
+				
+		display.prepend(nn.captured("ppr"));
+		
+	}
+	display.remove(regex_color);
+	return display;
 }
+
 
 QString task::getDescription() const
 /* returns only the descriptive part of the text, without t: due: color:
 */
 {
+	qDebug()<<"   task::getDescription not optimised"<<endline;
 	QString ret = _raw;
 	ret.remove(regex_color);
 	ret.remove(regex_done);
@@ -326,80 +372,6 @@ QString task::getDescription() const
 	ret.remove(regex_rec);
 	return ret;
 } 
-
-QDate task::getDueDate() const
-/* */
-{
-	QDate d, e;
-	auto matches = regex_due_date.globalMatch(_raw);
-	while (matches.hasNext())
-	{
-		e=QDate::fromString(matches.next().captured(1),"yyyy-MM-dd");
-		if (e.isValid() && (!d.isValid() || d<e))
-			d=e;		
-	
-	}
-return d;
-}
-
-QDate task::getThresholdDate() const
-/* */
-{
-	QDate d, e;
-	auto matches = regex_threshold_date.globalMatch(_raw);
-	while (matches.hasNext())
-	{
-		e=QDate::fromString(matches.next().captured(1),"yyyy-MM-dd");
-		if (e.isValid() && (!d.isValid() || d<e))
-				d=e;	
-	}
-return d;
-}
-
-
-QDate task::getInputDate() const
-/* */
-{
-	QDate d;
-	auto matches = regex_inputdate.globalMatch(_raw);
-	while (matches.hasNext())
-	{
-		d=QDate::fromString(matches.next().captured(1),"yyyy-MM-dd");
-		if (d.isValid()) return d;
-	}
-	return QDate();
-}
-
-QChar task::getPriority() const
-/**/
-{
-	QChar c;
-	
-	auto matches = regex_priority.globalMatch(_raw);
-	while (matches.hasNext())
-	{
-		return matches.next().captured(1).at(0);
-	}
-
-	return QChar::Null;
-}
-
-QColor task::getColor() const
-/* */
-{
-	QColor c;
-	
-	auto matches = regex_color.globalMatch(_raw);
-	while (matches.hasNext())
-	{
-		if (QColor::isValidColorName(matches.next().captured(1))){
-			return QColor::fromString(matches.next().captured(1));
-		}
-	}
-	return QColor::fromString("White");
-}
-
-
 
 QString task::toSaveString() const
 /* returns the full QString for saving, including all hidden data.
@@ -414,8 +386,16 @@ QString task::toString() const
 /* returns the full QString for debugging, including all hidden data.
 */
 {
-	QString ret=getEditText();
-	ret.append("\n    tuid:"+_tuid.toString(QUuid::WithoutBraces));
+	QString ret=_raw;
+	ret.append("\\n   tuid:"+_tuid.toString(QUuid::WithoutBraces));
+	ret.append("\\n   input Date:"+inputD.toString());
+	ret.append("\\n   due Date:"+dueD.toString());
+	ret.append("\\n   threshold Date:"+thrD.toString());
+	ret.append("\\n   complete Date:"+_complete_date.toString());
+	ret.append("\\n   priority:"+QString(priority));
+	ret.append("\\n   color:"+color.name());
+	ret.append("\\n   complete:"+complete);
+	ret.append("\\n   display:"+getDisplayText());
 	return ret;
 }
 
@@ -427,18 +407,18 @@ bool task::isActive() const
 	- task not completed
 	- context threshold not activated (!)
 	- not containing "inactive" tags (LATER: IDEA: LOW: WAIT: ..)
+	#TODO: remove from here all the QSettings part, to be done upper, will be fast thanks to new _valid model.
 */
 {
 	QSettings settings;
 	bool ret=true;
 	ret &= (QDate::currentDate()>getThresholdDate());
-//	ret &= !isComplete();
+
 	QStringList words = settings.value(SETTINGS_INACTIVE,DEFAULT_INACTIVE).toString().split(';');
-	for (QString i:words)
-		{
+	for (QString i:words){
 		ret &= ! _raw.contains(i);
 		}
-return ret;
+	return ret;
 }
 
 /*
@@ -506,6 +486,27 @@ Only for development, not planned to be used for production.
 	if(! regex_done.isValid()) return "regex_done "+regex_done.errorString();
 	if(! regex_threshold_project.isValid()) return "regex_threshold_project "+regex_threshold_project.errorString();
 	if(! regex_threshold_context.isValid()) return "regex_threshold_context "+regex_threshold_context.errorString();
+
+qDebug()<<"  regex_date: "<<regex_date;
+qDebug()<<"  regex_reldate: "<<  regex_reldate;
+qDebug()<<"  regex_tuid: "<< regex_tuid;
+qDebug()<<"  regex_url: "<<  regex_url;
+qDebug()<<"  regex_color: "<<  regex_color;
+qDebug()<<"  regex_threshold_project: "<<  regex_threshold_project;
+qDebug()<<"  regex_threshold_context: "<<  regex_threshold_context;
+qDebug()<<"  regex_threshold_date: "<<  regex_threshold_date;
+qDebug()<<"  regex_due_date: "<<  regex_due_date;
+qDebug()<<"  regex_rec: "<<  regex_rec;
+qDebug()<<"  regex_preamble: "<<  regex_preamble;
+qDebug()<<"  regex_done: "<<  regex_done;
+qDebug()<<"  regex_completedate: "<<  regex_completedate;
+qDebug()<<"  regex_priority: "<<  regex_priority;
+qDebug()<<"  regex_inputdate: "<<  regex_inputdate;
+qDebug()<<"  regex_todo_line: "<<  regex_todo_line;
+
+
+
+
 return "testRegularExpressions finished";
 }
 
@@ -513,54 +514,32 @@ return "testRegularExpressions finished";
 void task::taskTestSession()
 {
 	qDebug()<<"Testing regularExpression : "<<task::testRegularExpressions()<<endline;
- //test zone
+ 	//test zone
 
-qDebug()<<"Test zone: "<<endline;
-task *t = new task ("(B) This is a full test task t:2024-10-09 due:2024-11-01 due:+1m color:red");
-task *u = new task ("This is a second test task t:2025-10-09");
-task *v = new task ("x This is a finished test task t:2022-10-01");
-qDebug()<<"Created. Let's test:"<<endline;
+	qDebug()<<"Test zone: "<<endline;
+//	task *t = new task ("(B) This is a full test task");
+//	qDebug()<<"Created. Let's test:"<<endline;
 
-qDebug()<<"t raw: "<<t->getRaw()<<endline;
-qDebug()<<"t due-date: "<<t->getDueDate()<<endline;
-qDebug()<<"t threshold-date: "<<t->getThresholdDate()<<endline;
-qDebug()<<"t text: "<<t->getDisplayText()<<endline;
-//qDebug()<<"t pure text: "<<t->get_pure_text()<<endline;
-qDebug()<<"t priority: "<<t->getPriority()<<endline;
-qDebug()<<"t color: "<<t->getColor()<<endline;
-qDebug()<<"t is Complete: "<<t->isComplete()<<endline;
-qDebug()<<"t is Active: "<<t->isActive()<<endline;
-//qDebug()<<"t utid: "<<t->getTuid()<<endline;
+	QString ttt = "(B) 2025-05-09 test task";
+	auto matches = regex_preamble.globalMatch(ttt);
+	while (matches.hasNext())
+	{
+		auto nn=matches.next();
+		qDebug()<<"  test m1c0:"<<nn.captured("px")<<endline;
+		qDebug()<<"  test m1c1:"<<nn.captured("pxd")<<endline;
+		qDebug()<<"  test m1c2:"<<nn.captured("ppr")<<endline;
+		qDebug()<<"  test m1c2:"<<nn.captured("pid")<<endline;
+		qDebug()<<"  test m1c2:"<<nn.captured("ptk")<<endline;
+	
+	QString t=nn.captured("ptk");
+	t.prepend(nn.captured("ppr"));
+	qDebug()<<"original: "<<ttt<<endline;
+	qDebug()<<"modified: "<<t<<endline;
 
+	}
 
-t->setPriority('A');
-qDebug()<<"t raw: "<<t->toString()<<endline;
-t->setPriority('Z');
-qDebug()<<"t raw: "<<t->toString()<<endline;
-
-qDebug()<<"u raw: "<<u->toString()<<endline;
-qDebug()<<"u due-date: "<<u->getDueDate()<<endline;
-qDebug()<<"u threshold-date: "<<u->getThresholdDate()<<endline;
-qDebug()<<"u text: "<<u->getDisplayText()<<endline;
-//qDebug()<<"u pure text: "<<u->get_pure_text()<<endline;
-qDebug()<<"u priority: "<<u->getPriority()<<endline;
-qDebug()<<"u color: "<<u->getColor()<<endline;
-qDebug()<<"u is Complete: "<<u->isComplete()<<endline;
-qDebug()<<"u is Active: "<<u->isActive()<<endline;
-//qDebug()<<"u utid: "<<u->getTuid()<<endline;
-
-qDebug()<<"v raw: "<<v->toString()<<endline;
-qDebug()<<"v due-date: "<<v->getDueDate()<<endline;
-qDebug()<<"v threshold-date: "<<v->getThresholdDate()<<endline;
-qDebug()<<"v text: "<<v->getDisplayText()<<endline;
-//qDebug()<<"v pure text: "<<v->get_pure_text()<<endline;
-qDebug()<<"v priority: "<<v->getPriority()<<endline;
-qDebug()<<"v color: "<<v->getColor()<<endline;
-qDebug()<<"v is Complete: "<<v->isComplete()<<endline;
-qDebug()<<"v is Active: "<<v->isActive()<<endline;
-//qDebug()<<"v utid: "<<v->getTuid()<<endline;
-
-qDebug()<<"End of test session"<<endline;
+	
 
 
+qDebug()<<"End of test session"<<endline<<endline<<endline<<endline;
 }

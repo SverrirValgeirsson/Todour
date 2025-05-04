@@ -130,16 +130,20 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
 
         if(active && due<=0){
             // We have passed due date
-            return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_DUE_LATE_COLOR,DEFAULT_DUE_LATE_COLOR).toUInt()));
-        } else if(active && due<=settings.value(SETTINGS_DUE_WARNING,DEFAULT_DUE_WARNING).toInt()){
-            return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_DUE_WARNING_COLOR,DEFAULT_DUE_WARNING_COLOR).toUInt()));
+        	return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_DUE_LATE_COLOR,DEFAULT_DUE_LATE_COLOR).toUInt()));
         }
-        else if(!task_set.at(index.row()).isActive()){
-            return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_INACTIVE_COLOR,DEFAULT_INACTIVE_COLOR).toUInt()));
-        } else {
-            return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_ACTIVE_COLOR,DEFAULT_ACTIVE_COLOR).toUInt()));
-        }
-    }
+        else 
+        	if(active && due<=settings.value(SETTINGS_DUE_WARNING,DEFAULT_DUE_WARNING).toInt()){
+            	return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_DUE_WARNING_COLOR,DEFAULT_DUE_WARNING_COLOR).toUInt()));
+        	}
+       		else 
+       			if(!task_set.at(index.row()).isActive()){
+            		return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_INACTIVE_COLOR,DEFAULT_INACTIVE_COLOR).toUInt()));
+        		}
+        		else {
+            		return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_ACTIVE_COLOR,DEFAULT_ACTIVE_COLOR).toUInt()));
+        		}
+    		}
 
     if (role == Qt::BackgroundRole && index.column()==1){
 		if (task_set.at(index.row()).getColor().isValid())
@@ -190,11 +194,8 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
 void TodoTableModel::addTask(task *_t)
 /* */
 {
- 	if (_t!=0){
-//		QAbstractItemModel::beginResetModel();
- 	    task_set.push_back(*_t);
-//	    QAbstractItemModel::endResetModel();
-	    }
+ 	if (_t!=0)
+	 	    task_set.push_back(*_t);
 }
 
 void TodoTableModel::removeTask(QUuid tuid)
@@ -202,14 +203,10 @@ void TodoTableModel::removeTask(QUuid tuid)
 {
 	for (vector<task>::iterator i=task_set.begin();i!=task_set.end();++i){
 		if (i->getTuid() == tuid){
-//			QAbstractItemModel::beginResetModel();
 			i=task_set.erase(i);
-//			emit dataChanged(QModelIndex(),QModelIndex());
-//			QAbstractItemModel::endResetModel();
 			return;
-			}
-			
 		}
+	}
 }
 
 task* TodoTableModel::getTask(QUuid tuid)
@@ -218,10 +215,9 @@ task* TodoTableModel::getTask(QUuid tuid)
 	for (vector<task>::iterator i=task_set.begin();i!=task_set.end();++i){
 		if (i->getTuid() == tuid){
 			return &(*i);
-			}
-			
 		}
-return 0;
+	}
+	return 0;
 }
 
 task* TodoTableModel::getTask(QModelIndex index)

@@ -5,7 +5,8 @@
 AddCommand::AddCommand(TodoTableModel* model, task* _t, QUndoCommand *parent)
     : QUndoCommand(parent), _model(model)
 {
-    _task = new task(_t);
+//    _task = new task(_t);
+_task = _t;
 	setText("New task");
 }
 
@@ -167,3 +168,16 @@ bool PriorityCommand::mergeWith(const QUndoCommand *other)
 }
 
 
+// §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
+
+PostponeCommand::PostponeCommand(TodoTableModel* model, task* t, QString postp, QUndoCommand *parent)
+    :EditCommand(model, t,"",parent)
+{
+//	QSettings
+	setText("Postpone");
+	_new_raw = _old_raw + " " + postp;
+}
+
+/* #TODO  check*/
+PostponeCommand::~PostponeCommand()
+{}

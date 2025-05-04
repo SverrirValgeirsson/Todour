@@ -23,14 +23,13 @@ class task
 private:
 	QString _raw;
 	QUuid _tuid;
-//	QDate _d_date;
-//	QDate _t_date;
-	QDate _input_date;
 	QDate _complete_date;
-	QString _color;
-	QChar _priority;
-//	bool _completed;
-	QString _desc;
+	QChar priority;
+	QColor color;
+	QDate inputD;
+	QDate dueD;
+	QDate thrD;
+	Qt::CheckState complete ;
 	
 public:
 	task(QString s="", QString context="", bool loaded=false);
@@ -39,34 +38,49 @@ public:
 	bool is_txt_compatible();
 
 	void setDueDate(QString d, bool strict=true);
+	
 	void setThresholdDate(QString d, bool strict=true);
+	
 	void setInputDate(QDate d);
 	void setColor(QString c);
 	void setColor(QColor c);
 	void setDescription(QString s);
-//	void setPriority(QString c);
 	void setPriority(QChar c);
 	task* setComplete(bool c = true);
 	void setRaw(QString s);
 
-	QDate getDueDate() const;
-	QDate getThresholdDate() const;
-	QDate getInputDate() const;
-	QChar getPriority() const;
-	QColor getColor() const;
+	inline QDate getDueDate() const {return dueD;};
+	inline QDate getThresholdDate() const {return thrD;};
+	inline QDate getInputDate() const {return inputD;};
+	inline QChar getPriority()const {return priority;};
+	inline QColor getColor() const {return color;};
 	inline QUuid getTuid() const{return _tuid;}
+	inline Qt::CheckState isComplete() const {return complete;};
+	/*  */
+	
+	bool isActive() const;
+	/* */
+
 	QString getURL() const;
 
-	QString getRaw() const; // returns the full text, used for edit
-	QString getDisplayText() const; // text for display in todour
-	QString getEditText() const; // text for edit in Todour
-	QString getDescription() const; // text for display in future tool. return only the descriptive part of the text, without t: due: color: utid: ...   TODO
-	QString toSaveString() const;//returns the full QString for saving, including all hidden data.
-	QString toString() const;//returns the full QString for debugging
-
-	Qt::CheckState isComplete() const;
-	bool isActive() const;
+	inline QString getRaw() const {return _raw;};
+	/* returns the full text, used for edit */
 	
+	QString getDisplayText() const;
+	/* text for display in todour*/
+	
+	inline QString getEditText() const {return _raw;};
+	/* text for edit in Todour*/
+	
+	QString getDescription() const;
+	/* text for display in future tool. return only the descriptive part of the text, without t: due: color: utid: ...   TODO*/
+	
+	QString toSaveString() const;
+	/*returns the full QString for saving, including all hidden data.*/
+	
+	QString toString() const;
+	/*returns the full QString for debugging*/
+
 
 // === static functions ===
 	static QDate getRelativeDate(QString d);
@@ -79,6 +93,9 @@ public:
 protected:
 	void parse(QString s, bool strict=false);
 
+	
+	
+private:
 };
 
 #endif // TASK_H

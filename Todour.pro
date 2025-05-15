@@ -13,7 +13,8 @@ VERS = 2.22G
 DEFINES += VER=\"\\\"$${VERS}\\\"\"
 CONFIG += c++11
 CONFIG+=sdk_no_version_check
-CONFIG+=qt debug console
+CONFIG+=qt console
+#CONFIG+=debug
 CONFIG+=fontAwesomeFree
 
 macx{

@@ -42,7 +42,7 @@ todotxt::~todotxt()
 
 }
 
-void todotxt::getAllTask(vector<task> &output)
+void todotxt::getAllTask(vector<task*> &output)
 // Load all tasks from file to "output"  APPEND ???
 // Implement an error system, emit FileError
 {
@@ -65,8 +65,10 @@ void todotxt::getAllTask(vector<task> &output)
             //    continue;
             //}
         }
-		task* newt = new task(line,"",true);
-		output.push_back(*newt);
+        if (!line.isEmpty()){
+			task* newt = new task(line,"",true);
+			output.push_back(newt);
+			}
      }
 	if (_TodoFile->isOpen()){
     	_TodoFile->close();	
@@ -98,7 +100,13 @@ qDebug()<<" use of deprecated todotxt::slurp"<<endline;
 	}
 }
 
-int todotxt::write(vector<task>& content, filetype t, bool append)
+int todotxt::write(vector<task*>& content, filetype t, bool append)
+/* Writes a set of tasks (vector) to the file selected by filetype.
+If append is false, overwrite the file.
+return 1 : cannot open file
+return 2 : wrong "filetype", did nothing
+return 0 : sucess.
+*/
 {
     qDebug()<<"todotxt::writeB("<<t<<"). append="<<append<<endline;
     QTextStream out;
@@ -129,7 +137,7 @@ int todotxt::write(vector<task>& content, filetype t, bool append)
 //#TODO change this to iterator.
      out.setEncoding(QStringConverter::Utf8);
      for(unsigned int i = 0; i<content.size(); i++)
-         out << content.at(i).toSaveString() << "\n";
+         out << content.at(i)->toSaveString() << "\n";
 
 	if (_TodoFile->isOpen()){
 	     _TodoFile->flush();

@@ -31,10 +31,10 @@ public:
     explicit todotxt(QObject *parent = 0);
     ~todotxt();
 
-	void getAllTask(vector<task> &output);
+	void getAllTask(vector<task*> &output);
 	void clearFileWatch(); //gaetan 5/1/24
 	void setFileWatch(QObject *parent); //gaetan 5/1/24
-	int write(vector<task>& content, filetype t, bool append);
+	int write(vector<task*>& content, filetype t, bool append);
 
 protected:
 //   QTemporaryDir *undoDir;

@@ -60,6 +60,7 @@ private slots:
     		{QDesktopServices::openUrl(QUrl("https://sverrirvalgeirsson.github.io/Todour"));};    
     		
     void on_actionPrint_triggered();
+    void on_actionSave_triggered();
 	
 	void dataInModelChanged(QModelIndex,QModelIndex);
     

@@ -109,8 +109,9 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue(SETTINGS_FONT_SIZE,ui->sb_fontSize->value());
     settings.setValue(SETTINGS_REMOVE_DOUBLETS,ui->cb_removeDoublets->isChecked());
     if(ui->search_not_char->text().size()>0)
-        settings.setValue(SETTINGS_SEARCH_NOT_CHAR,ui->search_not_char->text().at(0));
-	settings.setValue(SETTINGS_DEFAULT_PRIORITY,ui->default_priority->text().at(0));
+        	settings.setValue(SETTINGS_SEARCH_NOT_CHAR,ui->search_not_char->text().at(0));
+    if(ui->default_priority->text().size()>0)
+			settings.setValue(SETTINGS_DEFAULT_PRIORITY,ui->default_priority->text().at(0));
 
     // Handle business days
     QList<int> business_days;

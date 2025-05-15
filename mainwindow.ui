@@ -255,6 +255,7 @@ border-radius: 5px;
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionSave"/>
     <addaction name="actionSettings"/>
     <addaction name="actionPrint"/>
     <addaction name="actionQuit"/>

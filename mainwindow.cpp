@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-
+	qDebug()<<"Start mainwindow creation..."<<endline;
     ui->setupUi(this);
     QString title=this->windowTitle();
 
@@ -67,8 +67,10 @@ MainWindow::MainWindow(QWidget *parent) :
         qDebug()<<"Setting ini file path to: "<<QDir::currentPath()<<endline;
     }
 
-   hotkey = new UGlobalHotkeys();
-   setHotkey();
+
+// COMMENTED TO PREVENT SEG FAULT WITH WAYLAND
+ // hotkey = new UGlobalHotkeys();
+ //  setHotkey();
 
     // Restore the position of the window
     restoreGeometry(settings.value( SETTINGS_GEOMETRY, saveGeometry() ).toByteArray());
@@ -105,7 +107,6 @@ MainWindow::MainWindow(QWidget *parent) :
     }
 
 
-
     // Set up shortcuts . Mac translates the Ctrl -> Cmd
     // http://doc.qt.io/qt-5/qshortcut.html
     auto editshortcut = new QShortcut(QKeySequence(tr("Ctrl+n")),this);
@@ -138,8 +139,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		rClickMenu->addAction(editAction);
 		rClickMenu->addAction(postponeAction);
 
-
-   priorityMenu=new QMenu("Priority",this);
+    priorityMenu=new QMenu("Priority",this);
 	   rClickMenu->addMenu(priorityMenu);
 	   ApriorAction = new QAction("(A) priority",this);
 	   BpriorAction = new QAction("(B) priority",this);
@@ -177,6 +177,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		connect(_undoStack, SIGNAL(canRedoChanged(bool)), redoAction, SLOT(setEnabled(bool)));
 //	    connect(_undoStack, SIGNAL(redoTextChanged(QString)),redoAction, SLOT(setText(QString)));
 		connect(redoAction, SIGNAL(triggered()), this, SLOT(on_actionRedo()));
+		
 		
 	// Copy:
 		copyAction = new QAction(tr("&Copy"),this);
@@ -221,7 +222,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tableView->setModel(proxyModel);
     ui->tableView->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
     ui->tableView->resizeColumnToContents(0); // Checkboxes kept small
-
 //	updateSearchResults();
 
     setFileWatch();
@@ -241,7 +241,6 @@ MainWindow::MainWindow(QWidget *parent) :
 		_taglist = new QCompleter(wordList, this);
 		_taglist->setCaseSensitivity(Qt::CaseInsensitive);
 		ui->lineEditFilter->setCompleter(_taglist);
-
 
 
     // Do this late as it triggers action using data
@@ -282,8 +281,10 @@ void MainWindow::updateTitle()
     if(proxyModel != NULL){
         int visible = proxyModel->rowCount();
         int total = proxyModel->sourceModel()->rowCount();
-
-        this->setWindowTitle(baseTitle+" ("+QString::number(visible)+"/"+QString::number(total)+")");
+		if (_undoStack->isClean())
+				this->setWindowTitle(baseTitle+" (" +QString::number(visible)+"/"+QString::number(total)+")");
+		else 
+				this->setWindowTitle(baseTitle+" * (" +QString::number(visible)+"/"+QString::number(total)+")");
 	}
 }
 
@@ -313,6 +314,8 @@ QSettings settings;
 }
 
 void MainWindow::setHotkey(){
+	//COMMENTED TO PREVENT SEGFAULT IN WAYLAND
+	return;
 	QSettings settings;
     if(settings.value(SETTINGS_HOTKEY_ENABLE).toBool()){
         hotkey->registerHotkey(settings.value(SETTINGS_HOTKEY,DEFAULT_HOTKEY).toString());
@@ -574,8 +577,8 @@ void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
     }
 }
 
-/* */
 void MainWindow::on_addButton_clicked()
+/* */
 {
     // Adding a new value into the model
    	QSettings settings;
@@ -604,8 +607,8 @@ void MainWindow::on_addButton_clicked()
    ui->lineEditNew->clear();
 }
 
-/* */
 void MainWindow::addTodo(QString &s, QString cont)
+/* */
 {
    	QSettings settings;
     QString prio="";
@@ -615,9 +618,9 @@ void MainWindow::addTodo(QString &s, QString cont)
     updateTitle();
 }
 
+void MainWindow::on_archiveButton_clicked()
 /* // Archive action.
 */
-void MainWindow::on_archiveButton_clicked()
 {
     model->archive();
     _undoStack->clear();
@@ -625,20 +628,28 @@ void MainWindow::on_archiveButton_clicked()
     updateTitle();
 }
 
+void MainWindow::on_refreshButton_clicked()
 /*// This is the Refresh button
 */
-void MainWindow::on_refreshButton_clicked()
 {
     model->refresh();
     updateTitle();
 }
 
+void MainWindow::on_actionSave_triggered()
 /* */
-void MainWindow::cleanup(){
-	QSettings settings;
+{
+	model->flush();
+    _undoStack->clear();
+}
 
+void MainWindow::cleanup()
+/* */
+{
+	QSettings settings;
 	qDebug()<<"Clean up ..."<<endline;	
 
+	model->flush();
     settings.setValue( SETTINGS_GEOMETRY, saveGeometry() );
     settings.setValue( SETTINGS_SAVESTATE, saveState() );
     settings.setValue( SETTINGS_MAXIMIZED, isMaximized() );
@@ -696,27 +707,25 @@ void MainWindow::on_actionStay_On_Top_changed()
     stayOnTop();
 }
 
-/*
-*/
 void MainWindow::on_actionUndo()
+/* */
 {
 	_undoStack->undo();
 	model->refresh();
 	updateTitle();
 }
 
-/*
-*/
 void MainWindow::on_actionRedo()
+/* */
 {
 	_undoStack->redo();
 	model->refresh();
 	updateTitle();
 }
 
+void MainWindow::on_actionEdit()
 /* User clicked on "Edit". We enable the editing of the line.
 */
-void MainWindow::on_actionEdit()
 {
    QModelIndex index = proxyModel->mapToSource(ui->tableView->selectionModel()->selection().indexes().first());
     if(!index.isValid()){
@@ -724,9 +733,9 @@ void MainWindow::on_actionEdit()
     }
 }
 
+void MainWindow::on_actionComplete()
 /* user clicked "Complete" on a set of tasks. 
 */
-void MainWindow::on_actionComplete()
 {
 	_undoStack->beginMacro("completion");	
 	
@@ -741,12 +750,12 @@ void MainWindow::on_actionComplete()
 
 }
 
+void MainWindow::on_actionDelete()
 /* User clicked on "Delete". We remove the selected items
 */
-void MainWindow::on_actionDelete()
 {
-	
-    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+    QModelIndexList indexes = proxyModel->mapSelectionToSource(ui->tableView->selectionModel()->selection()).indexes();
+//    qDebug()<<"MainWindow::on_actionDelete() indexes:"<<indexes<<endline;
     QList<QUuid> tuidL;
 	if (!indexes.isEmpty()){
 		for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
@@ -770,12 +779,12 @@ void MainWindow::on_actionDelete()
 void MainWindow::on_actionPostpone()
 {
 // #TODO  Get the postpone value from QSettings...
-    QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+    QModelIndexList indexes = proxyModel->mapSelectionToSource(ui->tableView->selectionModel()->selection()).indexes();
     if(!indexes.empty()){
  		_undoStack->beginMacro("postpone");			   
 		for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
 			//model->postponeTasks(indexes,"t:+10d");
-			_undoStack->push(new PostponeCommand(model, model->getTask(proxyModel->mapToSource(*i)), " t:+10d"));
+			_undoStack->push(new PostponeCommand(model, model->getTask(*i), " t:+10d"));
 		}
 		_undoStack->endMacro();    
 		model->refresh();
@@ -787,15 +796,16 @@ void MainWindow::on_actionDuplicate()
 /* User has clicked on "Duplicate". We need to make a copy of task and 
 */
 {
-   QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
+	QModelIndexList indexes = proxyModel->mapSelectionToSource(ui->tableView->selectionModel()->selection()).indexes();
 	if (! indexes.isEmpty()){
-		_undoStack->beginMacro("completion");
+		_undoStack->beginMacro("duplicate");
 		for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
-			_undoStack->push(new AddCommand(model,new task(model->getTask(proxyModel->mapToSource(*i)))));
+			_undoStack->push(new AddCommand(model,new task(model->getTask(*i))));
 		}
 		_undoStack->endMacro();   
 		model->refresh(); 
 		updateTitle();
+
 	}
  }
 

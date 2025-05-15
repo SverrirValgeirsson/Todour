@@ -77,14 +77,14 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
         {
         //Here we need to choose between the 2 options: active_only or all.
         // all is easy, just return all the tasks
-            QString s=task_set.at(index.row()).getDisplayText();
+            QString s=task_set.at(index.row())->getDisplayText();
             return s;
         }
      }
 
     if (role == Qt::EditRole) {
         if(index.column()==1){
-            QString s=task_set.at(index.row()).getEditText();   //ATTENTION : il faut ici afficher plus (color,...) mais pas tout!
+            QString s=task_set.at(index.row())->getEditText();   //ATTENTION : il faut ici afficher plus (color,...) mais pas tout!
 //			if (s.length()>30){
 //				QItemEditorFactory::registerEditor(QVariant::String,QItemEditorFactory::createEditor(QVariant::String,this->parent()->ui));
 //			}
@@ -93,18 +93,18 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
      }
 
     if(role == Qt::CheckStateRole) {
-        if(index.column()==0) return task_set.at(index.row()).isComplete();
+        if(index.column()==0) return task_set.at(index.row())->isComplete();
     }
 
     if(role == Qt::FontRole) {
         if(index.column()==1){
             QFont f;
-            if (! task_set.at(index.row()).isActive()){
+            if (! task_set.at(index.row())->isActive()){
             	 f.fromString(settings.value(SETTINGS_INACTIVE_FONT).toString());
             } else {
                  f.fromString(settings.value(SETTINGS_ACTIVE_FONT).toString());
             }
-			 f.setStrikeOut(task_set.at(index.row()).isComplete()); // Strike out if done
+			 f.setStrikeOut(task_set.at(index.row())->isComplete()); // Strike out if done
 
 //            QString url =todo->getURL(todo_data.at(index.row())) ;
 //            if(!url.isEmpty()){
@@ -119,12 +119,12 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
         int due=INT_MAX;
     	QSettings settings;
     	if(settings.value(SETTINGS_DUE).toBool()){
-    		if (task_set.at(index.row()).getDueDate().isValid()){
-				due = -(int) (task_set.at(index.row()).getDueDate().daysTo(QDate::currentDate()));
+    		if (task_set.at(index.row())->getDueDate().isValid()){
+				due = -(int) (task_set.at(index.row())->getDueDate().daysTo(QDate::currentDate()));
 			}
 		}
         bool active = true;
-        if(task_set.at(index.row()).isComplete()){
+        if(task_set.at(index.row())->isComplete()){
             active = false;
         }
 
@@ -137,7 +137,7 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
             	return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_DUE_WARNING_COLOR,DEFAULT_DUE_WARNING_COLOR).toUInt()));
         	}
        		else 
-       			if(!task_set.at(index.row()).isActive()){
+       			if(!task_set.at(index.row())->isActive()){
             		return QVariant::fromValue(QColor::fromRgba(settings.value(SETTINGS_INACTIVE_COLOR,DEFAULT_INACTIVE_COLOR).toUInt()));
         		}
         		else {
@@ -146,8 +146,8 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
     		}
 
     if (role == Qt::BackgroundRole && index.column()==1){
-		if (task_set.at(index.row()).getColor().isValid())
-			return QVariant::fromValue(task_set.at(index.row()).getColor().lighter(180));
+		if (task_set.at(index.row())->getColor().isValid())
+			return QVariant::fromValue(task_set.at(index.row())->getColor().lighter(180));
 	}
 
 		//Qt::UserRole is used for sorting. To use the power of regexp and QProxyModel, we will add a special code TODOUR_INACTIVE
@@ -156,20 +156,20 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
 		if (settings.value(SETTINGS_SEPARATE_INACTIVES,DEFAULT_SEPARATE_INACTIVES).toBool())
 			_prepend=(QChar) QChar::LastValidCodePoint;
 	   
-	   	//qDebug()<<"todotablemodel::getData() :"<<_prepend + task_set.at(index.row()).getEditText()+" "+TODOUR_INACTIVE<<endline;
-	   	if (task_set.at(index.row()).isActive()){
-//	   		qDebug()<<"todotablemodel::getData() :"<<task_set.at(index.row()).getEditText()+" "+TODOUR_INACTIVE<<endline;
-	    	return task_set.at(index.row()).getEditText()+" "+TODOUR_INACTIVE;
+	   	//qDebug()<<"todotablemodel::getData() :"<<_prepend + task_set.at(index.row())->getEditText()+" "+TODOUR_INACTIVE<<endline;
+	   	if (task_set.at(index.row())->isActive()){
+//	   		qDebug()<<"todotablemodel::getData() :"<<task_set.at(index.row())->getEditText()+" "+TODOUR_INACTIVE<<endline;
+	    	return task_set.at(index.row())->getEditText()+" "+TODOUR_INACTIVE;
 	    }
 	    else{
-//	   		qDebug()<<"todotablemodel::getData() :"<<_prepend + task_set.at(index.row()).getEditText();
-	    	return _prepend + task_set.at(index.row()).getEditText();
+//	   		qDebug()<<"todotablemodel::getData() :"<<_prepend + task_set.at(index.row())->getEditText();
+	    	return _prepend + task_set.at(index.row())->getEditText();
 	    }
 	 }
 
 	if(role == Qt::UserRole+1)  //UserRole+1 is used to sort by inputdate.
 	{
-		return task_set.at(index.row()).getInputDate().toString("yyyy-MM-dd");
+		return task_set.at(index.row())->getInputDate().toString("yyyy-MM-dd");
 	}
 
 	return QVariant();
@@ -181,10 +181,10 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
 	QAbstractItemModel::beginResetModel();
 
     if(index.column()==0 && role == Qt::CheckStateRole)
-	    	_undo->push(new CompleteCommand(this, &task_set.at(index.row()), value.toBool()));
+	    	_undo->push(new CompleteCommand(this, task_set.at(index.row()), value.toBool()));
     
     else if(index.column()==1 && role == Qt::EditRole)
-			_undo->push(new EditCommand(this, &task_set.at(index.row()),value.toString()));
+			_undo->push(new EditCommand(this, task_set.at(index.row()),value.toString()));
     else return false;
     QAbstractItemModel::endResetModel();
   	return true;
@@ -195,26 +195,33 @@ void TodoTableModel::addTask(task *_t)
 /* */
 {
  	if (_t!=0)
-	 	    task_set.push_back(*_t);
+	 	    task_set.push_back(_t);
 }
 
-void TodoTableModel::removeTask(QUuid tuid)
-/* */
+task* TodoTableModel::removeTask(QUuid tuid)
+/*
+Remove the task, don't delete object*/
 {
-	for (vector<task>::iterator i=task_set.begin();i!=task_set.end();++i){
-		if (i->getTuid() == tuid){
-			i=task_set.erase(i);
-			return;
+
+//	qDebug()<<"TodoTableModel::removeTask "<<tuid<<endline;
+	task* ret = nullptr;
+	for (vector<task*>::iterator i=task_set.begin();i!=task_set.end();++i){
+		if ((*i)->getTuid() == tuid){
+//			qDebug()<<"   found task: "<<(*i)->toString()<<endline;
+			ret= *i;
+			task_set.erase(i);
+			return ret;
 		}
 	}
+	return nullptr;
 }
 
 task* TodoTableModel::getTask(QUuid tuid)
 /* */
 {
-	for (vector<task>::iterator i=task_set.begin();i!=task_set.end();++i){
-		if (i->getTuid() == tuid){
-			return &(*i);
+	for (vector<task*>::iterator i=task_set.begin();i!=task_set.end();++i){
+		if ((*i)->getTuid() == tuid){
+			return *i;
 		}
 	}
 	return 0;
@@ -223,21 +230,22 @@ task* TodoTableModel::getTask(QUuid tuid)
 task* TodoTableModel::getTask(QModelIndex index)
 /* */
 {
-	return &(task_set.at(index.row()));
+	return (task_set.at(index.row()));
 }
 
 
+void TodoTableModel::archive()
 /* Remove all the "finished" tasks and move them to the "done" file.
 #TODO  use UndoCommands ???
 */
-void TodoTableModel::archive(){
+{
 	QAbstractItemModel::beginResetModel();
 
-    vector<task> done_set;
+    vector<task*> done_set;
 	qDebug()<<"TodoTableModel::archive task_set.size="<<task_set.size()<<endline;
-    for(vector<task>::const_iterator iter=task_set.begin();iter!=task_set.end();){
-        if(iter->isComplete()){
-        	qDebug()<<"TodoTableModel::archive move task "<<iter->getEditText()<<endline;
+    for(vector<task*>::const_iterator iter=task_set.begin();iter!=task_set.end();){
+        if((*iter)->isComplete()){
+        	qDebug()<<"TodoTableModel::archive move task "<<(*iter)->getEditText()<<endline;
             done_set.push_back((*iter));
             iter=task_set.erase(iter);
         } else {
@@ -251,6 +259,12 @@ void TodoTableModel::archive(){
     QAbstractItemModel::endResetModel();
 }
 
+int TodoTableModel::flush()
+/*  */
+{
+    return todo->write(task_set,typetodofile,false); // append=false
+
+}
 
 // what is exactly the scope of this?
 // it is activated by the click on "Reresh" button, requesting to reload the file from disk.

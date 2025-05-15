@@ -37,13 +37,14 @@ public:
 	~task();
 	bool is_txt_compatible();
 
-	void setDueDate(QString d, bool strict=true);
+	void setDueDate(QDate d);
 	
-	void setThresholdDate(QString d, bool strict=true);
-	
+	void setThresholdDate(QDate d);
 	void setInputDate(QDate d);
+	
 	void setColor(QString c);
 	void setColor(QColor c);
+	
 	void setDescription(QString s);
 	void setPriority(QChar c);
 	task* setComplete(bool c = true);

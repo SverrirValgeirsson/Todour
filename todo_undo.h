@@ -76,6 +76,7 @@ public:
 	
 protected:
 	task* _task;
+	task* rec_task;
 	bool _complete;
 	TodoTableModel* _model;
 

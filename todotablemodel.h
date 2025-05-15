@@ -18,7 +18,7 @@ class TodoTableModel : public QAbstractTableModel
     Q_OBJECT
 protected:
     todotxt *todo; // interface with files
-    vector<task> task_set;
+    vector<task*> task_set;
 
 public:
     explicit TodoTableModel(QUndoStack* undo, QObject *parent = 0);
@@ -33,12 +33,13 @@ public:
     int count();
 
     void addTask(task* t);
-    void removeTask(QUuid tuid);
+    task* removeTask(QUuid tuid);
 	task* getTask(QUuid tuid);
 	task* getTask(QModelIndex index);
 
     void archive();
     void refresh();
+    int flush();
             
    inline void clearFileWatch(){   todo->clearFileWatch();}; //gaetan 5/1/24
    inline void setFileWatch(QObject *parent){   todo->setFileWatch(parent);}; //gaetan 5/1/24

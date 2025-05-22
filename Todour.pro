@@ -4,14 +4,19 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network widgets
+QT       += core gui network widgets printsupport
+QT +=xml statemachine
 
 TARGET = Todour
 TEMPLATE = app
-VERS = $$system(perl version.pl)
+#VERS = $$system(perl version.pl)
+VERS = 2.99G
 DEFINES += VER=\"\\\"$${VERS}\\\"\"
 CONFIG += c++11
 CONFIG+=sdk_no_version_check
+CONFIG+=qt console
+CONFIG+=debug
+CONFIG+=fontAwesomeFree
 
 macx{
 ICON = icon.icns
@@ -22,7 +27,9 @@ win32 {
 }
 
 include(QtAwesome/QtAwesome/QtAwesome.pri)
-include(UGlobalHotkey/uglobalhotkey.pri)
+#include(UGlobalHotkey/uglobalhotkey.pri)
+
+INCLUDEPATH += ./Caldav/
 
 SOURCES += main.cpp\
     mainwindow.cpp \
@@ -30,16 +37,36 @@ SOURCES += main.cpp\
     todotablemodel.cpp \
     settingsdialog.cpp \
     aboutbox.cpp \
-    quickadddialog.cpp
+    quickadddialog.cpp \
+    task.cpp \
+    version.cpp \
+    todo_undo.cpp \
+    caldav.cpp \
+	Caldav/CalendarClient_CalDAV.cpp \
+	Caldav/CalendarEvent.cpp \
+	Caldav/DateUtils.cpp \
+	Caldav/CalendarClient_CalDAV_StateMachine.cpp    \
+	Caldav/SimpleCrypt.cpp \
+	Caldav/caldav_util.cpp
+    
 
 HEADERS  += mainwindow.h \
     todotxt.h \
     todotablemodel.h \
     settingsdialog.h \
     aboutbox.h \
-    globals.h \
     quickadddialog.h \
-    def.h
+    def.h \
+    task.h \
+    version.h \
+    todo_undo.h \
+    todo_backend.h \
+    caldav.h \
+    Caldav/DateUtils.h \
+    Caldav/SimpleCrypt.h \
+    Caldav/CalendarEvent.h \
+    Caldav/CalendarClient_CalDAV.h \
+    Caldav/caldav_util.h
 
 FORMS    += mainwindow.ui \
     settingsdialog.ui \

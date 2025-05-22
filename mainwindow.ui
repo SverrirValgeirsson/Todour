@@ -31,7 +31,7 @@
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QPushButton" name="pushButton_3">
+       <widget class="QPushButton" name="archiveButton">
         <property name="toolTip">
          <string>Archive</string>
         </property>
@@ -41,7 +41,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton_4">
+       <widget class="QPushButton" name="refreshButton">
         <property name="toolTip">
          <string>Refresh</string>
         </property>
@@ -54,7 +54,7 @@
        <spacer name="horizontalSpacer">
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
-        </property>
+        </property>  
         <property name="sizeHint" stdset="0">
          <size>
           <width>10</width>
@@ -71,20 +71,20 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btn_Alphabetical">
+       <widget class="QToolButton" name="btn_Alphabetical">
         <property name="toolTip">
-         <string>Toggle alpabetic sorting</string>
+         <string>Toggle sorting</string>
         </property>
         <property name="text">
          <string/>
         </property>
         <property name="checkable">
-         <bool>true</bool>
+         <bool>false</bool>
         </property>
        </widget>
       </item>
       <item>
-       <widget class="QLineEdit" name="lineEdit_2">
+       <widget class="QLineEdit" name="lineEditFilter">
         <property name="minimumSize">
          <size>
           <width>0</width>
@@ -103,7 +103,7 @@ border-radius: 5px;
 </string>
         </property>
         <property name="placeholderText">
-         <string>search</string>
+         <string>search (F3)</string>
         </property>
         <property name="clearButtonEnabled">
          <bool>true</bool>
@@ -170,10 +170,17 @@ border-radius: 5px;
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QLineEdit" name="lineEdit"/>
+       <widget class="QLineEdit" name="lineEditNew">
+        <property name="placeholderText">
+         <string>New (ctrl-n)</string>
+        </property>
+        <property name="clearButtonEnabled">
+         <bool>true</bool>
+        </property>
+      </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="addButton">
         <property name="toolTip">
          <string>Add item</string>
         </property>
@@ -182,16 +189,7 @@ border-radius: 5px;
         </property>
        </widget>
       </item>
-      <item>
-       <widget class="QPushButton" name="pushButton_2">
-        <property name="toolTip">
-         <string>Remove item</string>
-        </property>
-        <property name="text">
-         <string/>
-        </property>
-       </widget>
-      </item>
+
      </layout>
     </item>
     <item>
@@ -215,30 +213,7 @@ border-radius: 5px;
        <item>
         <widget class="QLabel" name="lbl_newVersion">
          <property name="text">
-          <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;New version is available at &lt;a href=&quot;http://nerdur.com/todour-pl&quot;&gt;&lt;span style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;https://nerdur.com/todour-pl&lt;/span&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-         </property>
-         <property name="textFormat">
-          <enum>Qt::RichText</enum>
-         </property>
-         <property name="openExternalLinks">
-          <bool>true</bool>
-         </property>
-         <property name="textInteractionFlags">
-          <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse</set>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="lbl_latestVersion">
-         <property name="text">
-          <string>You are running latest version</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="txtLatestVersion">
-         <property name="text">
-          <string/>
+          <string> </string>
          </property>
         </widget>
        </item>
@@ -280,7 +255,9 @@ border-radius: 5px;
     <property name="title">
      <string>File</string>
     </property>
+    <addaction name="actionSave"/>
     <addaction name="actionSettings"/>
+    <addaction name="actionPrint"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -295,8 +272,6 @@ border-radius: 5px;
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="actionUndo"/>
-    <addaction name="actionRedo"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -310,9 +285,18 @@ border-radius: 5px;
    <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
   </widget>
-  <action name="actionSettings">
+  <action name="actionSave">
+   <property name="text">
+    <string>Save</string>
+   </property>
+  </action>  <action name="actionSettings">
    <property name="text">
     <string>Settings..</string>
+   </property>
+  </action>
+  <action name="actionPrint">
+   <property name="text">
+    <string>Print</string>
    </property>
   </action>
   <action name="actionAbout">
@@ -328,22 +312,6 @@ border-radius: 5px;
   <action name="actionQuit">
    <property name="text">
     <string>Quit</string>
-   </property>
-  </action>
-  <action name="actionUndo">
-   <property name="text">
-    <string>Undo</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+Z</string>
-   </property>
-  </action>
-  <action name="actionRedo">
-   <property name="text">
-    <string>Redo</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+R</string>
    </property>
   </action>
   <action name="actionShow_All">
@@ -370,12 +338,11 @@ border-radius: 5px;
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <tabstops>
-  <tabstop>lineEdit</tabstop>
-  <tabstop>pushButton</tabstop>
-  <tabstop>pushButton_2</tabstop>
-  <tabstop>lineEdit_2</tabstop>
-  <tabstop>pushButton_3</tabstop>
-  <tabstop>pushButton_4</tabstop>
+  <tabstop>lineEditNew</tabstop>
+  <tabstop>addButton</tabstop>
+  <tabstop>lineEditFilter</tabstop>
+  <tabstop>archiveButton</tabstop>
+  <tabstop>refreshButton</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>

@@ -6,7 +6,6 @@
 
 #include "settingsdialog.h"
 #include "ui_settingsdialog.h"
-#include "globals.h"
 #include "def.h"
 
 #include <QSettings>
@@ -20,7 +19,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->lineEdit->setText(settings.value(SETTINGS_DIRECTORY,DEFAULT_DIRECTORY).toString());
     ui->lineEdit_2->setText(settings.value(SETTINGS_INACTIVE,DEFAULT_INACTIVE).toString());
     ui->cb_autorefresh->setChecked(settings.value(SETTINGS_AUTOREFRESH,DEFAULT_AUTOREFRESH).toBool());
-    ui->cb_separate->setChecked(settings.value(SETTINGS_SEPARATE_INACTIVES,DEFAULT_SEPARATE_INACTIVES).toBool());
+//    ui->cb_separate->setChecked(settings.value(SETTINGS_SEPARATE_INACTIVES,DEFAULT_SEPARATE_INACTIVES).toBool());
     ui->cb_deletedfile->setChecked(settings.value(SETTINGS_DELETED_FILE,DEFAULT_DELETED_FILE).toBool());
     ui->cb_threshold->setChecked(settings.value(SETTINGS_THRESHOLD,DEFAULT_THRESHOLD).toBool());
     ui->cb_threshold_label->setChecked(settings.value(SETTINGS_THRESHOLD_LABELS,DEFAULT_THRESHOLD_LABELS).toBool());
@@ -39,6 +38,7 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->cb_removeDoublets->setChecked(settings.value(SETTINGS_REMOVE_DOUBLETS,DEFAULT_REMOVE_DOUBLETS).toBool());
     ui->search_not_char->setText(settings.value(SETTINGS_SEARCH_NOT_CHAR,DEFAULT_SEARCH_NOT_CHAR).toChar());
     ui->cb_default_threshold->setCurrentText(settings.value(SETTINGS_DEFAULT_THRESHOLD,DEFAULT_DEFAULT_THRESHOLD).toString());
+    ui->default_priority->setText(settings.value(SETTINGS_DEFAULT_PRIORITY,DEFAULT_DEFAULT_PRIORITY).toString());
 
     // Business days
     QList<int> business_days = settings.value(SETTINGS_BUSINESS_DAYS, QVariant::fromValue(QList<int>())).value<QList<int> >();
@@ -56,7 +56,6 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     ui->cb_friday->setChecked(business_days.contains(5));
     ui->cb_saturday->setChecked(business_days.contains(6));
     ui->cb_sunday->setChecked(business_days.contains(7));
-
 
     // Handle the fonts
     activecolor=QColor::fromRgba(settings.value(SETTINGS_ACTIVE_COLOR,DEFAULT_ACTIVE_COLOR).toUInt());
@@ -87,7 +86,7 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue(SETTINGS_DIRECTORY,dir);
     settings.setValue(SETTINGS_INACTIVE,ui->lineEdit_2->text());
     settings.setValue(SETTINGS_AUTOREFRESH,ui->cb_autorefresh->isChecked());
-    settings.setValue(SETTINGS_SEPARATE_INACTIVES,ui->cb_separate->isChecked());
+//    settings.setValue(SETTINGS_SEPARATE_INACTIVES,ui->cb_separate->isChecked());
     settings.setValue(SETTINGS_DATES,ui->cb_dates->isChecked());
     settings.setValue(SETTINGS_SHOW_DATES,ui->cb_showdates->isChecked());
     settings.setValue(SETTINGS_LIVE_SEARCH,ui->cb_liveSearch->isChecked());
@@ -110,7 +109,9 @@ void SettingsDialog::on_buttonBox_accepted()
     settings.setValue(SETTINGS_FONT_SIZE,ui->sb_fontSize->value());
     settings.setValue(SETTINGS_REMOVE_DOUBLETS,ui->cb_removeDoublets->isChecked());
     if(ui->search_not_char->text().size()>0)
-        settings.setValue(SETTINGS_SEARCH_NOT_CHAR,ui->search_not_char->text().at(0));
+        	settings.setValue(SETTINGS_SEARCH_NOT_CHAR,ui->search_not_char->text().at(0));
+    if(ui->default_priority->text().size()>0)
+			settings.setValue(SETTINGS_DEFAULT_PRIORITY,ui->default_priority->text().at(0));
 
     // Handle business days
     QList<int> business_days;
@@ -196,7 +197,7 @@ void SettingsDialog::on_cb_hotKey_stateChanged(int arg1)
 void SettingsDialog::on_pb_warningColor_clicked()
 {
     QSettings settings;
-//    QColor c = QColorDialog::getRgba(settings.value(SETTINGS_DUE_WARNING_COLOR,DEFAULT_DUE_WARNING_COLOR).toInt());
+
     QColor c = QColorDialog::getColor(QColor::fromRgb(settings.value(SETTINGS_DUE_WARNING_COLOR,DEFAULT_DUE_WARNING_COLOR).toInt()),this);
     settings.setValue(SETTINGS_DUE_WARNING_COLOR,c.rgba());
     updateFonts();
@@ -205,7 +206,6 @@ void SettingsDialog::on_pb_warningColor_clicked()
 void SettingsDialog::on_pb_lateColor_clicked()
 {
     QSettings settings;
-//    QColor c = QColorDialog::getRgba(settings.value(SETTINGS_DUE_LATE_COLOR,DEFAULT_DUE_LATE_COLOR).toInt());
     QColor c = QColorDialog::getColor(QColor::fromRgb(settings.value(SETTINGS_DUE_LATE_COLOR,DEFAULT_DUE_LATE_COLOR).toInt()),this);
     settings.setValue(SETTINGS_DUE_LATE_COLOR,c.rgba());
     updateFonts();

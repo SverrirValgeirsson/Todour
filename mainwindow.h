@@ -3,22 +3,18 @@
 
 #include <QMainWindow>
 #include <QModelIndex>
-#include <uglobalhotkeys.h>
+//#include <uglobalhotkeys.h>
 #include <QSystemTrayIcon>
 #include <QMenu>
-#include <QNetworkAccessManager>
-#include <QNetworkRequest>
-#include <QNetworkReply>
+#include <QTimer> //used for hiding version bar
+#include <QSortFilterProxyModel>
+#include <QDesktopServices> //used for showing the online user manual.
+#include <QUndoStack>
+#include <QClipboard>
+#include <QCompleter>
+
 #include <memory>
-
-#ifdef Q_OS_OSX
-    #define VERSION_URL "https://nerdur.com/todour-latest_mac.php"
-#elif defined Q_OS_WIN
-    #define VERSION_URL "https://nerdur.com/todour-latest_windows.php"
-#else
-    #define VERSION_URL "https://nerdur.com/todour-latest.php"
-#endif
-
+#include "version.h"
 
 namespace Ui {
 class MainWindow;
@@ -30,71 +26,70 @@ class MainWindow : public QMainWindow
     
 public:
     explicit MainWindow(QWidget *parent = 0);
-    void parse_todotxt();
-    void addTodo(QString &s);
+    void addTodo(QString &s, QString context);
     ~MainWindow();
     
 public slots:
-    void fileModified(const QString& str);
-    void requestReceived(QNetworkReply* reply);
-    void undo();
-    void redo();
 
 private slots:
-    void on_lineEdit_2_textEdited(const QString &arg1);
-
+    void on_lineEditFilter_textEdited(const QString &arg1);
     void on_actionSettings_triggered();
-
     void on_actionAbout_triggered();
-
-    void on_pushButton_clicked();
-
-    void on_lineEdit_returnPressed();
-
-    void on_pushButton_2_clicked();
-
-    void on_pushButton_3_clicked();
-
-    void on_pushButton_4_clicked();
-
-    void dataInModelChanged(QModelIndex i1,QModelIndex i2);
-
-    void on_btn_Alphabetical_toggled(bool checked);
-
-    void on_lineEdit_2_returnPressed();
-
+    void on_addButton_clicked();
+    inline void on_lineEditNew_returnPressed() {on_addButton_clicked();}
+    void on_archiveButton_clicked();
+    void on_refreshButton_clicked();
+    void on_lineEditFilter_returnPressed();
     void on_hotkey();
-
     void on_context_lock_toggled(bool checked);
 
 
     void on_cb_threshold_inactive_stateChanged(int arg1);
-
     void iconActivated(QSystemTrayIcon::ActivationReason reason);
     void cleanup(); // Need to have a quit slot of my own to save settings and so on.
 
-
     void on_pb_closeVersionBar_clicked();
-
-    void on_actionCheck_for_updates_triggered();
-
+    inline void on_actionCheck_for_updates_triggered() {Version->onlineCheck(true);}
+    		
     void on_tableView_customContextMenuRequested(const QPoint &pos);
-
-    void on_actionQuit_triggered();
-
-    void on_actionUndo_triggered();
-
-    void on_actionRedo_triggered();
-
+    inline void on_actionQuit_triggered(){cleanup();}
+    		
     void on_actionShow_All_changed();
-
     void on_actionStay_On_Top_changed();
-
-    void on_actionManual_triggered();
+    inline void on_actionManual_triggered()
+    		{QDesktopServices::openUrl(QUrl("https://sverrirvalgeirsson.github.io/Todour"));};    
+    		
+    void on_actionPrint_triggered();
+    void on_actionSave_triggered();
+	
+	void dataInModelChanged(QModelIndex,QModelIndex);
+    
+//Gaetandc 4/1/24
+   void on_actionEdit();
+   void on_actionComplete();
+   void on_actionDelete();
+   void on_actionPostpone();
+   void on_actionDuplicate();
+   void on_actionPriority(QChar p);
+   inline void on_actionPriorityA(){on_actionPriority('A');}
+   inline void on_actionPriorityB(){on_actionPriority('B');}
+   inline void on_actionPriorityC(){on_actionPriority('C');}
+   inline void on_actionPriorityD(){on_actionPriority('D');}
+  
+   void on_actionSortAZ();
+   void on_actionSortDate();
+   void on_actionSortInactive();
+   void on_actionCopy();
+   
+   void on_actionUndo();
+   void on_actionRedo();
+      
+   void new_version(QString);
 
 private:
+    QSortFilterProxyModel *proxyModel;
+
     void setFileWatch();
-    void requestPage(QString &s);
     void setTray();
     void clearFileWatch();
     void closeEvent(QCloseEvent *ev);
@@ -102,18 +97,56 @@ private:
     void saveTableSelection();
     void resetTableSelection();
     void updateSearchResults();
+	void updateSort();
     void updateTitle();
     void setFontSize();
     void stayOnTop();
-    QString baseTitle;
-    UGlobalHotkeys *hotkey;
+
+//    UGlobalHotkeys *hotkey;
     void setHotkey();
+
+	QTimer *versionTimer;
+
+    QString baseTitle;
     QSystemTrayIcon *trayicon = NULL;
     QMenu *traymenu=NULL;
     QAction *minimizeAction;
     QAction *maximizeAction;
     QAction *restoreAction;
     QAction *quitAction;
-};
+    
+//    QModelIndex currentIndex;
+	todour_version *Version;
+	
+	QUndoStack* _undoStack;
+    
+//Gaetandc 4/1/24    
+    QAction* actionPrint;
 
+    QMenu* rClickMenu=NULL;
+	    QAction* editAction;
+   		QAction* deleteAction;
+     	QAction* postponeAction;
+        QAction* completeAction;
+    	QAction* duplicateAction;
+
+    QMenu* priorityMenu=NULL;
+    	QAction* ApriorAction;
+    	QAction* BpriorAction;
+    	QAction* CpriorAction;
+    	QAction* DpriorAction;
+
+	QMenu* sortMenu=NULL;    
+    	QAction* sortAzAction;
+    	QAction* sortDateAction;
+    	QAction* sortInactiveAction;
+    
+    // Edit Menu
+        QAction* undoAction;
+    	QAction* redoAction;
+    	QAction* copyAction;
+    
+    QCompleter* _taglist;
+    
+};
 #endif // MAINWINDOW_H

@@ -2,40 +2,59 @@
 #define TODOTABLEMODEL_H
 
 #include <QAbstractTableModel>
-#include "todotxt.h"
+#include <QMouseEvent>
+#include "todo_backend.h"
+#include "task.h"
+#include <QUndoStack>
+#include <vector>
+
+
+
+#define TODOUR_INACTIVE "TODOUR_INACTIVE_794e26fdf5ea"
+
 
 class TodoTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 protected:
-    todotxt *todo;
+//    todotxt *todo; // interface with files
+  todo_backend  *todo;
+    vector<task*> task_set;
 
 public:
-    explicit TodoTableModel(QObject *parent = 0);
+    explicit TodoTableModel(QUndoStack* undo, QObject *parent = 0);
     ~TodoTableModel();
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
+
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     Qt::ItemFlags flags(const QModelIndex& index) const;
-    bool setData(const QModelIndex & index, const QVariant & value, int role);
-    void add(QString text);
-    void remove(QString text);
+ 	bool setData(const QModelIndex & index, const QVariant & value, int role);
+    int count();
+
+    void addTask(task* t);
+    task* removeTask(QUuid tuid);
+	task* getTask(QUuid tuid);
+	task* getTask(QModelIndex index);
+
     void archive();
     void refresh();
-    int count();
-    QString getTodoFile();
-    QModelIndexList match(const QModelIndex &start, int role, const QVariant &value, int hits = 1, Qt::MatchFlags flags = Qt::MatchFlags( Qt::MatchStartsWith | Qt::MatchWrap )) const;
-    bool undo();
-    bool redo();
-    bool undoPossible(); // Say if undo is possible or not
-    bool redoPossible(); // Say if redo is possible or not
+    int flush();
+            
+   inline void clearFileWatch(){   todo->clearMonitoring();}; //gaetan 5/1/24
+   inline void setFileWatch(QObject *parent){   todo->setMonitoring(parent);}; //gaetan 5/1/24
+
 
 signals:
-   //void dataChanged(QModelIndex i1,QModelIndex i2,QVector<int> v); Borde inte behövas. Det finns ju redan
-    
+	void dataSavedOK();
+	
 public slots:
-    
+    void backendDataLoaded();
+    void backendDataSaved();
+    void backendError();
+private:
+	QUndoStack* _undo;
 };
 
 #endif // TODOTABLEMODEL_H

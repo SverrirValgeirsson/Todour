@@ -1,3 +1,12 @@
+New in 2.22G
+============
+
+* Improve deprecated use of QColor functions
+* take the warning time in consideration for CONSIDER_DUE_AS_THRESHOLD
+* add POSPONE column and setting
+* re-organise some settings
+* add F3 shortcut key for "search"
+
 New in 2.22
 ===========
 

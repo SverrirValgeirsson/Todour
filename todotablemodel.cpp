@@ -9,12 +9,23 @@
 
 #include "todo_undo.h"
 
+#include "todotxt.h"
+#include "caldav.h"
+
 
 TodoTableModel::TodoTableModel(QUndoStack* undo, QObject *parent) :
     QAbstractTableModel(parent), _undo(undo)
 {
-    todo = new todotxt();
-	todo->getAllTask(task_set);
+//    todo = new todotxt();
+	todo = new caldav();
+	QObject::connect(todo,SIGNAL(DataChanged()),this,SLOT(backendDataLoaded()));
+	QObject::connect(todo,SIGNAL(ConnectionLost()),this,SLOT(backendError()));
+	QObject::connect(todo,SIGNAL(DataAvailable()),this,SLOT(backendDataLoaded()));
+	QObject::connect(todo,SIGNAL(DataSaved()),this,SLOT(backendDataSaved()));
+	
+	if (todo->isReady())
+		todo->reloadRequest();
+	
 	}
 
 TodoTableModel::~TodoTableModel()
@@ -254,26 +265,32 @@ void TodoTableModel::archive()
         }
      }
 
-    todo->write(task_set,typetodofile,false); // append=false
-    todo->write(done_set,typedonefile,true); // append=true
+    todo->writeRequest(task_set,typeTodo,false); // append=false
+    todo->writeRequest(done_set,typeDone,true); // append=true
     QAbstractItemModel::endResetModel();
 }
 
 int TodoTableModel::flush()
 /*  */
 {
-    return todo->write(task_set,typetodofile,false); // append=false
-
+    todo->writeRequest(task_set,typeTodo,false); // append=false
+	return 0;    //#TODO change this: we receive a signal when write is ok.
 }
 
-// what is exactly the scope of this?
+
+
+
+void TodoTableModel::refresh()
+/*// what is exactly the scope of this?
 // it is activated by the click on "Reresh" button, requesting to reload the file from disk.
 // This is only possible if we trust more the file than our internal info.
 // Options : remove, de-activate
 //		or make a check of the file, if different, propose to reload
-//		or consider that we are saving any change immediately, and the file is trusted.
-void TodoTableModel::refresh()
+//		or consider that we are saving any change immediately, and the file is trusted.*/
 {
+//#TODO  if we saved the last modifications, reload from the source.
+// if we did not save, shows a confirmation window, as we risk to loose the last changes
+//  note: this issue is only with todo.txt files. With a synchronisation-capable, we should be safe to reload.
 // For the moment, do nothing
 
 //    QAbstractItemModel::beginResetModel();
@@ -287,4 +304,28 @@ void TodoTableModel::refresh()
     emit dataChanged(QModelIndex(),QModelIndex());
 
 //    QAbstractItemModel::endResetModel();
+}
+
+
+void TodoTableModel::backendDataLoaded()
+/* Activated when the data is ready in the backend.*/
+{
+    QAbstractItemModel::beginResetModel();
+	todo->getAllTask(task_set);
+    QAbstractItemModel::endResetModel();
+	
+    emit dataChanged(QModelIndex(),QModelIndex());
+
+}
+
+void TodoTableModel::backendDataSaved()
+/* */
+{
+	emit dataSavedOK();
+}
+
+void TodoTableModel::backendError()
+/* */
+{
+	
 }

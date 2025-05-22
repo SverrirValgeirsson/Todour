@@ -3,7 +3,7 @@
 
 #include <QAbstractTableModel>
 #include <QMouseEvent>
-#include "todotxt.h"
+#include "todo_backend.h"
 #include "task.h"
 #include <QUndoStack>
 #include <vector>
@@ -17,7 +17,8 @@ class TodoTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 protected:
-    todotxt *todo; // interface with files
+//    todotxt *todo; // interface with files
+  todo_backend  *todo;
     vector<task*> task_set;
 
 public:
@@ -41,14 +42,17 @@ public:
     void refresh();
     int flush();
             
-   inline void clearFileWatch(){   todo->clearFileWatch();}; //gaetan 5/1/24
-   inline void setFileWatch(QObject *parent){   todo->setFileWatch(parent);}; //gaetan 5/1/24
+   inline void clearFileWatch(){   todo->clearMonitoring();}; //gaetan 5/1/24
+   inline void setFileWatch(QObject *parent){   todo->setMonitoring(parent);}; //gaetan 5/1/24
 
 
 signals:
-	    
+	void dataSavedOK();
+	
 public slots:
-    
+    void backendDataLoaded();
+    void backendDataSaved();
+    void backendError();
 private:
 	QUndoStack* _undo;
 };

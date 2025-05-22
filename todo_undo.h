@@ -4,8 +4,6 @@
 #include <QUndoCommand>
 #include "task.h"
 #include "todotablemodel.h"
-#include <vector>
-
 
 using namespace std;
 
@@ -41,7 +39,7 @@ protected:
 	task* _task;
 	TodoTableModel* _model;
  	QUuid _tuid;
-//	vector<task>* _taskset;
+
 
 };
 

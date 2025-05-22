@@ -11,34 +11,30 @@
 #define DELETEDFILE "deleted.txt"
 
 #include <vector>
-#include <set>
 #include <QString>
 #include <QDate>
-#include <QTemporaryDir>
 #include <QFile>
 #include <QObject>
 
 #include "task.h"
+#include "todo_backend.h"
 
 using namespace std;
 
-typedef enum {typetodofile,typedonefile,typedeletefile} filetype;
-
-class todotxt : public QObject
+class todotxt : public todo_backend
 {
-    Q_OBJECT
 public:
     explicit todotxt(QObject *parent = 0);
     ~todotxt();
 
 	void getAllTask(vector<task*> &output);
-	void clearFileWatch(); //gaetan 5/1/24
-	void setFileWatch(QObject *parent); //gaetan 5/1/24
-	int write(vector<task*>& content, filetype t, bool append);
-
-protected:
-//   QTemporaryDir *undoDir;
-    
+	void clearMonitoring(); //gaetan 5/1/24
+	void setMonitoring(QObject *parent); //gaetan 5/1/24
+	void reloadRequest();
+	void writeRequest(vector<task*>& content, TodoDestination t, bool append);
+	bool isReady();
+	
+protected:    
     QString _TodoFilePath;
     QString _DoneFilePath;
     QString _DeleteFilePath;
@@ -51,22 +47,13 @@ protected:
 // trash
     vector<QString> todo;
     vector<QString> done;
-    set<QString> active_projects;
-    set<QString> active_contexts;
  
 private:
     void slurp(QFile* filename,vector<QString>&  content);
     
     
 public slots:
-	void fileModified(QString str);
-
- 
-public: 
-
-protected:
-
-private:	
+//	void fileModified(QString str);
 };
 
 #endif // TODOTXT_H

@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include <QModelIndex>
-#include <uglobalhotkeys.h>
+//#include <uglobalhotkeys.h>
 #include <QSystemTrayIcon>
 #include <QMenu>
 #include <QTimer> //used for hiding version bar
@@ -102,7 +102,7 @@ private:
     void setFontSize();
     void stayOnTop();
 
-    UGlobalHotkeys *hotkey;
+//    UGlobalHotkeys *hotkey;
     void setHotkey();
 
 	QTimer *versionTimer;
@@ -115,7 +115,7 @@ private:
     QAction *restoreAction;
     QAction *quitAction;
     
-    QModelIndex currentIndex;
+//    QModelIndex currentIndex;
 	todour_version *Version;
 	
 	QUndoStack* _undoStack;

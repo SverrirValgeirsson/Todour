@@ -82,6 +82,16 @@ task::task(QString s, QString context, bool loaded)
 
 }
 
+task::task(QString s, QUuid tuid)
+/* */
+{
+	_raw=s;
+	_tuid= tuid;
+	parse(s,true);
+
+}
+
+
 task::task(task* copy)
 /* Creates a new task with a new TUID*/
 {

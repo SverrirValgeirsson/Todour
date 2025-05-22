@@ -316,16 +316,16 @@ QSettings settings;
 void MainWindow::setHotkey(){
 	//COMMENTED TO PREVENT SEGFAULT IN WAYLAND
 	return;
-	QSettings settings;
-    if(settings.value(SETTINGS_HOTKEY_ENABLE).toBool()){
-        hotkey->registerHotkey(settings.value(SETTINGS_HOTKEY,DEFAULT_HOTKEY).toString());
-        connect(hotkey,&UGlobalHotkeys::activated,[=](size_t id){
-            Q_UNUSED(id);
-            on_hotkey();
-        });
-    } else {
-        hotkey->unregisterAllHotkeys();
-    }
+//	QSettings settings;
+//    if(settings.value(SETTINGS_HOTKEY_ENABLE).toBool()){
+//        hotkey->registerHotkey(settings.value(SETTINGS_HOTKEY,DEFAULT_HOTKEY).toString());
+//        connect(hotkey,&UGlobalHotkeys::activated,[=](size_t id){
+//            Q_UNUSED(id);
+//            on_hotkey();
+//        }
+//    else {
+//        hotkey->unregisterAllHotkeys();
+//    }
 
 }
 
@@ -608,7 +608,8 @@ void MainWindow::on_addButton_clicked()
 }
 
 void MainWindow::addTodo(QString &s, QString cont)
-/* */
+/* #TODO the effective adding must heppen in the model.
+*/
 {
    	QSettings settings;
     QString prio="";
@@ -624,7 +625,7 @@ void MainWindow::on_archiveButton_clicked()
 {
     model->archive();
     _undoStack->clear();
-	//_undoStack->setClean();
+
     updateTitle();
 }
 
@@ -752,6 +753,8 @@ void MainWindow::on_actionComplete()
 
 void MainWindow::on_actionDelete()
 /* User clicked on "Delete". We remove the selected items
+
+	#TODO the undo_cmd should be in the model.
 */
 {
     QModelIndexList indexes = proxyModel->mapSelectionToSource(ui->tableView->selectionModel()->selection()).indexes();
@@ -773,10 +776,14 @@ void MainWindow::on_actionDelete()
     }
 }
 
+
+void MainWindow::on_actionPostpone()
 /* User clicked on Postpone. We postpone the task for a default value.
   Issue: make a setting for this default postpone.
+  
+  
+  #TODO  the undo_cmd should be in the model
 */
-void MainWindow::on_actionPostpone()
 {
 // #TODO  Get the postpone value from QSettings...
     QModelIndexList indexes = proxyModel->mapSelectionToSource(ui->tableView->selectionModel()->selection()).indexes();
@@ -794,6 +801,8 @@ void MainWindow::on_actionPostpone()
 
 void MainWindow::on_actionDuplicate()
 /* User has clicked on "Duplicate". We need to make a copy of task and 
+
+  #TODO  the undo_cmd should be in the model
 */
 {
 	QModelIndexList indexes = proxyModel->mapSelectionToSource(ui->tableView->selectionModel()->selection()).indexes();
@@ -809,8 +818,11 @@ void MainWindow::on_actionDuplicate()
 	}
  }
 
-/* */
+
 void MainWindow::on_actionPriority(QChar p)
+/* 
+  #TODO  the undo_cmd should be in the model
+*/
 {
    QModelIndexList indexes = proxyModel->mapSelectionToSource(ui->tableView->selectionModel()->selection()).indexes();
     if(!indexes.empty()){

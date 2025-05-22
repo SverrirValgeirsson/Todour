@@ -34,6 +34,8 @@ private:
 public:
 	task(QString s="", QString context="", bool loaded=false);
 	task(task* copy);
+	task(QString s, QUuid tuid);
+
 	~task();
 	bool is_txt_compatible();
 

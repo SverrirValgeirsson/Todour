@@ -4,20 +4,18 @@
 // Todo.txt file format: https://github.com/ginatrapani/todo.txt-cli/wiki/The-Todo.txt-Format
 
 #include <QTextStream>
-#include <QStringList>
-#include <set>
+//#include <QStringList>
 #include <QSettings>
-#include <QList>
-#include <QVariant>
+//#include <QList>
+//#include <QVariant>
 #include <QDebug>
-#include <QUuid>
-#include <QDir>
-#include <vector>
+//#include <QUuid>
+//#include <QDir>
 
 #include <QFileSystemWatcher>
 
 todotxt::todotxt(QObject *parent) :
-	QObject(parent)
+	todo_backend(parent)
 {
     QSettings settings;
     QString dir = settings.value(SETTINGS_DIRECTORY).toString();
@@ -32,27 +30,38 @@ todotxt::todotxt(QObject *parent) :
 }
 
 todotxt::~todotxt()
+/* */
 {
-//    if(undoDir) delete undoDir;
 
 	delete _TodoFile;
 	delete _DoneFile;
 	delete _DeleteFile;
-	
-
 }
 
-void todotxt::getAllTask(vector<task*> &output)
-// Load all tasks from file to "output"  APPEND ???
-// Implement an error system, emit FileError
+bool todotxt::isReady()
+/* if true, can receive readRequest and writeRequest */
 {
-    QSettings settings;
+	return _TodoFile->exists();
+}
+
+void todotxt::reloadRequest()
+/* */
+{
     _TodoFile->open(QIODevice::ReadOnly | QIODevice::Text);
 
     if (!_TodoFile->isOpen()){
     	qDebug()<<"todotxt::getAllTask error opening file"<<endline;
     	return;
     }
+	emit DataAvailable();
+}
+
+void todotxt::getAllTask(vector<task*> &output)
+/* Load all tasks from file to "output"  APPEND ???
+ Implement an error system, emit FileError
+*/
+{
+    QSettings settings;
 
     QTextStream in(_TodoFile);
     in.setEncoding(QStringConverter::Utf8);
@@ -75,7 +84,108 @@ void todotxt::getAllTask(vector<task*> &output)
 	}
 }
 
-// GDE-NTM need rework
+void todotxt::writeRequest(vector<task*>& content, TodoDestination t, bool append)
+/* Writes a set of tasks (vector) to the file selected by filetype.
+If append is false, overwrite the file.
+return 1 : cannot open file
+return 2 : wrong "filetype", did nothing
+return 0 : sucess.
+*/
+{
+    qDebug()<<"todotxt::writeB("<<t<<"). append="<<append<<endline;
+    QTextStream out;
+	bool result;
+	switch (t){
+		case typeTodo:
+		    if (append) result=_TodoFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
+			else result =_TodoFile->open(QIODevice::WriteOnly | QIODevice::Text);
+			if (!result){
+				emit WriteError("todotxt Write: unable to open todo file");
+				return;
+			}
+			out.setDevice(_TodoFile);
+		    break;
+		case typeDone:
+		    if (append) result=_DoneFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
+		    else result=_DoneFile->open(QIODevice::WriteOnly | QIODevice::Text);
+			if (!result){
+				emit WriteError("todotxt Write: unable to open done file");
+				return;
+			}
+			out.setDevice(_DoneFile);
+		    break;
+		case typeDelete:
+		    if (append) result=_DeleteFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
+		    else result=_DeleteFile->open(QIODevice::WriteOnly | QIODevice::Text);
+			if (!result){
+				emit WriteError("todotxt Write: unable to open deleted file");
+				return;
+			}
+			out.setDevice(_DeleteFile);
+		    break;
+	default: 
+		emit WriteError("todotxt Write: unkown file type");
+		return;
+	}
+	
+    out.setEncoding(QStringConverter::Utf8);
+    for(vector<task*>::iterator i=content.begin(); i!=content.end(); i++)
+         out << (*i)->toSaveString() << "\n";
+
+	if (_TodoFile->isOpen()){
+	     _TodoFile->flush();
+   		 _TodoFile->close();
+	}
+	if (_DoneFile->isOpen()){
+     	_DoneFile->flush();
+    	_DoneFile->close();	
+	}
+	if (_DeleteFile->isOpen()){
+	     _DeleteFile->flush();
+	     _DeleteFile->close();	
+	}
+    emit DataSaved();
+    return;
+}
+
+QFileSystemWatcher *watcher;
+void todotxt::clearMonitoring()
+/* */
+{
+    if(watcher != NULL){
+        delete watcher;
+        watcher = NULL;
+    }
+}
+
+void todotxt::setMonitoring(QObject *parent)
+/* */
+{
+	Q_UNUSED(parent);
+    watcher = new QFileSystemWatcher();
+    watcher->removePaths(watcher->files()); // Make sure this is empty. Should only be this file we're using in this program, and only one instance
+    watcher->addPath(_TodoFilePath);
+//    QObject::connect(watcher, SIGNAL(fileChanged(QString)), this, SLOT(fileModified(QString)));
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// #TODO  delete this?
+// re-use the code of "REMOVE_DOUBLETS"
 void todotxt::slurp(QFile* file,vector<QString>& content){ //  NOT USED.
 qDebug()<<" use of deprecated todotxt::slurp"<<endline;
     QSettings settings;
@@ -100,106 +210,3 @@ qDebug()<<" use of deprecated todotxt::slurp"<<endline;
 	}
 }
 
-int todotxt::write(vector<task*>& content, filetype t, bool append)
-/* Writes a set of tasks (vector) to the file selected by filetype.
-If append is false, overwrite the file.
-return 1 : cannot open file
-return 2 : wrong "filetype", did nothing
-return 0 : sucess.
-*/
-{
-    qDebug()<<"todotxt::writeB("<<t<<"). append="<<append<<endline;
-    QTextStream out;
-	bool result;
-	switch (t){
-		case typetodofile:
-		    if (append) result=_TodoFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
-			else result =_TodoFile->open(QIODevice::WriteOnly | QIODevice::Text);
-			if (!result) return 1;
-			out.setDevice(_TodoFile);
-		    break;
-		case typedonefile:
-		    if (append) result=_DoneFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
-		    else result=_DoneFile->open(QIODevice::WriteOnly | QIODevice::Text);
-			if (!result) return 1;
-			out.setDevice(_DoneFile);
-		    break;
-		case typedeletefile:
-		    if (append) result=_DeleteFile->open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Append);
-		    else result=_DeleteFile->open(QIODevice::WriteOnly | QIODevice::Text);
-			if (!result) return 1;
-			out.setDevice(_DeleteFile);
-		    break;
-	default: return 2;
-	}
-
-
-//#TODO change this to iterator.
-     out.setEncoding(QStringConverter::Utf8);
-     for(unsigned int i = 0; i<content.size(); i++)
-         out << content.at(i)->toSaveString() << "\n";
-
-	if (_TodoFile->isOpen()){
-	     _TodoFile->flush();
-   		 _TodoFile->close();
-	}
-	if (_DoneFile->isOpen()){
-     	_DoneFile->flush();
-    	_DoneFile->close();	
-	}
-	if (_DeleteFile->isOpen()){
-	     _DeleteFile->flush();
-	     _DeleteFile->close();	
-	}
-     return 0;
-}
-
-
-
-
-
-QFileSystemWatcher *watcher;
-void todotxt::clearFileWatch()
-{
-    if(watcher != NULL){
-        delete watcher;
-        watcher = NULL;
-    }
-}
-
-void todotxt::setFileWatch(QObject *parent)
-{
-	Q_UNUSED(parent);
-    watcher = new QFileSystemWatcher();
-    watcher->removePaths(watcher->files()); // Make sure this is empty. Should only be this file we're using in this program, and only one instance
-    watcher->addPath(_TodoFilePath);
-    QObject::connect(watcher, SIGNAL(fileChanged(QString)), this, SLOT(fileModified(QString)));
-
-}
-
-
-void todotxt::fileModified(QString str)
-/*
-*/
-{
-	Q_UNUSED(str);
-	qDebug()<<"DEBUG : todotxt::fileModified detected !!"<<endline;
-
-/*   COPY FROM MAINWINDOW.CPP:
-void MainWindow::fileModified(const QString &str)
-  
-    Q_UNUSED(str);
-    //qDebug()<<"MainWindow::fileModified  "<<watcher->files()<<" --- "<<str;
-//    saveTableSelection();  // This should be maintained???
-    model->refresh();
-    if(model->count()==0){
-        // This sometimes happens when the file is being updated. We have gotten the signal a bit soon so the file is still empty. Wait and try again
-        delay();
-        model->refresh();
-        updateTitle();
-    }
-//    resetTableSelection();  // This should be maintained???
-    setFileWatch();
-    }
-*/    
-}

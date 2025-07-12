@@ -61,8 +61,17 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     // Handle the fonts
     activecolor=QColor::fromRgba(settings.value(SETTINGS_ACTIVE_COLOR,DEFAULT_ACTIVE_COLOR).toUInt());
     inactivecolor=QColor::fromRgba(settings.value(SETTINGS_INACTIVE_COLOR,DEFAULT_INACTIVE_COLOR).toUInt());
-    activefont.fromString(settings.value(SETTINGS_ACTIVE_FONT).toString());
-    inactivefont.fromString(settings.value(SETTINGS_INACTIVE_FONT).toString());
+    
+    // Only load font settings if they exist and are not empty
+    QString activeFontString = settings.value(SETTINGS_ACTIVE_FONT).toString();
+    if (!activeFontString.isEmpty()) {
+        activefont.fromString(activeFontString);
+    }
+    
+    QString inactiveFontString = settings.value(SETTINGS_INACTIVE_FONT).toString();
+    if (!inactiveFontString.isEmpty()) {
+        inactivefont.fromString(inactiveFontString);
+    }
     updateFonts();
     refresh=false;
 }

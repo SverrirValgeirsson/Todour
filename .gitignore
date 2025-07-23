@@ -16,3 +16,13 @@ mainwindow.cpp.autosave
 autobuild/releases/
 *.autosave
 documentation/site
+
+# Build artifacts
+.qmake.stash
+Makefile
+Todour
+moc_*.cpp
+moc_predefs.h
+qrc_*.cpp
+ui_*.h
+*.php

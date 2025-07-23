@@ -77,9 +77,15 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const {
         if(index.column()==1){
             QFont f;
             if(todo->isInactive(todo_data.at(index.row()))){
-                f.fromString(settings.value(SETTINGS_INACTIVE_FONT).toString());
+                QString inactiveFontString = settings.value(SETTINGS_INACTIVE_FONT).toString();
+                if (!inactiveFontString.isEmpty()) {
+                    f.fromString(inactiveFontString);
+                }
             } else {
-                f.fromString(settings.value(SETTINGS_ACTIVE_FONT).toString());
+                QString activeFontString = settings.value(SETTINGS_ACTIVE_FONT).toString();
+                if (!activeFontString.isEmpty()) {
+                    f.fromString(activeFontString);
+                }
             }
             f.setStrikeOut(todo->getState(todo_data.at(index.row()))); // Strike out if done
 

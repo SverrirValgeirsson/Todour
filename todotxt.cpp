@@ -92,25 +92,52 @@ void todotxt::parse(){
 }
 
 QString todotxt::getTodoFilePath(){
-    QSettings settings;
-    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
-    QString todofile = dir.append(TODOFILE);
+    QString dir;
+    if (!filedirectory.isEmpty()) {
+        dir = filedirectory;
+    } else {
+        QSettings settings;
+        dir = settings.value(SETTINGS_DIRECTORY).toString();
+    }
+    // Ensure directory ends with separator
+    if (!dir.endsWith("/") && !dir.endsWith("\\")) {
+        dir.append("/");
+    }
+    QString todofile = dir + TODOFILE;
     return todofile;
 }
 
 
 QString todotxt::getDoneFilePath(){
-    QSettings settings;
-    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
-    QString todofile = dir.append(DONEFILE);
-    return todofile;
+    QString dir;
+    if (!filedirectory.isEmpty()) {
+        dir = filedirectory;
+    } else {
+        QSettings settings;
+        dir = settings.value(SETTINGS_DIRECTORY).toString();
+    }
+    // Ensure directory ends with separator
+    if (!dir.endsWith("/") && !dir.endsWith("\\")) {
+        dir.append("/");
+    }
+    QString donefile = dir + DONEFILE;
+    return donefile;
 }
 
 QString todotxt::getDeletedFilePath(){
-    QSettings settings;
-    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
-    QString todofile = dir.append(DELETEDFILE);
-    return todofile;
+    QString dir;
+    if (!filedirectory.isEmpty()) {
+        dir = filedirectory;
+    } else {
+        QSettings settings;
+        dir = settings.value(SETTINGS_DIRECTORY).toString();
+    }
+    // Ensure directory ends with separator
+    if (!dir.endsWith("/") && !dir.endsWith("\\")) {
+        dir.append("/");
+    }
+    QString deletedfile = dir + DELETEDFILE;
+    return deletedfile;
 }
 
 void todotxt::getActive(QString& filter,vector<QString> &output){

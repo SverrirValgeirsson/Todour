@@ -1,28 +1,102 @@
+# Qt-specific files
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.moc
+moc_*.cpp
+moc_predefs.h
+qrc_*.cpp
+ui_*.h
+*.jsc
+Makefile*
+*build-*
+*.qm
+.qmake.stash
+
+# Qt Creator specific files
+.qmake.cache
+.qmake.vars
+qtcreator-*.cmake
+CMakeLists.txt.user*
+
+# Build directories and artifacts
+build*/
 .build*/
-*.user
+debug/
+release/
+Debug/
+Release/
+object_script.*
+*.o
+*.obj
+*.lib
+*.a
+*.la
+*.so
+*.so.*
+*.dll
+*.dylib
+*.exe
+
+# Test artifacts
+tests/build/
+tests/.github/
+tests/data/
+todour_core_tests*
+test_output*
+
+# Temporary and backup files
+*~
+*.tmp
+*.temp
+*.autosave
+*.bak
+*.orig
+*.swp
+*.swo
+*#
+
+# IDE and editor files
+.vscode/
+.vs/
+*.vcxproj*
+*.sln
+*.suo
+*.ncb
+*.aps
+
+# OS-specific files
 .DS_Store
-arkiv
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Archive and packaging
+arkiv/
 arkiv/*
 arkiv/.*
 autobuild/node_modules/
 autobuild/Todour.dmg
 autobuild/Todour-win/
-node_modules/
-*~
-*.o
 autobuild/Todour/
-autobuild/Output/setup.exe
-mainwindow.cpp.autosave
+autobuild/Output/
 autobuild/releases/
-*.autosave
-documentation/site
+node_modules/
+releases/
+Todour-win
 
-# Build artifacts
-.qmake.stash
-Makefile
-Todour
-moc_*.cpp
-moc_predefs.h
-qrc_*.cpp
-ui_*.h
+# Documentation build
+documentation/site/
+
+# Version-specific files
 *.php
+version.pl
+
+# Logs and runtime files
+*.log
+*.out

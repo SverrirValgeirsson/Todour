@@ -22,6 +22,28 @@ git submodule update
 qmake Todour.pro
 make
 ```
+
+# Documentation Generation
+The project uses MkDocs to generate documentation from Markdown files. The documentation source is located in the `documentation/` directory.
+
+## Prerequisites
+```
+pip install mkdocs
+```
+
+## Working with Documentation
+```
+cd documentation
+
+# Preview documentation locally (starts server at http://127.0.0.1:8000)
+mkdocs serve
+
+# Deploy documentation to GitHub Pages
+mkdocs gh-deploy
+```
+
+The live documentation is available at: https://sverrirvalgeirsson.github.io/Todour/
+
 ## Dependencies 
 On Ubuntu 20.04 the following has been reported to be needed (see https://github.com/SverrirValgeirsson/Todour/issues/28)
 ```

@@ -4,6 +4,8 @@
 #include <QDialog>
 #include <QColor>
 #include <QFont>
+#include <QCloseEvent>
+#include <QShowEvent>
 
 namespace Ui {
 class SettingsDialog;
@@ -20,6 +22,10 @@ public:
     explicit SettingsDialog(QWidget *parent = 0);
     ~SettingsDialog();
     bool refresh;
+
+protected:
+    void closeEvent(QCloseEvent *event) override;
+    void showEvent(QShowEvent *event) override;
     
 private slots:
     void on_buttonBox_rejected();
@@ -45,6 +51,9 @@ private slots:
 private:
     Ui::SettingsDialog *ui;
     void updateFonts();
+    void saveGeometry();
+    void restoreGeometry();
+    void ensureVisibleOnScreen();
 };
 
 #endif // SETTINGSDIALOG_H

@@ -3,6 +3,9 @@
 #include <QColorDialog>
 #include <QPalette>
 #include <QRgb>
+#include <QApplication>
+#include <QDesktopWidget>
+#include <QScreen>
 
 #include "settingsdialog.h"
 #include "ui_settingsdialog.h"
@@ -74,10 +77,14 @@ SettingsDialog::SettingsDialog(QWidget *parent) :
     }
     updateFonts();
     refresh=false;
+    
+    // Restore window geometry
+    restoreGeometry();
 }
 
 SettingsDialog::~SettingsDialog()
 {
+    saveGeometry();
     delete ui;
 }
 
@@ -218,5 +225,64 @@ void SettingsDialog::on_pb_lateColor_clicked()
     QColor c = QColorDialog::getColor(QColor::fromRgb(settings.value(SETTINGS_DUE_LATE_COLOR,DEFAULT_DUE_LATE_COLOR).toInt()),this);
     settings.setValue(SETTINGS_DUE_LATE_COLOR,c.rgba());
     updateFonts();
+}
 
+void SettingsDialog::closeEvent(QCloseEvent *event)
+{
+    saveGeometry();
+    QDialog::closeEvent(event);
+}
+
+void SettingsDialog::showEvent(QShowEvent *event)
+{
+    QDialog::showEvent(event);
+    ensureVisibleOnScreen();
+}
+
+void SettingsDialog::saveGeometry()
+{
+    QSettings settings;
+    settings.setValue(SETTINGS_SETTINGS_GEOMETRY, QDialog::saveGeometry());
+}
+
+void SettingsDialog::restoreGeometry()
+{
+    QSettings settings;
+    QByteArray geometry = settings.value(SETTINGS_SETTINGS_GEOMETRY).toByteArray();
+    if (!geometry.isEmpty()) {
+        QDialog::restoreGeometry(geometry);
+    }
+}
+
+void SettingsDialog::ensureVisibleOnScreen()
+{
+    // Make sure the dialog is visible on at least one screen
+    QRect dialogRect = frameGeometry();
+    bool isVisible = false;
+    
+    // Check if the dialog is visible on any screen
+    foreach (QScreen *screen, QApplication::screens()) {
+        if (screen->availableGeometry().intersects(dialogRect)) {
+            isVisible = true;
+            break;
+        }
+    }
+    
+    // If not visible on any screen, move to primary screen
+    if (!isVisible) {
+        QScreen *primaryScreen = QApplication::primaryScreen();
+        if (primaryScreen) {
+            QRect screenRect = primaryScreen->availableGeometry();
+            
+            // Center the dialog on the primary screen
+            int x = screenRect.x() + (screenRect.width() - width()) / 2;
+            int y = screenRect.y() + (screenRect.height() - height()) / 2;
+            
+            // Ensure the dialog doesn't go outside screen bounds
+            x = qMax(screenRect.x(), qMin(x, screenRect.x() + screenRect.width() - width()));
+            y = qMax(screenRect.y(), qMin(y, screenRect.y() + screenRect.height() - height()));
+            
+            move(x, y);
+        }
+    }
 }

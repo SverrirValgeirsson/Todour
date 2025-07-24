@@ -65,6 +65,7 @@
 #define SETTINGS_THRESHOLD_INACTIVE "threshold_inactive"
 #define SETTINGS_AUTOREFRESH "autorefresh"
 #define SETTINGS_GEOMETRY "geometry"
+#define SETTINGS_SETTINGS_GEOMETRY "settings_geometry"
 #define SETTINGS_SAVESTATE "savestate"
 #define SETTINGS_MAXIMIZED "maximized"
 #define SETTINGS_LIVE_SEARCH "liveSearch"

@@ -384,7 +384,7 @@ void MainWindow::setTray(){
     bool trayEnabled = settings.value(SETTINGS_TRAY_ENABLED,DEFAULT_TRAY_ENABLED).toBool();
     
     // Set quit behavior based on tray setting
-    QApplication::instance()->setQuitOnLastWindowClosed(!trayEnabled);
+    QApplication::setQuitOnLastWindowClosed(!trayEnabled);
     
     if(trayEnabled){
         // We should be showing a tray icon. Are we?

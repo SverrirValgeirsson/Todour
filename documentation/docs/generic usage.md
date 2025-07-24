@@ -121,7 +121,6 @@ due:2024-03       # Show tasks due in March 2024
 | `Space` | Toggle task completion (when checkbox is selected)|
 
 ### Customization
-- Global hotkey can be changed in Settings
-- Can be disabled if conflicts with other applications
+- Global hotkey can be disabled if conflicts with other applications
 - Some hotkeys may vary by operating system
 

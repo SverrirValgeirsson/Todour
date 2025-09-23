@@ -85,6 +85,12 @@ void caldav_util::parseVTODO( QTextStream* m_DataStream, CalendarEvent* event)
     {
       event->setDescription(value);
     }
+    else if (key == QLatin1String("LAST-MODIFIED"))
+    {
+      utcTime = DateUtils::parseDate(value);
+      event->setLastModified(utcTime.toLocalTime());
+    }
+
   }
 
 

@@ -13,22 +13,24 @@ Author Gaetan DC
 #define TASK_H
 
 #include <QString>
-#include <QDate>
+//#include <QDate>
 #include <QColor>
 #include <QUuid>
 #include <QDebug>
+#include <QDateTime>
 
 class task
 {
 private:
 	QString _raw;
 	QUuid _tuid;
-	QDate _complete_date;
+	QDateTime _ttag;
+	QDateTime _complete_date;
 	QChar priority;
 	QColor color;
-	QDate inputD;
-	QDate dueD;
-	QDate thrD;
+	QDateTime inputD;
+	QDateTime dueD;
+	QDateTime thrD;
 	Qt::CheckState complete ;
 	
 public:
@@ -39,10 +41,10 @@ public:
 	~task();
 	bool is_txt_compatible();
 
-	void setDueDate(QDate d);
+	void setDueDate(QDateTime d);
 	
-	void setThresholdDate(QDate d);
-	void setInputDate(QDate d);
+	void setThresholdDate(QDateTime d);
+	void setInputDate(QDateTime d);
 	
 	void setColor(QString c);
 	void setColor(QColor c);
@@ -52,9 +54,9 @@ public:
 	task* setComplete(bool c = true);
 	void setRaw(QString s);
 
-	inline QDate getDueDate() const {return dueD;};
-	inline QDate getThresholdDate() const {return thrD;};
-	inline QDate getInputDate() const {return inputD;};
+	inline QDateTime getDueDate() const {return dueD;};
+	inline QDateTime getThresholdDate() const {return thrD;};
+	inline QDateTime getInputDate() const {return inputD;};
 	inline QChar getPriority()const {return priority;};
 	inline QColor getColor() const {return color;};
 	inline QUuid getTuid() const{return _tuid;}
@@ -84,9 +86,10 @@ public:
 	QString toString() const;
 	/*returns the full QString for debugging*/
 
+	inline QDateTime getTimeStamp() const {return _ttag;}
 
 // === static functions ===
-	static QDate getRelativeDate(QString d);
+	static QDateTime getRelativeDate(QString d);
 	static QString testRegularExpressions();
 	static void taskTestSession();	
 	

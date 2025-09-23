@@ -10,7 +10,8 @@
 static QRegularExpression regex_date("("+DATE_PAT+")(?:\\s*|$)");
 static QRegularExpression regex_reldate("(?<rdate>"+RDATE_PAT+")(?:\\s*|$)");
 
-static QRegularExpression regex_tuid("\\s+tuid:(?<tuid>.{8}-.{4}-.{4}-.{4}-.{12})(?:\\s*|$)");  //xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+static QRegularExpression regex_tuid("\\s+tuid:(?<tuid>.{8}-.{4}-.{4}-.{4}-.{12})");  //xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+static QRegularExpression regex_ttag("\\s+ttag:(?<ttag>\\d{10,15})");
 static QRegularExpression regex_url("[a-zA-Z0-9_]+:\\/\\/([-a-zA-Z0-9@:%_\\+.~#?&\\/=\\(\\)\\{\\}\\\\]*)");
 static QRegularExpression regex_color("\\s*color:([a-z]*)");
 static QRegularExpression regex_threshold_project("t:(\\+[^\\s]+)(?:\\s+|$)");
@@ -26,8 +27,8 @@ static QRegularExpression regex_rec("(rec:" + RDATE_PAT+")(?:\\s*|$)");
 //preamble    //^(?:x\s+(?:\d\d\d\d-\d\d-\d\d\s)?)?(?:\(\w\)\s+)?(?:\d\d\d\d-\d\d-\d\d\s+)?
 static QRegularExpression regex_preamble("^(?<pxd>x\\s+"+DATE_PAT+"\\s)?(?<px>x\\s)?\\s*(?<ppr>\\(\\w\\)\\s)?\\s*(?<pid>"+DATE_PAT+"\\s)?\\s*(?<ptk>.*)$");
 static QRegularExpression regex_done        ("^(x\\s+)"); // x 2025-03-01
-static QRegularExpression regex_completedate("^(?=x\\s+("+DATE_PAT+")?)");
-static QRegularExpression regex_priority("^(?:x\\s+(?="+DATE_PAT+")?)?(\\(\\w\\)\\s+)"); //(B)
+static QRegularExpression regex_completedate("^(x\\s+("+DATE_PAT+")?\\s+)");
+static QRegularExpression regex_priority("^(?:x\\s+(?="+DATE_PAT+")?)?(\\(\\w\\)\\s+)"); //(B) 2025-05-05
 static QRegularExpression regex_inputdate("^(?:x\\s)?(?:x\\s+"+DATE_PAT+"\\s)?\\s*(?:\\(\\w\\)\\s)?\\s*(?<p>"+DATE_PAT+")");
 
 static QRegularExpression regex_todo_line("((^(?:x )+("+DATE_PAT+"(?:\\s+|$))?)+(?<donedate>"+DATE_PAT+"(?:\\s*|$))?)?(?<priority>"+regex_priority.pattern()+")?(?<inputdate>"+DATE_PAT+"(?:\\s*|$))?(.*)");
@@ -49,31 +50,43 @@ task::task(QString s, QString context, bool loaded)
 {
 //	qDebug()<<"task:task Task constructor s="<<s<<"  context="<<context<<"  loaded="<<loaded<<endline;
 	QString ret=s;
-	if (loaded) //we loaded from the file, we should find the data in task
+	if (loaded) //we loaded from the file, we should find the data in task (tuid + ttag)
 	{
 		auto match = regex_tuid.match(s);
 		if (match.hasMatch())
 		{
 			_tuid= QUuid::fromString(match.captured("tuid"));
 			ret.remove(regex_tuid);
-			if (_tuid.isNull())
-					_tuid=QUuid::createUuid();
 		}
+		if (_tuid.isNull())
+			_tuid=QUuid::createUuid();
+
+
+		match = regex_ttag.match(s);
+		if (match.hasMatch())
+		{
+			_ttag= QDateTime::fromSecsSinceEpoch(match.captured("ttag").toLongLong());
+			ret.remove(regex_ttag);
+		}
+		if (!_ttag.isValid())
+			_ttag=QDateTime::currentDateTime();
+
 		parse(ret,true);
 	}
-	else //this is a new typed task, default inputdate if settings + tuid + ??
+	else //this is a new typed task, default inputdate if settings + tuid + ttag??
 	{
 		QSettings settings;	
 		
 		_tuid=QUuid::createUuid();
-
 		if (!context.isEmpty())
 				ret = ret+" "+context;
-				
+		
+		_ttag=QDateTime::currentDateTime();
+		qDebug()<<" ttag:"+QString::number(_ttag.toSecsSinceEpoch())<<endline;
 		parse(ret,true);
 
     	if(!inputD.isValid()&&(settings.value(SETTINGS_DATES).toBool()))
-    		 	setInputDate(QDate::currentDate());
+    		 	setInputDate(QDateTime::currentDateTime());
 	
 		if (priority.isNull()) // there was no priority in the newly created task
 				setPriority(settings.value(SETTINGS_DEFAULT_PRIORITY,DEFAULT_DEFAULT_PRIORITY).toChar());			
@@ -87,6 +100,7 @@ task::task(QString s, QUuid tuid)
 {
 	_raw=s;
 	_tuid= tuid;
+	_ttag=QDateTime::currentDateTime();
 	parse(s,true);
 
 }
@@ -98,9 +112,8 @@ task::task(task* copy)
 	setRaw(copy->getRaw());
 	//_tuid=copy->getTuid();
 	_tuid=QUuid::createUuid();
-//	qDebug()<<"task:task from existing. raw="<<_raw<<endline;	
-//	parse(_raw,true); // usefull? should not be ;-)
-	setInputDate(QDate::currentDate());
+	_ttag=QDateTime::currentDateTime();
+	setInputDate(QDateTime::currentDateTime());
 }
 
 task::~task()
@@ -123,13 +136,13 @@ void task::parse(QString s,bool strict)
 	{
 		tmp=matches.next().captured(1);
 		if (tmp.size() > 0)
-				dueD = QDate::fromString(tmp.remove(0,4),"yyyy-MM-dd");
+				dueD = QDateTime::fromString(tmp.remove(0,4),"yyyy-MM-dd");
 	}
 
 	matches = regex_due_date_r.globalMatch(s);
 	while (matches.hasNext())
 	{
-		QDate td = task::getRelativeDate(matches.next().captured(1));
+		QDateTime td = task::getRelativeDate(matches.next().captured(1));
 		if (td.isValid()){ //if new date is not valid, do nothing.
 			_raw.remove(regex_due_date_r);
 			_raw.append(" due:"+td.toString("yyyy-MM-dd"));
@@ -142,14 +155,14 @@ void task::parse(QString s,bool strict)
 	{
 		tmp=matches.next().captured(1);
 		if (tmp.size() >0)
-			thrD = QDate::fromString(tmp.remove(0,2),"yyyy-MM-dd");
+			thrD = QDateTime::fromString(tmp.remove(0,2),"yyyy-MM-dd");
 	}
 
 	matches = regex_threshold_date_r.globalMatch(s);
 	while (matches.hasNext())
 	{
 //		this->setThresholdDate(matches.next().captured(1),strict);
-		QDate td = task::getRelativeDate(matches.next().captured(1));
+		QDateTime td = task::getRelativeDate(matches.next().captured(1));
 		if (td.isValid()){ //if new date is not valid, do nothing
 			_raw.remove(regex_threshold_date_r);
 			_raw.append(" t:"+td.toString("yyyy-MM-dd"));
@@ -166,11 +179,11 @@ void task::parse(QString s,bool strict)
 		else
 				this->complete=Qt::Unchecked;
 			
-		QDate d=QDate::fromString(nn.captured("pid"),"yyyy-MM-dd");
+		QDateTime d=QDateTime::fromString(nn.captured("pid"),"yyyy-MM-dd");
 		if (d.isValid())
 			inputD=d;
 		else
-			inputD=QDate();
+			inputD=QDateTime();
 		
 		if (!nn.captured("ppr").isNull())
 				priority=nn.captured("ppr").at(1);
@@ -189,12 +202,13 @@ void task::parse(QString s,bool strict)
 	else
 		color=QColor::fromString("White");
 
+	_ttag=QDateTime::currentDateTime();
 
-	qDebug()<<"task::parse "<<toString()<<endline;
+//	qDebug()<<"task::parse "<<toString()<<endline;
 }
 
 
-void task::setDueDate(QDate d)
+void task::setDueDate(QDateTime d)
 /* Update the due_date
    remove any present dueDate + add due:... at the end.
 */
@@ -203,9 +217,11 @@ void task::setDueDate(QDate d)
 	dueD=d;
 	_raw.remove(regex_due_date);
 	_raw.append(" due:"+d.toString("yyyy-MM-dd"));
+	_ttag=QDateTime::currentDateTime();
+
 }
 
-void task::setThresholdDate(QDate d)
+void task::setThresholdDate(QDateTime d)
 /* Update the threshold_date
    remove any present thD + add t:... at the end.
 */
@@ -214,10 +230,11 @@ void task::setThresholdDate(QDate d)
 	thrD = d;
 	_raw.remove(regex_threshold_date);
 	_raw.append(" t:"+d.toString("yyyy-MM-dd"));
+	_ttag=QDateTime::currentDateTime();
 
 }
 
-void task::setInputDate(QDate d)
+void task::setInputDate(QDateTime d)
 /* place a date at beginning, but after priority.
 If a date is present, remove it first !*/
 {
@@ -235,6 +252,8 @@ If a date is present, remove it first !*/
 	}
 	
 	inputD=d;
+	_ttag=QDateTime::currentDateTime();
+
 }
 
 void task::setColor(QString c)
@@ -251,11 +270,15 @@ void task::setColor(QString c)
 	else
 		color=QColor::fromString("White");
 
+	_ttag=QDateTime::currentDateTime();
+
 }
 
 void task::setColor(QColor c)
 {
 	color=c;	
+	_ttag=QDateTime::currentDateTime();
+
 }
 
 void task::setDescription(QString s)
@@ -282,7 +305,7 @@ void task::setPriority(QChar c)
 		_raw.prepend(c);
 		_raw.prepend("(");
 		priority=c;
-		
+		_ttag=QDateTime::currentDateTime();
 	}
 }
 
@@ -318,15 +341,16 @@ task* task::setComplete(bool c)
 				}
 			}
     	if(settings.value(SETTINGS_DATES).toBool())
- 				_raw.prepend("x "+QDate::currentDate().toString("yyyy-MM-dd")+" ");
+ 				_raw.prepend("x "+QDateTime::currentDateTime().toString("yyyy-MM-dd")+" ");
  		else
  				_raw.prepend("x ");
  		complete=Qt::Checked;
 	}
 	else{
-		_raw.remove(regex_done);
+		_raw.remove(regex_completedate);
 		complete=Qt::Unchecked;
 	}
+	_ttag=QDateTime::currentDateTime();
 
 	return ret;
 }
@@ -385,6 +409,7 @@ QString task::toSaveString() const
 {
 	QString ret=getEditText();
 	ret.append(" tuid:"+_tuid.toString(QUuid::WithoutBraces));
+	ret.append(" ttag:"+QString::number(_ttag.toSecsSinceEpoch()));
 	return ret;
 }
 
@@ -418,7 +443,7 @@ bool task::isActive() const
 {
 	QSettings settings;
 	bool ret=true;
-	ret &= (QDate::currentDate()>=getThresholdDate());
+	ret &= (QDateTime::currentDateTime()>=getThresholdDate());
 
 	QStringList words = settings.value(SETTINGS_INACTIVE,DEFAULT_INACTIVE).toString().split(';');
 	for (QString i:words){
@@ -430,15 +455,15 @@ bool task::isActive() const
 /*
 ====================================  STATIC FUNCTIONS ========================================
 */
-QDate task::getRelativeDate(QString d)
+QDateTime task::getRelativeDate(QString d)
 /* static function, returns a QDate object based on the "relative" as described in regex_reldate
 */
 {
 	QSettings settings;
-    QDate ret = QDate::currentDate();
+    QDateTime ret = QDateTime::currentDateTime();
     QRegularExpressionMatch m = regex_reldate.match(d);
 //	qDebug()<<"task::getRelativeDate match:"<<m.captured("rdate")<<endline;
-    if (!m.hasMatch()) return QDate();
+    if (!m.hasMatch()) return QDateTime();
         if(m.captured("u").contains('d')){
             ret = ret.addDays(m.captured("n").toInt());
         } else if(m.captured("u").contains('w')){
@@ -466,7 +491,7 @@ QDate task::getRelativeDate(QString d)
             int add = m.captured("n").toInt();
             while(days<add){
                 ret = ret.addDays(1); // add one at a time
-                if(business_days.contains(ret.dayOfWeek())){
+                if(business_days.contains(ret.date().dayOfWeek())){
                     days++;
                 }
             }

@@ -40,6 +40,7 @@ CalendarEvent::CalendarEvent(QObject *parent) : QObject(parent)
   m_UID             = "";
   m_HREF            = "";
   m_CalendarPointer = NULL;
+  m_lastModified   = QDateTime();
   eventType = E_INVALID;
 }
 
@@ -213,6 +214,12 @@ void CalendarEvent::setHREF(const QString& href)
     m_HREF = href;
     emit hrefChanged(m_HREF);
   }
+}
+
+void CalendarEvent::setLastModified(const QDateTime &date)
+/* */{
+	m_lastModified=date;
+	emit lastModifiedChanged(m_lastModified);
 }
 
 void CalendarEvent::reset()

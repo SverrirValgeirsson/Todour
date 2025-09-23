@@ -45,7 +45,7 @@
 #define DEFAULT_BUSINESS_DAYS_FIRST 1
 #define DEFAULT_BUSINESS_DAYS_LAST 5
 #define DEFAULT_DUE_AS_THRESHOLD false
-#define DEFAULT_DEFAULT_PRIORITY ""
+#define DEFAULT_DEFAULT_PRIORITY "B"
 
 
 // Names of settings in QSettings
@@ -90,6 +90,11 @@
 #define SETTINGS_BUSINESS_DAYS "business_days"
 #define SETTINGS_DUE_AS_THRESHOLD "due_as_threshold"
 #define SETTINGS_DEFAULT_PRIORITY "default_priority"
+
+#define SETTINGS_BACKEND "backend"
+#define SETTINGS_CALDAV_URL "caldav_url"
+#define SETTINGS_CALDAV_USERNAME "caldav_username"
+#define SETTINGS_CALDAV_PASSWORD "caldav_password"
 
 enum prio_on_close {removeit=0,moveit,tagit};
 

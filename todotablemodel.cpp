@@ -16,16 +16,20 @@
 TodoTableModel::TodoTableModel(QUndoStack* undo, QObject *parent) :
     QAbstractTableModel(parent), _undo(undo)
 {
-//    todo = new todotxt();
-	todo = new caldav();
+ 	QSettings settings;
+    todo = new todotxt();
+
+// 	if (settings.value(SETTINGS_BACKEND).toString()=="caldav"){
+// 		todo = new caldav();
+// 		}
+
 	QObject::connect(todo,SIGNAL(DataChanged()),this,SLOT(backendDataLoaded()));
-	QObject::connect(todo,SIGNAL(ConnectionLost()),this,SLOT(backendError()));
+	QObject::connect(todo,SIGNAL(ConnectionLost()),this,SIGNAL(backendError()));
 	QObject::connect(todo,SIGNAL(DataAvailable()),this,SLOT(backendDataLoaded()));
 	QObject::connect(todo,SIGNAL(DataSaved()),this,SLOT(backendDataSaved()));
 	
 	if (todo->isReady())
 		todo->reloadRequest();
-	
 	}
 
 TodoTableModel::~TodoTableModel()
@@ -37,6 +41,7 @@ int TodoTableModel::rowCount(const QModelIndex &parent) const {
     Q_UNUSED(parent);
 //Should we consider here the quantity of SHOWN rows?
     int size = (int)task_set.size();
+//    qDebug()<<"TodoTableModel::rowCount"<<size<<endline;
     return size;
     }
 
@@ -69,16 +74,19 @@ Qt::ItemFlags TodoTableModel::flags(const QModelIndex& index) const
   }
   return returnFlags;
 }
-
+/*
 int TodoTableModel::count(){
     return this->rowCount(QModelIndex());
-}
+} NOT USED.*/
 
 QVariant TodoTableModel::data(const QModelIndex &index, int role) const
 /*
 */
 {
 	QSettings settings;
+//	qDebug()<<"TodoTableModel:data start. index= "<<index<<" role="<<role<<" size="<<(int)task_set.size()<<endline;
+
+
 	if (!index.isValid()) return QVariant();
 	if (task_set.empty()) return QVariant();
     if (index.row() >= (int) task_set.size() || index.row() < 0) return QVariant();
@@ -131,7 +139,7 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
     	QSettings settings;
     	if(settings.value(SETTINGS_DUE).toBool()){
     		if (task_set.at(index.row())->getDueDate().isValid()){
-				due = -(int) (task_set.at(index.row())->getDueDate().daysTo(QDate::currentDate()));
+				due = -(int) (task_set.at(index.row())->getDueDate().daysTo(QDateTime::currentDateTime()));
 			}
 		}
         bool active = true;
@@ -167,13 +175,10 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
 		if (settings.value(SETTINGS_SEPARATE_INACTIVES,DEFAULT_SEPARATE_INACTIVES).toBool())
 			_prepend=(QChar) QChar::LastValidCodePoint;
 	   
-	   	//qDebug()<<"todotablemodel::getData() :"<<_prepend + task_set.at(index.row())->getEditText()+" "+TODOUR_INACTIVE<<endline;
 	   	if (task_set.at(index.row())->isActive()){
-//	   		qDebug()<<"todotablemodel::getData() :"<<task_set.at(index.row())->getEditText()+" "+TODOUR_INACTIVE<<endline;
 	    	return task_set.at(index.row())->getEditText()+" "+TODOUR_INACTIVE;
 	    }
 	    else{
-//	   		qDebug()<<"todotablemodel::getData() :"<<_prepend + task_set.at(index.row())->getEditText();
 	    	return _prepend + task_set.at(index.row())->getEditText();
 	    }
 	 }
@@ -201,12 +206,17 @@ bool TodoTableModel::setData(const QModelIndex & index, const QVariant & value, 
   	return true;
 }
 
+void TodoTableModel::toggleDone(QModelIndex &index)
+/* */{
+	QAbstractItemModel::beginResetModel();
+	_undo->push(new CompleteCommand(this, task_set.at(index.row())));
+    QAbstractItemModel::endResetModel();
+	
+}
 
 void TodoTableModel::addTask(task *_t)
-/* */
-{
- 	if (_t!=0)
-	 	    task_set.push_back(_t);
+/* */{
+ 	if (_t!=0) task_set.push_back(_t);
 }
 
 task* TodoTableModel::removeTask(QUuid tuid)
@@ -231,9 +241,7 @@ task* TodoTableModel::getTask(QUuid tuid)
 /* */
 {
 	for (vector<task*>::iterator i=task_set.begin();i!=task_set.end();++i){
-		if ((*i)->getTuid() == tuid){
-			return *i;
-		}
+		if ((*i)->getTuid() == tuid)return *i;
 	}
 	return 0;
 }
@@ -312,6 +320,7 @@ void TodoTableModel::backendDataLoaded()
 {
     QAbstractItemModel::beginResetModel();
 	todo->getAllTask(task_set);
+	qDebug()<<"void TodoTableModel::backendDataLoaded() - all tasks loaded"<<endline;
     QAbstractItemModel::endResetModel();
 	
     emit dataChanged(QModelIndex(),QModelIndex());
@@ -324,8 +333,8 @@ void TodoTableModel::backendDataSaved()
 	emit dataSavedOK();
 }
 
-void TodoTableModel::backendError()
+QString TodoTableModel::toString()
 /* */
 {
-	
+	return QString("model : ")+todo->getType()+"\n"+QString("  Contains n tasks: ")+QString::number((int)task_set.size());
 }

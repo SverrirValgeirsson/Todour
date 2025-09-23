@@ -1,0 +1,2 @@
+export QT_LOGGING_RULES="*.debug=true;qt.*.debug=false"
+

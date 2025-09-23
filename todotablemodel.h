@@ -31,7 +31,7 @@ public:
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     Qt::ItemFlags flags(const QModelIndex& index) const;
  	bool setData(const QModelIndex & index, const QVariant & value, int role);
-    int count();
+//    int count();
 
     void addTask(task* t);
     task* removeTask(QUuid tuid);
@@ -42,17 +42,18 @@ public:
     void refresh();
     int flush();
             
-   inline void clearFileWatch(){   todo->clearMonitoring();}; //gaetan 5/1/24
-   inline void setFileWatch(QObject *parent){   todo->setMonitoring(parent);}; //gaetan 5/1/24
-
+//   inline void clearFileWatch(){   todo->clearMonitoring();}; //gaetan 5/1/24
+   inline void setFileWatch(bool b, QObject *parent){   todo->setMonitoring(b, parent);}; //gaetan 5/1/24
+	QString toString();
 
 signals:
 	void dataSavedOK();
+	void backendError();
 	
 public slots:
     void backendDataLoaded();
     void backendDataSaved();
-    void backendError();
+    void toggleDone(QModelIndex &index);
 private:
 	QUndoStack* _undo;
 };

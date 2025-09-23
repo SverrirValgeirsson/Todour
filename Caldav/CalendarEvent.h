@@ -26,7 +26,8 @@
   typedef enum {
     E_INVALID,	//item not defined. won't be saved!
     E_VEVENT,  // item is a calendar event
-    E_VTODO  // item is a todo event
+    E_VTODO,  // item is a todo event
+    E_VJOURNAL //item is a journal event (see rfc5545)
   } E_CalType;
 
 
@@ -91,6 +92,9 @@ public:
 
   // URL of calendar file
   Q_PROPERTY(QString href READ getHREF WRITE setHREF NOTIFY hrefChanged)
+  
+  // Last modified
+  Q_PROPERTY(QDateTime lastmodified READ getLastModified WRITE setLastModified NOTIFY lastModifiedChanged)
 
   // Read-only boolean property which is set, if the event represents a specific occurrence and an EXDATE value applies
   Q_PROPERTY(bool isCanceled READ getIsCanceled NOTIFY isCanceledChanged)
@@ -146,6 +150,7 @@ signals:
   void uidChanged(const QString& uid);
   void hrefChanged(const QString& href);
   void isCanceledChanged(const bool& isCanceled);
+  void lastModifiedChanged(const QDateTime& lastModified);
 
 /******************************************************************************/
 /* Public slots                                                               */
@@ -193,6 +198,9 @@ public slots:
   inline E_CalType getType() const {return eventType;};
   inline void setType(E_CalType _et){eventType=_et;};
 
+  inline QDateTime getLastModified() const{    return m_lastModified;};
+  void setLastModified(const QDateTime &date);
+
 
   // to edit an event and upload it back to the CalDAV server we need to know the
   // CalendarClient object where this event originates from
@@ -228,6 +236,7 @@ protected:
   bool m_IsCanceled;
   QObject* m_CalendarPointer;
   E_CalType eventType;
+  QDateTime m_lastModified;
 
 
 /******************************************************************************/

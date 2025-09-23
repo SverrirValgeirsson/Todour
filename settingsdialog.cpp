@@ -10,6 +10,9 @@
 
 #include <QSettings>
 
+// #TODO: add a GUI setting for the caldav backend. Any other option to be expected?   Possible is None, CalDav.
+
+
 SettingsDialog::SettingsDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::SettingsDialog)

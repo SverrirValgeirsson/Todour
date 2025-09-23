@@ -30,7 +30,8 @@ public:
     ~MainWindow();
     
 public slots:
-
+    void updateTitle();
+    
 private slots:
     void on_lineEditFilter_textEdited(const QString &arg1);
     void on_actionSettings_triggered();
@@ -61,7 +62,7 @@ private slots:
     		
     void on_actionPrint_triggered();
     void on_actionSave_triggered();
-	
+	void on_actionSync_triggered();
 	void dataInModelChanged(QModelIndex,QModelIndex);
     
 //Gaetandc 4/1/24
@@ -80,7 +81,7 @@ private slots:
    void on_actionSortDate();
    void on_actionSortInactive();
    void on_actionCopy();
-   
+   void on_actionSpace();
    void on_actionUndo();
    void on_actionRedo();
       
@@ -91,21 +92,22 @@ private:
 
     void setFileWatch();
     void setTray();
-    void clearFileWatch();
+//    void clearFileWatch();
     void closeEvent(QCloseEvent *ev);
     Ui::MainWindow *ui;
     void saveTableSelection();
     void resetTableSelection();
     void updateSearchResults();
 	void updateSort();
-    void updateTitle();
+
     void setFontSize();
     void stayOnTop();
 
-//    UGlobalHotkeys *hotkey;
+//    UGlobalHotkeys *hotkey;   // Commented out for Wayland transition. Can be reintroduced if we can identify platform.
     void setHotkey();
 
 	QTimer *versionTimer;
+	QTimer *autoSaver;
 
     QString baseTitle;
     QSystemTrayIcon *trayicon = NULL;
@@ -115,37 +117,10 @@ private:
     QAction *restoreAction;
     QAction *quitAction;
     
-//    QModelIndex currentIndex;
 	todour_version *Version;
 	
 	QUndoStack* _undoStack;
-    
-//Gaetandc 4/1/24    
-    QAction* actionPrint;
-
-    QMenu* rClickMenu=NULL;
-	    QAction* editAction;
-   		QAction* deleteAction;
-     	QAction* postponeAction;
-        QAction* completeAction;
-    	QAction* duplicateAction;
-
-    QMenu* priorityMenu=NULL;
-    	QAction* ApriorAction;
-    	QAction* BpriorAction;
-    	QAction* CpriorAction;
-    	QAction* DpriorAction;
-
-	QMenu* sortMenu=NULL;    
-    	QAction* sortAzAction;
-    	QAction* sortDateAction;
-    	QAction* sortInactiveAction;
-    
-    // Edit Menu
-        QAction* undoAction;
-    	QAction* redoAction;
-    	QAction* copyAction;
-    
+           
     QCompleter* _taglist;
     
 };

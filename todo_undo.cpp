@@ -130,6 +130,15 @@ CompleteCommand::CompleteCommand(TodoTableModel* model, task* t, bool complete, 
 	rec_task = nullptr;
 }
 
+CompleteCommand::CompleteCommand(TodoTableModel* model, task* t, QUndoCommand *parent)
+    :QUndoCommand(parent), _task(t), _model(model)
+/* */
+{
+	setText("Complete");
+	rec_task = nullptr;
+	_complete=!t->isComplete();
+}
+
 CompleteCommand::~CompleteCommand()
 /* #TODO  check*/
 {

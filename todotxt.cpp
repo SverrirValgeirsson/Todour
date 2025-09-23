@@ -4,13 +4,8 @@
 // Todo.txt file format: https://github.com/ginatrapani/todo.txt-cli/wiki/The-Todo.txt-Format
 
 #include <QTextStream>
-//#include <QStringList>
 #include <QSettings>
-//#include <QList>
-//#include <QVariant>
 #include <QDebug>
-//#include <QUuid>
-//#include <QDir>
 
 #include <QFileSystemWatcher>
 
@@ -128,9 +123,13 @@ return 0 : sucess.
 		return;
 	}
 	
+	
     out.setEncoding(QStringConverter::Utf8);
     for(vector<task*>::iterator i=content.begin(); i!=content.end(); i++)
+        {
+        qDebug()<<"Writing: "<<(*i)->toSaveString()<<endline;
          out << (*i)->toSaveString() << "\n";
+         }
 
 	if (_TodoFile->isOpen()){
 	     _TodoFile->flush();
@@ -149,40 +148,30 @@ return 0 : sucess.
 }
 
 QFileSystemWatcher *watcher;
-void todotxt::clearMonitoring()
-/* */
-{
-    if(watcher != NULL){
-        delete watcher;
-        watcher = NULL;
-    }
-}
-
-void todotxt::setMonitoring(QObject *parent)
+void todotxt::setMonitoring(bool b, QObject *parent)
 /* */
 {
 	Q_UNUSED(parent);
-    watcher = new QFileSystemWatcher();
-    watcher->removePaths(watcher->files()); // Make sure this is empty. Should only be this file we're using in this program, and only one instance
-    watcher->addPath(_TodoFilePath);
-//    QObject::connect(watcher, SIGNAL(fileChanged(QString)), this, SLOT(fileModified(QString)));
-
+	if (b) {
+		qDebug()<<"Filesystemwtcher activated"<<endline;
+    	watcher = new QFileSystemWatcher();
+    	watcher->removePaths(watcher->files()); // Make sure this is empty. Should only be this file we're using in this program, and only one instance
+    	watcher->addPath(_TodoFilePath);
+    	QObject::connect(watcher, SIGNAL(fileChanged(QString)), this, SIGNAL(DataChanged()));
+		}
+	else {
+ 	   if(watcher != NULL){
+        delete watcher;
+        watcher = NULL;
+	}
+}
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+QString todotxt::getType()
+/* return type of Backend*/
+{
+	return "todotxt";
+}
 
 // #TODO  delete this?
 // re-use the code of "REMOVE_DOUBLETS"

@@ -66,6 +66,7 @@ class CompleteCommand : public QUndoCommand
 {
 public:
     explicit CompleteCommand(TodoTableModel* model, task* t, bool complete, QUndoCommand *parent = nullptr);
+    explicit CompleteCommand(TodoTableModel* model, task* t, QUndoCommand *parent = nullptr);
 	~CompleteCommand();
     void undo() override;
     void redo() override;

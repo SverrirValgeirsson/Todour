@@ -1,3 +1,5 @@
+// moved by GDE to a new files, static functions to simplify the code.
+// GPL
 
 #include <QDateTime>
 #include <QTextStream>

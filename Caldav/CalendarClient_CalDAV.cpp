@@ -863,6 +863,8 @@ void CalendarClient_CalDAV::sendRequestChanges(void)
                           "         <C:prop name=\"UID\"/>\r\n"
                           "         <C:prop name=\"DTSTART\"/>\r\n"
                           "         <C:prop name=\"DTEND\"/>\r\n"
+                          "         <C:prop name=\"LAST-MODIFIED\"/>\n"
+                          "		    <C:prop name=\"PARTSTAT\"/>\r\n"
                           "       </C:comp>\r\n"
                           "     </C:comp>\r\n"
                           "   </C:calendar-data>\r\n"

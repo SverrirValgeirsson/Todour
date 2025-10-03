@@ -138,8 +138,8 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
         int due=INT_MAX;
     	QSettings settings;
     	if(settings.value(SETTINGS_DUE).toBool()){
-    		if (task_set.at(index.row())->getDueDate().isValid()){
-				due = -(int) (task_set.at(index.row())->getDueDate().daysTo(QDateTime::currentDateTime()));
+    		if (task_set.at(index.row())->getDueDate()->isValid()){
+				due = -(int) (task_set.at(index.row())->getDueDate()->daysTo(QDateTime::currentDateTime()));
 			}
 		}
         bool active = true;
@@ -165,8 +165,8 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
     		}
 
     if (role == Qt::BackgroundRole && index.column()==1){
-		if (task_set.at(index.row())->getColor().isValid())
-			return QVariant::fromValue(task_set.at(index.row())->getColor().lighter(180));
+		if (task_set.at(index.row())->getColor()->isValid())
+			return QVariant::fromValue(task_set.at(index.row())->getColor()->lighter(180));
 	}
 
 		//Qt::UserRole is used for sorting. To use the power of regexp and QProxyModel, we will add a special code TODOUR_INACTIVE
@@ -185,7 +185,7 @@ QVariant TodoTableModel::data(const QModelIndex &index, int role) const
 
 	if(role == Qt::UserRole+1)  //UserRole+1 is used to sort by inputdate.
 	{
-		return task_set.at(index.row())->getInputDate().toString("yyyy-MM-dd");
+		return task_set.at(index.row())->getInputDate()->toString("yyyy-MM-dd");
 	}
 
 	return QVariant();

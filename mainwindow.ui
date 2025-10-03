@@ -81,6 +81,36 @@
         <property name="checkable">
          <bool>false</bool>
         </property>
+        <widget class="QMenu" name="sortMenu">
+        	<addaction name="sortAzAction"/>
+        	<addaction name="sortDateAction"/>
+        	<addaction name="sortInactiveAction"/>
+        </widget>
+        <action name="sortAzAction">
+   		 <property name="text">
+    	  <string>Sort alphabetically</string>
+   		 </property>
+   		 <property name="checkable">
+   		  <bool>true</bool>
+   		 </property>
+  		</action>
+        <action name="sortDateAction">
+   		 <property name="text">
+    	  <string>Sort by Input date</string>
+   		 </property>
+   		 <property name="checkable">
+   		  <bool>true</bool>
+   		 </property>
+  		</action>
+        <action name="sortInactiveAction">
+   		 <property name="text">
+    	  <string>Sort inactive last</string>
+   		 </property>
+   		 <property name="checkable">
+   		  <bool>true</bool>
+   		 </property>
+  		</action>
+  		
        </widget>
       </item>
       <item>
@@ -127,13 +157,6 @@ border-radius: 5px;
     </item>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_3">
-      <item>
-       <widget class="QListView" name="lv_activetags">
-        <property name="enabled">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
       <item>
        <widget class="QTableView" name="tableView">
         <property name="contextMenuPolicy">
@@ -258,6 +281,7 @@ border-radius: 5px;
     <addaction name="actionSave"/>
     <addaction name="actionSettings"/>
     <addaction name="actionPrint"/>
+    <addaction name="actionSync"/>
     <addaction name="actionQuit"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -272,6 +296,9 @@ border-radius: 5px;
     <property name="title">
      <string>Edit</string>
     </property>
+    <addaction name="copyAction"/>
+    <addaction name="undoAction"/>
+    <addaction name="redoAction"/>
    </widget>
    <widget class="QMenu" name="menuWindow">
     <property name="title">
@@ -284,12 +311,36 @@ border-radius: 5px;
    <addaction name="menuEdit"/>
    <addaction name="menuWindow"/>
    <addaction name="menuHelp"/>
+   <widget class="QMenu" name="rClickMenu">
+    <addaction name="editAction"/>
+    <addaction name="completeAction"/>
+    <addaction name="deleteAction"/>
+    <addaction name="postponeAction"/>
+    <addaction name="duplicateAction"/>
+    <addaction name="priorityMenu"/>
+
+  <widget class="QMenu" name="priorityMenu">
+     <property name="title">
+     <string>Priority: </string>
+    </property>
+    <addaction name="ApriorAction"/>
+	<addaction name="BpriorAction"/>
+    <addaction name="CpriorAction"/>
+    <addaction name="DpriorAction"/>
+  </widget>
+   </widget>
   </widget>
   <action name="actionSave">
    <property name="text">
     <string>Save</string>
    </property>
-  </action>  <action name="actionSettings">
+  </action>
+  <action name="actionSync">
+   <property name="text">
+    <string>Synchronize</string>
+   </property>
+  </action>
+  <action name="actionSettings">
    <property name="text">
     <string>Settings..</string>
    </property>
@@ -335,6 +386,74 @@ border-radius: 5px;
     <string>Manual..</string>
    </property>
   </action>
+  <action name="copyAction">
+   <property name="text">
+    <string>Copy</string>
+   </property>
+  </action>
+    <action name="undoAction">
+   <property name="text">
+    <string>Undo</string>
+   </property>
+    <property name="icon">
+     <iconset>icons/undo.png</iconset>
+     </property>
+  </action>
+    <action name="redoAction">
+   <property name="text">
+    <string>Redo</string>
+   </property>
+    <property name="icon">
+     <iconset>icons/redo.png</iconset>
+     </property>
+  </action>
+
+ 
+ <action name="editAction">
+  <property name="text">
+   <string>Edit</string>
+  </property>
+ </action>
+ <action name="completeAction">
+  <property name="text">
+   <string>Complete</string>
+  </property>
+ </action>
+ <action name="deleteAction">
+  <property name="text">
+   <string>Delete</string>
+  </property>
+ </action>
+ <action name="postponeAction">
+  <property name="text">
+   <string>Postpone +10p</string>
+  </property>
+ </action>
+ <action name="duplicateAction">
+  <property name="text">
+   <string>Duplicate</string>
+  </property>
+ </action>
+ <action name="ApriorAction">
+  <property name="text">
+   <string>(A) priority</string>
+  </property>
+ </action>
+ <action name="BpriorAction">
+  <property name="text">
+   <string>(B) priority</string>
+  </property>
+ </action>
+ <action name="CpriorAction">
+  <property name="text">
+   <string>(C) priority</string>
+  </property>
+ </action>
+ <action name="DpriorAction">
+  <property name="text">
+   <string>(D) priority</string>
+  </property>
+ </action> 
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <tabstops>

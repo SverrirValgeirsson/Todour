@@ -10,19 +10,17 @@
 static QRegularExpression regex_date("("+DATE_PAT+")(?:\\s*|$)");
 static QRegularExpression regex_reldate("(?<rdate>"+RDATE_PAT+")(?:\\s*|$)");
 
-static QRegularExpression regex_tuid("\\s+tuid:(?<tuid>.{8}-.{4}-.{4}-.{4}-.{12})");  //xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-static QRegularExpression regex_ttag("\\s+ttag:(?<ttag>\\d{10,15})");
-static QRegularExpression regex_url("[a-zA-Z0-9_]+:\\/\\/([-a-zA-Z0-9@:%_\\+.~#?&\\/=\\(\\)\\{\\}\\\\]*)");
-static QRegularExpression regex_color("\\s*color:([a-z]*)");
-static QRegularExpression regex_threshold_project("t:(\\+[^\\s]+)(?:\\s+|$)");
-static QRegularExpression regex_threshold_context("t:(\\@[^\\s]+)(?:\\s+|$)");
-static QRegularExpression regex_threshold_date("\\s+(t:" + DATE_PAT + ")(\\s+|$)");
-static QRegularExpression regex_threshold_date_r("\\s+(t:" + RDATE_PAT + ")(?:\\s+|$)");
+static QRegularExpression regex_url("(?:\\s+)[a-zA-Z0-9_]+:\\/\\/([-a-zA-Z0-9@:%_\\+.~#?&\\/=\\(\\)\\{\\}\\\\]*)");
+static QRegularExpression regex_color("(?:\\s+)color:([a-z]*)");
+static QRegularExpression regex_threshold_project("(?:\\s+)t:(\\+[^\\s]+)(?#\\s+|$)");
+static QRegularExpression regex_threshold_context("(?:\\s+)t:(\\@[^\\s]+)(?#\\s+|$)");
+static QRegularExpression regex_threshold_date("(?:\\s+)(t:" + DATE_PAT + ")(?#\\s+|$)");
+static QRegularExpression regex_threshold_date_r("(?:\\s+)(t:" + RDATE_PAT + ")(?#\\s+|$)");
 
-static QRegularExpression     regex_due_date("\\s+(due:" + DATE_PAT + ")(?:\\s*|$)");
-static QRegularExpression     regex_due_date_r("\\s+(due:" + RDATE_PAT + ")(?:\\s*|$)");
+static QRegularExpression     regex_due_date("(?:\\s+)(due:" + DATE_PAT + ")(?#\\s+|$)");
+static QRegularExpression     regex_due_date_r("(?:\\s+)(due:" + RDATE_PAT + ")(?#\\s+|$)");
 
-static QRegularExpression regex_rec("(rec:" + RDATE_PAT+")(?:\\s*|$)"); 
+static QRegularExpression regex_rec("(?:\\s+)(rec:" + RDATE_PAT+")(?#\\s+|$)"); 
 
 //preamble    //^(?:x\s+(?:\d\d\d\d-\d\d-\d\d\s)?)?(?:\(\w\)\s+)?(?:\d\d\d\d-\d\d-\d\d\s+)?
 static QRegularExpression regex_preamble("^(?<pxd>x\\s+"+DATE_PAT+"\\s)?(?<px>x\\s)?\\s*(?<ppr>\\(\\w\\)\\s)?\\s*(?<pid>"+DATE_PAT+"\\s)?\\s*(?<ptk>.*)$");
@@ -38,8 +36,8 @@ static QRegularExpression regex_todo_line("((^(?:x )+("+DATE_PAT+"(?:\\s+|$))?)+
 bool task::is_txt_compatible()
 /* Some checks to do if a task can be saved as todo.txt.  usefull?
    #IDEA: can make use of regex_todo_line ?
-*/
-{ return true;
+*/{
+	return true;
 }
 
 task::task(QString s, QString context, bool loaded)
@@ -49,12 +47,14 @@ task::task(QString s, QString context, bool loaded)
 */
 {
 //	qDebug()<<"task:task Task constructor s="<<s<<"  context="<<context<<"  loaded="<<loaded<<endline;
+	static QRegularExpression regex_tuid("\\s+tuid:(?<tuid>.{8}-.{4}-.{4}-.{4}-.{12})");  //xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+	static QRegularExpression regex_timetag("\\s+ttag:(?<ttag>\\d{10,15})");
+
 	QString ret=s;
-	if (loaded) //we loaded from the file, we should find the data in task (tuid + ttag)
+	if (loaded) //we loaded from the file, we should find the data in task (tuid + timetag)
 	{
 		auto match = regex_tuid.match(s);
-		if (match.hasMatch())
-		{
+		if (match.hasMatch()){
 			_tuid= QUuid::fromString(match.captured("tuid"));
 			ret.remove(regex_tuid);
 		}
@@ -62,11 +62,10 @@ task::task(QString s, QString context, bool loaded)
 			_tuid=QUuid::createUuid();
 
 
-		match = regex_ttag.match(s);
-		if (match.hasMatch())
-		{
+		match = regex_timetag.match(s);
+		if (match.hasMatch()){
 			_ttag= QDateTime::fromSecsSinceEpoch(match.captured("ttag").toLongLong());
-			ret.remove(regex_ttag);
+			ret.remove(regex_timetag);
 		}
 		if (!_ttag.isValid())
 			_ttag=QDateTime::currentDateTime();
@@ -82,7 +81,7 @@ task::task(QString s, QString context, bool loaded)
 				ret = ret+" "+context;
 		
 		_ttag=QDateTime::currentDateTime();
-		qDebug()<<" ttag:"+QString::number(_ttag.toSecsSinceEpoch())<<endline;
+//		qDebug()<<" ttag:"+QString::number(_ttag.toSecsSinceEpoch())<<endline;
 		parse(ret,true);
 
     	if(!inputD.isValid()&&(settings.value(SETTINGS_DATES).toBool()))
@@ -96,8 +95,7 @@ task::task(QString s, QString context, bool loaded)
 }
 
 task::task(QString s, QUuid tuid)
-/* */
-{
+/* */{
 	_raw=s;
 	_tuid= tuid;
 	_ttag=QDateTime::currentDateTime();
@@ -105,10 +103,9 @@ task::task(QString s, QUuid tuid)
 
 }
 
-
 task::task(task* copy)
-/* Creates a new task with a new TUID*/
-{
+/* Creates a new task with a new TUID
+*/{
 	setRaw(copy->getRaw());
 	//_tuid=copy->getTuid();
 	_tuid=QUuid::createUuid();
@@ -118,8 +115,7 @@ task::task(task* copy)
 
 task::~task()
 /*  nothing to do */
-{
-}
+{}
 
 void task::parse(QString s,bool strict)
 /* Update the fields because the "text" has changed.  Only tak care of relative dates...
@@ -334,10 +330,10 @@ task* task::setComplete(bool c)
 			QString tmp = matches.next().captured(1);
 			ret = new task(this);
 			if (settings.value(SETTINGS_DEFAULT_THRESHOLD,DEFAULT_DEFAULT_THRESHOLD) == "t:"){
-				ret->setThresholdDate(task::getRelativeDate(tmp));
+				ret->setThresholdDate(task::getRelativeDate(tmp, getThresholdDate()));
 				}
 			else{
-				ret->setDueDate(task::getRelativeDate(tmp));
+				ret->setDueDate(task::getRelativeDate(tmp, getDueDate()));
 				}
 			}
     	if(settings.value(SETTINGS_DATES).toBool())
@@ -405,12 +401,17 @@ QString task::getDescription() const
 
 QString task::toSaveString() const
 /* returns the full QString for saving, including all hidden data.
-*/
-{
+*/{
 	QString ret=getEditText();
 	ret.append(" tuid:"+_tuid.toString(QUuid::WithoutBraces));
 	ret.append(" ttag:"+QString::number(_ttag.toSecsSinceEpoch()));
 	return ret;
+}
+
+QString task::toSaveString_pureTODO() const
+/* returns the full QString for saving, including all hidden data.
+*/{
+	return getEditText();
 }
 
 QString task::toString() const
@@ -443,7 +444,7 @@ bool task::isActive() const
 {
 	QSettings settings;
 	bool ret=true;
-	ret &= (QDateTime::currentDateTime()>=getThresholdDate());
+	ret &= (QDateTime::currentDateTime()>=thrD);
 
 	QStringList words = settings.value(SETTINGS_INACTIVE,DEFAULT_INACTIVE).toString().split(';');
 	for (QString i:words){
@@ -455,12 +456,17 @@ bool task::isActive() const
 /*
 ====================================  STATIC FUNCTIONS ========================================
 */
-QDateTime task::getRelativeDate(QString d)
-/* static function, returns a QDate object based on the "relative" as described in regex_reldate
+QDateTime task::getRelativeDate(QString d, const QDateTime* base)
+/* static function, returns a QDateTime object based on the "relative" as described in regex_reldate
 */
 {
 	QSettings settings;
-    QDateTime ret = QDateTime::currentDateTime();
+	QDateTime ret;
+	if (base == nullptr)
+	    ret = QDateTime::currentDateTime();
+	else
+		ret = *base;
+		
     QRegularExpressionMatch m = regex_reldate.match(d);
 //	qDebug()<<"task::getRelativeDate match:"<<m.captured("rdate")<<endline;
     if (!m.hasMatch()) return QDateTime();
@@ -500,51 +506,11 @@ QDateTime task::getRelativeDate(QString d)
         return ret;
 }
 
-QString task::testRegularExpressions()
-/* static function, make a test on the RegularExpressions.
-Only for development, not planned to be used for production.
-*/
-{
-	if(! regex_todo_line.isValid()) return "regex_todo_line "+regex_todo_line.errorString();
-	if(! regex_tuid.isValid()) return "regex_tuid "+regex_tuid.errorString();
-	if(! regex_reldate.isValid()) return "regex_reldate "+regex_reldate.errorString();
-	if(! regex_url.isValid()) return "regex_url "+regex_url.errorString();
-	if(! regex_threshold_date.isValid()) return "regex_threshold_date "+regex_threshold_date.errorString();
-	if(! regex_due_date.isValid()) return "regex_due_date "+regex_due_date.errorString();
-	if(! regex_rec.isValid()) return "regex_rec "+regex_rec.errorString();
-	if(! regex_color.isValid()) return "regex_color "+regex_color.errorString();
-	if(! regex_priority.isValid()) return "regex_priority "+regex_priority.errorString();
-	if(! regex_done.isValid()) return "regex_done "+regex_done.errorString();
-	if(! regex_threshold_project.isValid()) return "regex_threshold_project "+regex_threshold_project.errorString();
-	if(! regex_threshold_context.isValid()) return "regex_threshold_context "+regex_threshold_context.errorString();
-
-qDebug()<<"  regex_date: "<<regex_date;
-qDebug()<<"  regex_reldate: "<<  regex_reldate;
-qDebug()<<"  regex_tuid: "<< regex_tuid;
-qDebug()<<"  regex_url: "<<  regex_url;
-qDebug()<<"  regex_color: "<<  regex_color;
-qDebug()<<"  regex_threshold_project: "<<  regex_threshold_project;
-qDebug()<<"  regex_threshold_context: "<<  regex_threshold_context;
-qDebug()<<"  regex_threshold_date: "<<  regex_threshold_date;
-qDebug()<<"  regex_due_date: "<<  regex_due_date;
-qDebug()<<"  regex_rec: "<<  regex_rec;
-qDebug()<<"  regex_preamble: "<<  regex_preamble;
-qDebug()<<"  regex_done: "<<  regex_done;
-qDebug()<<"  regex_completedate: "<<  regex_completedate;
-qDebug()<<"  regex_priority: "<<  regex_priority;
-qDebug()<<"  regex_inputdate: "<<  regex_inputdate;
-qDebug()<<"  regex_todo_line: "<<  regex_todo_line;
-
-
-
-
-return "testRegularExpressions finished";
-}
 
 
 void task::taskTestSession()
 {
-	qDebug()<<"Testing regularExpression : "<<task::testRegularExpressions()<<endline;
+//	qDebug()<<"Testing regularExpression : "<<task::testRegularExpressions()<<endline;
  	//test zone
 
 	qDebug()<<"Test zone: "<<endline;

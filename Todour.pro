@@ -15,7 +15,7 @@ DEFINES += VER=\"\\\"$${VERS}\\\"\"
 CONFIG += c++11
 CONFIG+=sdk_no_version_check
 CONFIG+=qt console
-CONFIG+=debug
+#CONFIG+=debug
 CONFIG+=fontAwesomeFree
 
 macx{

@@ -54,11 +54,11 @@ public:
 	task* setComplete(bool c = true);
 	void setRaw(QString s);
 
-	inline QDateTime getDueDate() const {return dueD;};
-	inline QDateTime getThresholdDate() const {return thrD;};
-	inline QDateTime getInputDate() const {return inputD;};
-	inline QChar getPriority()const {return priority;};
-	inline QColor getColor() const {return color;};
+	inline QDateTime const *getDueDate() {return &dueD;};
+	inline QDateTime const *getThresholdDate() {return &thrD;};
+	inline QDateTime const *getInputDate() {return &inputD;};
+	inline QChar const getPriority() {return priority;};
+	inline QColor const *getColor() {return &color;};
 	inline QUuid getTuid() const{return _tuid;}
 	inline Qt::CheckState isComplete() const {return complete;};
 	/*  */
@@ -83,14 +83,18 @@ public:
 	QString toSaveString() const;
 	/*returns the full QString for saving, including all hidden data.*/
 	
+	QString toSaveString_pureTODO() const;
+	/*returns the full QString for saving, including all hidden data.*/
+	
 	QString toString() const;
 	/*returns the full QString for debugging*/
 
 	inline QDateTime getTimeStamp() const {return _ttag;}
 
+
+
 // === static functions ===
-	static QDateTime getRelativeDate(QString d);
-	static QString testRegularExpressions();
+	static QDateTime getRelativeDate(QString d, const QDateTime *base = nullptr);
 	static void taskTestSession();	
 	
 	inline bool operator==(task &t){return t.getTuid()==_tuid;}

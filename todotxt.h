@@ -26,8 +26,7 @@ public:
     ~todotxt();
 
 	void getAllTask(vector<task*> &output);
-//	void clearMonitoring(); //gaetan 5/1/24
-	void setMonitoring(bool b,	 QObject *parent); //gaetan 5/1/24
+	void setMonitoring(bool b,	 QObject *parent=0); //gaetan 5/1/24
 	void reloadRequest();
 	void writeRequest(vector<task*>& content, TodoDestination t, bool append);
 	bool isReady();

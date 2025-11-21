@@ -4,13 +4,16 @@
 #include <QUndoCommand>
 #include "task.h"
 #include "todotablemodel.h"
+#include "taskset.h"
 
 using namespace std;
+
+//TODO: consider a masterclass doing all the common stuff??
 
 class AddCommand : public QUndoCommand
 {
 public:
-    explicit AddCommand(TodoTableModel* model, task* _t, QUndoCommand *parent = nullptr);
+    explicit AddCommand(taskset* _list, task* _t, QUndoCommand *parent = nullptr);
     ~AddCommand();
 
     void undo() override;
@@ -21,14 +24,14 @@ public:
 protected:
     task* _task;
     TodoTableModel* _model;
-
+	taskset* tasklist;
 };
 
 
 class DeleteCommand : public QUndoCommand
 {
 public:
-    explicit DeleteCommand(TodoTableModel* model, QUuid index, QUndoCommand *parent = nullptr);
+    explicit DeleteCommand(taskset* _list, QUuid index, QUndoCommand *parent = nullptr);
 	~DeleteCommand();
     void undo() override;
     void redo() override;
@@ -38,6 +41,7 @@ public:
 protected:
 	task* _task;
 	TodoTableModel* _model;
+	taskset* tasklist;
  	QUuid _tuid;
 
 
@@ -47,7 +51,7 @@ protected:
 class EditCommand : public QUndoCommand
 {
 public:
-    explicit EditCommand(TodoTableModel* model, task* t, QString new_raw, QUndoCommand *parent = nullptr);
+    explicit EditCommand(taskset* _list, task* t, QString new_raw, QUndoCommand *parent = nullptr);
 	~EditCommand();
     void undo() override;
     void redo() override;
@@ -59,14 +63,15 @@ protected:
 	QString _old_raw;
 	QString _new_raw;
 	TodoTableModel* _model;
+	taskset* tasklist;
     };
 
 
 class CompleteCommand : public QUndoCommand
 {
 public:
-    explicit CompleteCommand(TodoTableModel* model, task* t, bool complete, QUndoCommand *parent = nullptr);
-    explicit CompleteCommand(TodoTableModel* model, task* t, QUndoCommand *parent = nullptr);
+    explicit CompleteCommand(taskset* _list, task* t, bool complete, QUndoCommand *parent = nullptr);
+    explicit CompleteCommand(taskset* _list, task* t, QUndoCommand *parent = nullptr);
 	~CompleteCommand();
     void undo() override;
     void redo() override;
@@ -78,13 +83,14 @@ protected:
 	task* rec_task;
 	bool _complete;
 	TodoTableModel* _model;
+	taskset* tasklist;
 
 };
 
 class PriorityCommand : public QUndoCommand
 {
 public:
-    explicit PriorityCommand(TodoTableModel* model, task* t, QChar prio, QUndoCommand *parent = nullptr);
+    explicit PriorityCommand(taskset* _list, task* t, QChar prio, QUndoCommand *parent = nullptr);
 	~PriorityCommand();
     void undo() override;
     void redo() override;
@@ -96,13 +102,14 @@ protected:
 	QChar _priority;
 	QChar _p_priority;
 	TodoTableModel* _model;
+	taskset* tasklist;
 
 };
 
 class PostponeCommand : public EditCommand
 {
 public:
-    explicit PostponeCommand(TodoTableModel* model, task* t, QString _postp, QUndoCommand *parent = nullptr);
+    explicit PostponeCommand(taskset* _list, task* t, QString _postp, QUndoCommand *parent = nullptr);
 	~PostponeCommand();
 	
 private:

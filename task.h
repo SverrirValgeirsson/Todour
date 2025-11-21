@@ -32,6 +32,7 @@ private:
 	QDateTime dueD;
 	QDateTime thrD;
 	Qt::CheckState complete ;
+	bool active;
 	
 public:
 	task(QString s="", QString context="", bool loaded=false);
@@ -54,6 +55,8 @@ public:
 	task* setComplete(bool c = true);
 	void setRaw(QString s);
 
+	void forceActive(bool state);
+	
 	inline QDateTime const *getDueDate() {return &dueD;};
 	inline QDateTime const *getThresholdDate() {return &thrD;};
 	inline QDateTime const *getInputDate() {return &inputD;};
@@ -63,7 +66,9 @@ public:
 	inline Qt::CheckState isComplete() const {return complete;};
 	/*  */
 	
-	bool isActive() const;
+	void refreshActive(QDateTime now);
+	
+	inline bool isActive() const {return active;};
 	/* */
 
 	QString getURL() const;

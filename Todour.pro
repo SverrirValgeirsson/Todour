@@ -39,6 +39,7 @@ SOURCES += main.cpp\
     aboutbox.cpp \
     quickadddialog.cpp \
     task.cpp \
+    taskset.cpp\
     version.cpp \
     todo_undo.cpp \
     caldav.cpp \
@@ -58,6 +59,7 @@ HEADERS  += mainwindow.h \
     quickadddialog.h \
     def.h \
     task.h \
+    taskset.h \
     version.h \
     todo_undo.h \
     todo_backend.h \

@@ -200,6 +200,8 @@ void task::parse(QString s,bool strict)
 
 	_ttag=QDateTime::currentDateTime();
 
+	this->refreshActive(QDateTime::currentDateTime());
+
 //	qDebug()<<"task::parse "<<toString()<<endline;
 }
 
@@ -311,6 +313,12 @@ void task::setRaw(QString s)
 {
 	parse(s);
 }
+
+void task::forceActive(bool state)
+/* Force the status of a task to active, until next refresh.*/
+{
+	this->active = state;
+	}
 
 task* task::setComplete(bool c)
 /* Mark the task as completed.
@@ -433,7 +441,7 @@ QString task::toString() const
 
 
 
-bool task::isActive() const
+void task::refreshActive(QDateTime now)
 /* returns true if the task is active. Active means:
 	- threshold date not greater than today
 	- task not completed
@@ -444,13 +452,13 @@ bool task::isActive() const
 {
 	QSettings settings;
 	bool ret=true;
-	ret &= (QDateTime::currentDateTime()>=thrD);
+	ret &= (now >= thrD);
 
 	QStringList words = settings.value(SETTINGS_INACTIVE,DEFAULT_INACTIVE).toString().split(';');
 	for (QString i:words){
 		ret &= ! _raw.contains(i);
 		}
-	return ret;
+	this->active = ret;
 }
 
 /*

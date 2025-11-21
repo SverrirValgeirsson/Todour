@@ -2,8 +2,8 @@
 #include "def.h"
 #include <QDebug>
 
-AddCommand::AddCommand(TodoTableModel* model, task* _t, QUndoCommand *parent)
-    : QUndoCommand(parent), _model(model)
+AddCommand::AddCommand(taskset* _list, task* _t, QUndoCommand *parent)
+    : QUndoCommand(parent), tasklist(_list)
 /* */
 {
 	_task = _t;
@@ -18,14 +18,14 @@ void AddCommand::undo()
 /* undo() of addCommand is a remove
 */
 {
-	_model->removeTask(_task->getTuid());
+	tasklist->removeTask(_task->getTuid());
 }
 
 void AddCommand::redo()
 /* redo() add is adding again
 */
 {
-	_model->addTask(_task);
+	tasklist->addTask(_task);
 }
 
 int AddCommand::id() const
@@ -38,8 +38,8 @@ return false;}
 
 // §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
 
-DeleteCommand::DeleteCommand(TodoTableModel* model, QUuid index, QUndoCommand *parent)
-    : QUndoCommand(parent), _model(model), _tuid(index)
+DeleteCommand::DeleteCommand(taskset* _list, QUuid index, QUndoCommand *parent)
+    : QUndoCommand(parent), tasklist(_list), _tuid(index)
 /*	_task = is initialised in the redo */
 {
 	setText("Delete");
@@ -53,7 +53,7 @@ void DeleteCommand::undo()
 /* UNDO DELETE means we have to add a task in the list.
 */
 {
-	_model->addTask(_task);
+	tasklist->addTask(_task);
 }
 
 void DeleteCommand::redo()
@@ -61,7 +61,7 @@ void DeleteCommand::redo()
 {
 	// as far as I know, <vector> doesn't actually delete the object.
 	//_task=_model->getTask(_tuid);
-	_task = _model->removeTask(_tuid);
+	_task = tasklist->removeTask(_tuid);
 	//qDebug()<<"DeleteCommand::redo()  _task="<<_task->toString()<<endline;
 }
 
@@ -81,8 +81,8 @@ bool DeleteCommand::mergeWith(const QUndoCommand *other)
 
 // §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
 
-EditCommand::EditCommand(TodoTableModel* model, task* t, QString new_raw, QUndoCommand *parent)
-    :QUndoCommand(parent), _task(t), _model(model)
+EditCommand::EditCommand(taskset* _list, task* t, QString new_raw, QUndoCommand *parent)
+    :QUndoCommand(parent), _task(t), tasklist(_list)
 /* */
 {
 	_old_raw = t->getRaw();
@@ -122,16 +122,16 @@ bool EditCommand::mergeWith(const QUndoCommand *other)
 
 // §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
 
-CompleteCommand::CompleteCommand(TodoTableModel* model, task* t, bool complete, QUndoCommand *parent)
-    :QUndoCommand(parent), _task(t),_complete(complete), _model(model)
+CompleteCommand::CompleteCommand(taskset* _list, task* t, bool complete, QUndoCommand *parent)
+    :QUndoCommand(parent), _task(t),_complete(complete), tasklist(_list)
 /* */
 {
 	setText("Complete");
 	rec_task = nullptr;
 }
 
-CompleteCommand::CompleteCommand(TodoTableModel* model, task* t, QUndoCommand *parent)
-    :QUndoCommand(parent), _task(t), _model(model)
+CompleteCommand::CompleteCommand(taskset* _list, task* t, QUndoCommand *parent)
+    :QUndoCommand(parent), _task(t), tasklist(_list)
 /* */
 {
 	setText("Complete");
@@ -141,15 +141,14 @@ CompleteCommand::CompleteCommand(TodoTableModel* model, task* t, QUndoCommand *p
 
 CompleteCommand::~CompleteCommand()
 /* #TODO  check*/
-{
-}
+{}
 
 void CompleteCommand::undo()
 /* */
 {
 	_task->setComplete(!_complete);
 	if (rec_task != nullptr)
-			_model->removeTask(rec_task->getTuid());
+			tasklist->removeTask(rec_task->getTuid());
 	
 }
 
@@ -158,7 +157,7 @@ void CompleteCommand::redo()
 {
 	rec_task=_task->setComplete(_complete);
 	if (rec_task != nullptr)
-			_model->addTask(rec_task);
+			tasklist->addTask(rec_task);
 }
 
 int CompleteCommand::id() const
@@ -176,8 +175,8 @@ bool CompleteCommand::mergeWith(const QUndoCommand *other)
 
 // §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
 
-PriorityCommand::PriorityCommand(TodoTableModel* model, task* t, QChar prio, QUndoCommand *parent)
-    :QUndoCommand(parent), _task(t), _priority(prio), _model(model)
+PriorityCommand::PriorityCommand(taskset* _list, task* t, QChar prio, QUndoCommand *parent)
+    :QUndoCommand(parent), _task(t), _priority(prio), tasklist(_list)
 /* */
 {
 	setText("Priority");
@@ -216,8 +215,8 @@ bool PriorityCommand::mergeWith(const QUndoCommand *other)
 
 // §§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§§
 
-PostponeCommand::PostponeCommand(TodoTableModel* model, task* t, QString postp, QUndoCommand *parent)
-    :EditCommand(model, t,"",parent)
+PostponeCommand::PostponeCommand(taskset* _list, task* t, QString postp, QUndoCommand *parent)
+    :EditCommand(_list, t,"",parent)
 /* */
 {
 //	QSettings

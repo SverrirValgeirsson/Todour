@@ -50,6 +50,18 @@
         </property>
        </widget>
       </item>
+
+      <item>
+       <widget class="QPushButton" name="syncButton">
+        <property name="CalDAV sync">
+         <string>Sync now</string>
+        </property>
+        <property name="text">
+         <string>S</string>
+        </property>
+       </widget>
+      </item>
+
       <item>
        <spacer name="horizontalSpacer">
         <property name="orientation">
@@ -190,6 +202,40 @@ border-radius: 5px;
       </item>
      </layout>
     </item>
+
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QListView" name="ideaView">
+        <property name="contextMenuPolicy">
+         <enum>Qt::CustomContextMenu</enum>
+        </property>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarAsNeeded</enum>
+        </property>
+        <property name="autoScroll">
+         <bool>true</bool>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>false</bool>
+        </property>
+        <property name="textElideMode">
+         <enum>Qt::ElideRight</enum>
+        </property>
+        <property name="wordWrap">
+         <bool>false</bool>
+        </property>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderHighlightSections">
+         <bool>false</bool>
+        </attribute>
+       </widget>
+      </item>
+     </layout>
+    </item>
+
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
@@ -462,6 +508,7 @@ border-radius: 5px;
   <tabstop>lineEditFilter</tabstop>
   <tabstop>archiveButton</tabstop>
   <tabstop>refreshButton</tabstop>
+  <tabstop>syncButton</tabstop>
  </tabstops>
  <resources>
   <include location="resources.qrc"/>

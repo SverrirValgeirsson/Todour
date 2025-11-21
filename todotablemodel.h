@@ -3,26 +3,20 @@
 
 #include <QAbstractTableModel>
 #include <QMouseEvent>
-#include "todo_backend.h"
 #include "task.h"
 #include <QUndoStack>
 #include <vector>
-
-
+#include "taskset.h"
 
 #define TODOUR_INACTIVE "TODOUR_INACTIVE_794e26fdf5ea"
-
 
 class TodoTableModel : public QAbstractTableModel
 {
     Q_OBJECT
 protected:
-//    todotxt *todo; // interface with files
-  todo_backend  *todo;
-    vector<task*> task_set;
-
+	taskset* tasklist;
 public:
-    explicit TodoTableModel(QUndoStack* undo, QObject *parent = 0);
+    explicit TodoTableModel(taskset* _tasklist, QObject *parent = 0);
     ~TodoTableModel();
     int rowCount(const QModelIndex &parent) const;
     int columnCount(const QModelIndex &parent) const;
@@ -30,32 +24,43 @@ public:
     QVariant data(const QModelIndex &index, int role) const;
     QVariant headerData(int section, Qt::Orientation orientation, int role) const;
     Qt::ItemFlags flags(const QModelIndex& index) const;
- 	bool setData(const QModelIndex & index, const QVariant & value, int role);
-//    int count();
+ 	 bool setData(const QModelIndex & index, const QVariant & value, int role);
+	 inline task* getTask(QModelIndex index) {return (tasklist->at(index.row()));};
 
-    void addTask(task* t);
-    task* removeTask(QUuid tuid);
-	task* getTask(QUuid tuid);
-	task* getTask(QModelIndex index);
-
-    void archive();
-    void refresh();
-    int flush();
-            
-//   inline void clearFileWatch(){   todo->clearMonitoring();}; //gaetan 5/1/24
-   inline void setFileWatch(bool b, QObject *parent){   todo->setMonitoring(b, parent);}; //gaetan 5/1/24
+    void refresh();    
+//    void refreshActive(); //cycle through all task to recalculate the active state
 	QString toString();
 
 signals:
-	void dataSavedOK();
-	void backendError();
 	
 public slots:
-    void backendDataLoaded();
-    void backendDataSaved();
-    void toggleDone(QModelIndex &index);
 private:
-	QUndoStack* _undo;
+
 };
+
+
+class IdeaTableModel : public TodoTableModel
+{
+    Q_OBJECT
+protected:
+public:
+    explicit IdeaTableModel(taskset* _tasklist, QObject *parent = 0);
+    ~IdeaTableModel();
+    int columnCount(const QModelIndex &parent) const;
+
+    QVariant data(const QModelIndex &index, int role) const;
+    QVariant headerData(int section, Qt::Orientation orientation, int role) const;
+    Qt::ItemFlags flags(const QModelIndex& index) const;
+ 	 bool setData(const QModelIndex & index, const QVariant & value, int role);
+
+//    void refresh();    
+
+signals:
+	
+public slots:
+private:
+
+};
+
 
 #endif // TODOTABLEMODEL_H

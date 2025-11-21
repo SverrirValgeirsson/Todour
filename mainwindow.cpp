@@ -8,7 +8,7 @@
 #include "aboutbox.h"
 #include "def.h"
 
-#include "todo_undo.h"
+//#include "todo_undo.h"
 
 #include <QTime>
 #include <QDebug>
@@ -28,7 +28,10 @@
 #define NEW_VERSION_STRING "<a href=\"http://nerdur.com/todour-pl\">http://nerdur.com/todour-pl</a>"
 
 
+//new objects: ideaView, syncButton
+
 TodoTableModel *model=NULL;
+IdeaTableModel* ideas=NULL;
 QString saved_selection; // Used for selection memory
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -78,8 +81,6 @@ MainWindow::MainWindow(QWidget *parent) :
     	// add a always working function. If todour is launched with -a flag, only show the "taskadd" and close.
     	this->on_hotkey();
     }
-
-
 
 
     // Restore the position of the window
@@ -139,7 +140,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		connect(ui->BpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityB()));
 		connect(ui->CpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityC()));
 		connect(ui->DpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityD()));
-	    connect(ui->copyAction,SIGNAL(triggered()),this,SLOT(on_actionCopy()));
+	   connect(ui->copyAction,SIGNAL(triggered()),this,SLOT(on_actionCopy()));
 
 
 	//undo
@@ -170,15 +171,30 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
     // Started. Lets open the todo.txt file, parse it and show it.
-    model = new TodoTableModel(_undoStack,this);
+    task_set = new taskset(_undoStack,this);
+    model = new TodoTableModel(task_set,this);
+    ideas = new IdeaTableModel(task_set, this);
 
     proxyModel = new QSortFilterProxyModel(this);
     proxyModel->setSourceModel(model);
     proxyModel->setFilterRole(Qt::UserRole);
     proxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
     ui->tableView->setModel(proxyModel);
+    
+    ideaProxyModel = new QSortFilterProxyModel(this);
+    ideaProxyModel->setSourceModel(ideas);
+    ideaProxyModel->setFilterRole(Qt::UserRole);
+    ideaProxyModel->setFilterCaseSensitivity(Qt::CaseInsensitive);
+    ui->ideaView->setModel(ideaProxyModel);
+    ideaProxyModel->setFilterRegularExpression(QString("^((?!")+QString(TODOUR_INACTIVE)+QString(").)*$"));
+    ideaProxyModel->setFilterKeyColumn(0);
+
+    
     ui->tableView->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
     ui->tableView->resizeColumnToContents(0); // Checkboxes kept small
+//    ui->ideaView->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
+//    ui->ideaView->resizeColumnToContents(0); // Checkboxes kept small
+
 //	updateSearchResults();
 
     setFileWatch();
@@ -204,6 +220,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->btn_Alphabetical->setChecked(settings.value(SETTINGS_SORT_ALPHA).toBool());
     QObject::connect(model,SIGNAL(dataChanged (const QModelIndex , const QModelIndex )), this, 
     		SLOT(dataInModelChanged(QModelIndex,QModelIndex)));
+    QObject::connect(ideas,SIGNAL(dataChanged (const QModelIndex , const QModelIndex )), this, 
+    		SLOT(dataInModelChanged(QModelIndex,QModelIndex)));
 
     updateSearchResults(); // Since we may have set a value in the search window
 	on_actionSortAZ();
@@ -214,8 +232,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	QObject::connect(autoSaver,SIGNAL(timeout()),this,SLOT(on_actionSave_triggered()));
 	// #TODO put this as a setting: autosave on/off?
 	autoSaver->start(1000*60*15); // milliseconds
-
-//	QObject::connect(_undoStack,SIGNAL(cleanChanged()),this,SLOT(updateTitle())); // if the _undoStack changes, update the title. NOPE
 
 	QShortcut* spaceDone = new QShortcut(ui->tableView);
 	spaceDone->setKey(Qt::Key_Space);
@@ -237,14 +253,16 @@ We need to update the title + ?
 }
 
 MainWindow::~MainWindow()
-{
+/*
+*/{
     delete ui;
     delete model;
+    delete ideas;
 }
 
-/* */
 void MainWindow::updateTitle()
-{
+/*
+*/{
     if(proxyModel != NULL){
         int visible = proxyModel->rowCount();
         int total = proxyModel->sourceModel()->rowCount();
@@ -255,21 +273,22 @@ void MainWindow::updateTitle()
 	}
 }
 
-/* */
 void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
-{
+/*
+*/{
 	ui->rClickMenu->popup(ui->tableView->viewport()->mapToGlobal(pos));
 }
 
 /* Activate the filewatching. when enabled, subsystem should monitor the file and keep the display up to date.
 */
 void MainWindow::setFileWatch()
-{
+/*
+*/{
 QSettings settings;
 //    model->clearFileWatch();
 //    if(! settings.value(SETTINGS_AUTOREFRESH).toBool())
 //           return;
-   model->setFileWatch(settings.value(SETTINGS_AUTOREFRESH).toBool(),(QObject*) this);
+   task_set->setFileWatch(settings.value(SETTINGS_AUTOREFRESH).toBool(),(QObject*) this);
 }
 
 void MainWindow::setHotkey(){
@@ -311,7 +330,8 @@ void MainWindow::on_cb_threshold_inactive_stateChanged(int arg1)
 }
 
 void MainWindow::on_lineEditFilter_returnPressed()
-/* */{
+/* 
+*/{
 	QSettings settings;
     bool liveUpdate = settings.value(SETTINGS_LIVE_SEARCH).toBool();
 
@@ -326,8 +346,6 @@ void MainWindow::updateSearchResults()
 */{
     // Take the text of the format of match1 match2 !match3 and turn it into
     //(?=.*match1)(?=.*match2)(?!.*match3) - all escaped of course   
-//    qDebug()<<"MainWindow::updateSearchResults step 1"<<endline;
-    
 	QSettings settings;    
     QChar search_not_char = settings.value(SETTINGS_SEARCH_NOT_CHAR,DEFAULT_SEARCH_NOT_CHAR).toChar();
     QStringList words = ui->lineEditFilter->text().split(QRegularExpression("\\s+"));
@@ -343,7 +361,7 @@ void MainWindow::updateSearchResults()
         	regexpstring += STARTN+QRegularExpression::escape(word.remove(0,1))+".*$)";
         }else{
 	        regexpstring += START+QRegularExpression::escape(word)+".*$)";
-    }
+    	}
     }
 
     if (!settings.value(SETTINGS_THRESHOLD_INACTIVE,DEFAULT_THRESHOLD_INACTIVE).toBool() 
@@ -353,8 +371,7 @@ void MainWindow::updateSearchResults()
     	regexpstring +=TODOUR_INACTIVE;
     	regexpstring +=".*$)";	 
     } 
-    
-//    qDebug()<<" MainWindow::updateSearchResult: "<<regexpstring<<endline;
+
     QRegularExpression regexp(regexpstring);	
     proxyModel->setFilterRegularExpression(regexp);
     proxyModel->setFilterKeyColumn(1);
@@ -362,7 +379,8 @@ void MainWindow::updateSearchResults()
 }
 
 void MainWindow::on_actionSortAZ()
-/* sorts the list A to Z*/{
+/* sorts the list A to Z
+*/{
 	ui->sortDateAction->setChecked(false);
 	ui->sortAzAction->setChecked(true);
 
@@ -370,14 +388,16 @@ void MainWindow::on_actionSortAZ()
 }
 
 void MainWindow::on_actionSortDate()
-/* sorts the list by input date DECREASING*/{
+/* sorts the list by input date DECREASING
+*/{
 	ui->sortAzAction->setChecked(false);
 	ui->sortDateAction->setChecked(true);
 	updateSort();
 }
 
 void MainWindow::on_actionSortInactive()
-/* */{
+/* 
+*/{
 	QSettings settings;
 	settings.setValue(SETTINGS_SEPARATE_INACTIVES,ui->sortInactiveAction->isChecked());
 //	qDebug()<<"setting value = "<<settings.value(SETTINGS_SEPARATE_INACTIVES,DEFAULT_SEPARATE_INACTIVES).toBool()<<endline;
@@ -386,7 +406,8 @@ void MainWindow::on_actionSortInactive()
 }
 
 void MainWindow::updateSort()
-/* */{
+/* 
+*/{
 	proxyModel->invalidate();
 	if(ui->sortAzAction->isChecked()){
 	qDebug()<<"updateSort case 1"<<endline;
@@ -524,8 +545,7 @@ void MainWindow::iconActivated(QSystemTrayIcon::ActivationReason reason)
 
 void MainWindow::on_addButton_clicked()
 /* */{
-    // Adding a new value into the model
-   	QSettings settings;
+   QSettings settings;
 	QString txt = ui->lineEditNew->text();
 	QString context = "";
     if(ui->context_lock->isChecked()){
@@ -552,20 +572,22 @@ void MainWindow::on_addButton_clicked()
 }
 
 void MainWindow::addTodo(QString &s, QString cont)
-/* #TODO the effective adding must happen in the model.
+/* 
 */{
-   	QSettings settings;
-    QString prio="";
-    task* t = new task(s,cont);
- 	_undoStack->push(new AddCommand(model,t));
+	QSettings settings;
+	task* t = new task(s,cont);
+	task_set->safeAdd(t);
+
 	model->refresh();
-    updateTitle();
+	ideas->refresh();
+   updateTitle();
 }
 
 void MainWindow::on_archiveButton_clicked()
 /* // Archive action.
 */{
-    model->archive();
+//TODO: refresh the view
+	task_set->archive();
     _undoStack->clear(); //no undo possible anymore.
 	
     updateTitle();
@@ -575,14 +597,29 @@ void MainWindow::on_refreshButton_clicked()
 /*// This is the Refresh button
 */{
     model->refresh();
+    ideas->refresh();
     updateTitle();
 }
+
+void MainWindow:: on_syncButton_clicked()
+/* This is the sync button. It should initiate a sync, according to QSettings + eventually ask a password
+TODO: this is currently only used for testing the second task window.
+*/{
+	if (ui->ideaView->isVisible()){
+		ui->ideaView->setVisible(false);
+		ui->cb_threshold_inactive->setVisible(true);}
+	else {
+		ui->ideaView->setVisible(true	);
+		ui->cb_threshold_inactive->setVisible(false);}
+//	ui->actionSync->trigger();
+	}
+
 
 void MainWindow::on_actionSave_triggered()
 /* */{
 	if (_undoStack->isClean()) //nothing to do
 			return;
-	model->flush();
+	task_set->flush();
     _undoStack->setClean();
 }
 
@@ -591,7 +628,7 @@ void MainWindow::cleanup()
 	QSettings settings;
 	qDebug()<<"Clean up ..."<<endline;	
 
-	model->flush();
+	task_set->flush();
     settings.setValue( SETTINGS_GEOMETRY, saveGeometry() );
     settings.setValue( SETTINGS_SAVESTATE, saveState() );
     settings.setValue( SETTINGS_MAXIMIZED, isMaximized() );
@@ -643,6 +680,7 @@ void MainWindow::on_actionUndo()
 /* */{
 	_undoStack->undo();
 	model->refresh();
+	ideas->refresh();
 	updateTitle();
 }
 
@@ -650,15 +688,15 @@ void MainWindow::on_actionRedo()
 /* */{
 	_undoStack->redo();
 	model->refresh();
+	ideas->refresh();
 	updateTitle();
 }
 
 void MainWindow::on_actionSpace()
 /*  */{
-// #TODO: check that the selection is valid before using it
    QModelIndex index = proxyModel->mapToSource(ui->tableView->selectionModel()->currentIndex());
     if(index.isValid()){
-        model->toggleDone(index);
+        //model->toggleDone(index);
         ui->tableView->selectionModel()->setCurrentIndex(proxyModel->mapFromSource(index), QItemSelectionModel::SelectCurrent);
     }
     
@@ -677,28 +715,22 @@ void MainWindow::on_actionEdit()
 void MainWindow::on_actionComplete()
 /* user clicked "Complete" on a set of tasks. 
 */{
-
-	//qDebug()<<"MainWindow::on_actionComplete: selectionModel()->currentIndex= "<<proxyModel->mapToSource(ui->tableView->selectionModel()->currentIndex())<<endline;
-
 	_undoStack->beginMacro("completion");
     QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
 	for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
-		_undoStack->push(new CompleteCommand(model,model->getTask(proxyModel->mapToSource(*i)),true));
+		task_set->safeComplete((proxyModel->mapToSource(*i)).row(),true);
 		}
 		
 	_undoStack->endMacro(); 
-	model->refresh();   
+	model->refresh();
     updateTitle();
 
 }
 
 void MainWindow::on_actionDelete()
 /* User clicked on "Delete". We remove the selected items
-
-	#TODO the undo_cmd should be in the model.
 */{
     QModelIndexList indexes = proxyModel->mapSelectionToSource(ui->tableView->selectionModel()->selection()).indexes();
-//    qDebug()<<"MainWindow::on_actionDelete() indexes:"<<indexes<<endline;
     QList<QUuid> tuidL;
 	if (!indexes.isEmpty()){
 		for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
@@ -707,11 +739,12 @@ void MainWindow::on_actionDelete()
 
 		_undoStack->beginMacro("deletion");			
 		for (QList<QUuid>::iterator j=tuidL.begin();j!=tuidL.end();++j){
-			_undoStack->push(new DeleteCommand(model,*j));
+			task_set->safeDelete(*j);
 		}
 		
 		_undoStack->endMacro();    
 		model->refresh();
+		ideas->refresh();
     	updateTitle();
     }
 }
@@ -719,18 +752,13 @@ void MainWindow::on_actionDelete()
 
 void MainWindow::on_actionPostpone()
 /* User clicked on Postpone. We postpone the task for a default value.
-  Issue: make a setting for this default postpone.
-  
-  
-  #TODO  the undo_cmd should be in the model
+  TODO: make a setting for this default postpone.  
 */{
-// #TODO  Get the postpone value from QSettings...
     QModelIndexList indexes = proxyModel->mapSelectionToSource(ui->tableView->selectionModel()->selection()).indexes();
     if(!indexes.empty()){
  		_undoStack->beginMacro("postpone");			   
 		for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
-			//model->postponeTasks(indexes,"t:+10d");
-			_undoStack->push(new PostponeCommand(model, model->getTask(*i), " t:+10d"));
+			task_set->safePostpone(i->row(),"t:+10d");
 		}
 		_undoStack->endMacro();    
 		model->refresh();
@@ -740,17 +768,16 @@ void MainWindow::on_actionPostpone()
 
 void MainWindow::on_actionDuplicate()
 /* User has clicked on "Duplicate". We need to make a copy of task and 
-
-  #TODO  the undo_cmd should be in the model
 */{
 	QModelIndexList indexes = proxyModel->mapSelectionToSource(ui->tableView->selectionModel()->selection()).indexes();
 	if (! indexes.isEmpty()){
 		_undoStack->beginMacro("duplicate");
 		for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
-			_undoStack->push(new AddCommand(model,new task(model->getTask(*i))));
+			task_set->safeAdd(new task(task_set->at(i->row())));
 		}
 		_undoStack->endMacro();   
 		model->refresh(); 
+		ideas->refresh();
 		updateTitle();
 
 	}
@@ -765,7 +792,7 @@ void MainWindow::on_actionPriority(QChar p)
     if(!indexes.empty()){
    		_undoStack->beginMacro("completion");
 	    for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
-			_undoStack->push(new PriorityCommand(model,model->getTask(*i), p));
+			task_set->safePriority(i->row(), p);
 		}
 
 		_undoStack->endMacro();   

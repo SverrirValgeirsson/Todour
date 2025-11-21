@@ -15,6 +15,7 @@
 
 #include <memory>
 #include "version.h"
+#include "taskset.h"
 
 namespace Ui {
 class MainWindow;
@@ -40,6 +41,7 @@ private slots:
     inline void on_lineEditNew_returnPressed() {on_addButton_clicked();}
     void on_archiveButton_clicked();
     void on_refreshButton_clicked();
+    void on_syncButton_clicked();
     void on_lineEditFilter_returnPressed();
     void on_hotkey();
     void on_context_lock_toggled(bool checked);
@@ -89,6 +91,7 @@ private slots:
 
 private:
     QSortFilterProxyModel *proxyModel;
+    QSortFilterProxyModel *ideaProxyModel;
 
     void setFileWatch();
     void setTray();
@@ -119,6 +122,7 @@ private:
     
 	todour_version *Version;
 	
+	taskset* task_set;
 	QUndoStack* _undoStack;
            
     QCompleter* _taglist;

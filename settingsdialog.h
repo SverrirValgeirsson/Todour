@@ -45,6 +45,8 @@ private slots:
 private:
     Ui::SettingsDialog *ui;
     void updateFonts();
+    
+signals:
 };
 
 #endif // SETTINGSDIALOG_H

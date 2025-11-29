@@ -10,6 +10,7 @@
 class todo_backend;
 
 #define TODOUR_INACTIVE "TODOUR_INACTIVE_794e26fdf5ea"
+// this should be removed if the model / proxy is good.
 
 
 class taskset:public QObject
@@ -19,10 +20,9 @@ class taskset:public QObject
 private:
 
 protected:
-//    todotxt *todo; // interface with files
 	todo_backend  *todo;
-	todo_backend *caldav;
-   std::vector<task*> task_set;  //RENAME THIS
+	todo_backend *cdav_client;
+   std::vector<task*> content;  //RENAME THIS
 
 public:
     explicit taskset(QUndoStack* undo, QObject *parent = 0);
@@ -40,10 +40,10 @@ public:
     
 	 task* getTask(QUuid tuid);
 	 task* getTask(int position);
-	 inline task* at(int position) const {return task_set.at(position);};
-	// inline void push_back(task* _t) {task_set.push_back(_t);};
-	 inline bool empty() const {return task_set.empty();};
-	 inline int size() const {return task_set.size();};
+	 inline task* at(int position) const {return content.at(position);};
+	// inline void push_back(task* _t) {content.push_back(_t);};
+	 inline bool empty() const {return content.empty();};
+	 inline int size() const {return content.size();};
 
     
     void refreshActive(); //cycle through all task to recalculate the active state
@@ -56,15 +56,20 @@ public:
 	QString toString();
 	int size();
 	void archive();
-
+    void synchronize();
+q
 signals:
 	void dataSavedOK();
 	void backendError();
+	void sync_error();
+	void sync_finished();
 	
 public slots:
     void backendDataLoaded();
     void backendDataSaved();
     void toggleDone(int tuid);
+	void actualSynchronize();
+    
 private:
 	QUndoStack* _undo;
 };

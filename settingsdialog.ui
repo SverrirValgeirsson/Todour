@@ -319,6 +319,15 @@
          </property>
         </widget>
        </item>
+
+        <item>
+        <widget class="QCheckBox" name="cb_split_mode">
+         <property name="text">
+          <string>Enable spit mode</string>
+         </property>
+        </widget>
+       </item>
+
        <item>
         <widget class="QCheckBox" name="cb_CheckUpdates">
          <property name="text">

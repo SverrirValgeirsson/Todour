@@ -28,8 +28,6 @@
 #define NEW_VERSION_STRING "<a href=\"http://nerdur.com/todour-pl\">http://nerdur.com/todour-pl</a>"
 
 
-//new objects: ideaView, syncButton
-
 TodoTableModel *model=NULL;
 IdeaTableModel* ideas=NULL;
 QString saved_selection; // Used for selection memory
@@ -82,13 +80,14 @@ MainWindow::MainWindow(QWidget *parent) :
     	this->on_hotkey();
     }
 
-
     // Restore the position of the window
     restoreGeometry(settings.value( SETTINGS_GEOMETRY, saveGeometry() ).toByteArray());
     restoreState(settings.value( SETTINGS_SAVESTATE, saveState() ).toByteArray());
     if ( settings.value( SETTINGS_MAXIMIZED, isMaximized() ).toBool() )
         showMaximized();
 
+
+//what is this ???
     ui->lineEditFilter->setText(settings.value(SETTINGS_SEARCH_STRING,DEFAULT_SEARCH_STRING).toString());
 
     // Check that we have an UUID for this application (used for undo for example)
@@ -113,14 +112,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
 	ui->actionSave->setShortcuts(QKeySequence::Save);
 	ui->actionQuit->setShortcuts(QKeySequence::Quit);
+	ui->actionQuit->setShortcut(QKeySequence(Qt::ALT | Qt::Key_F4));
 	ui->actionPrint->setShortcuts(QKeySequence::Print);
 	ui->copyAction->setShortcuts(QKeySequence::Copy);
 	
-    // Set some defaults if they dont exist
-    if(!settings.contains(SETTINGS_LIVE_SEARCH)){
-        settings.setValue(SETTINGS_LIVE_SEARCH,DEFAULT_LIVE_SEARCH);
-    }
-
+ 
 
     // Set up shortcuts . Mac translates the Ctrl -> Cmd
     // http://doc.qt.io/qt-5/qshortcut.html
@@ -141,7 +137,7 @@ MainWindow::MainWindow(QWidget *parent) :
 		connect(ui->CpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityC()));
 		connect(ui->DpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityD()));
 	   connect(ui->copyAction,SIGNAL(triggered()),this,SLOT(on_actionCopy()));
-
+		connect(ui->deleteIdeaAction, SIGNAL(triggered()), this, SLOT(on_actionIdeaDelete()));
 
 	//undo
 	_undoStack = new QUndoStack(this);
@@ -192,22 +188,13 @@ MainWindow::MainWindow(QWidget *parent) :
     
     ui->tableView->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
     ui->tableView->resizeColumnToContents(0); // Checkboxes kept small
-//    ui->ideaView->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
-//    ui->ideaView->resizeColumnToContents(0); // Checkboxes kept small
 
 //	updateSearchResults();
 
-    setFileWatch();
 	ui->context_lock->setChecked(settings.value(SETTINGS_CONTEXT_LOCK,DEFAULT_CONTEXT_LOCK).toBool());
 
 //    ui->lv_activetags->hide(); //  Not being used yet
     ui->newVersionView->hide(); // This defaults to not being shown
-    ui->actionShow_All->setChecked(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool());
-    ui->actionStay_On_Top->setChecked(settings.value(SETTINGS_STAY_ON_TOP,DEFAULT_STAY_ON_TOP).toBool());
-    ui->cb_threshold_inactive->setChecked(settings.value(SETTINGS_THRESHOLD_INACTIVE,DEFAULT_THRESHOLD_INACTIVE).toBool());
-    stayOnTop();
-    setTray();
-    setFontSize();
 
 	//	QStringList wordList;
 	//	wordList << "alpha" << "omega" << "omicron" << "zeta";
@@ -238,8 +225,53 @@ MainWindow::MainWindow(QWidget *parent) :
 	spaceDone->setContext(Qt::WidgetShortcut);
 	QObject::connect(spaceDone,SIGNAL(activated()),this,SLOT(on_actionSpace()));
 
+
+	this->updateSettings();
 	qDebug()<<"mainwindow initialised"<<endline;	
 }
+
+
+void MainWindow::updateSettings()
+/* This function regroups all the layout issued from settings.
+It is intended to be run at startup, and at closing of settings dialog.
+It should be safe to run it at any time.
+*/{
+QSettings settings;
+      // Set some defaults if they dont exist
+    if(!settings.contains(SETTINGS_LIVE_SEARCH))
+        		settings.setValue(SETTINGS_LIVE_SEARCH,DEFAULT_LIVE_SEARCH);
+    
+	if (settings.value(SETTINGS_SPLIT_MODE,DEFAULT_SPLIT_MODE).toBool()){
+		ui->ideaView->setVisible(true);
+		ui->cb_threshold_inactive->setVisible(false);
+		}
+	else {
+		ui->ideaView->setVisible(false);
+		ui->cb_threshold_inactive->setVisible(true);
+		}
+    ui->actionShow_All->setChecked(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool());
+    ui->actionStay_On_Top->setChecked(settings.value(SETTINGS_STAY_ON_TOP,DEFAULT_STAY_ON_TOP).toBool());
+    ui->cb_threshold_inactive->setChecked(settings.value(SETTINGS_THRESHOLD_INACTIVE,DEFAULT_THRESHOLD_INACTIVE).toBool());
+    setTray();
+    stayOnTop();
+    
+    
+	//set font size
+    int size = settings.value(SETTINGS_FONT_SIZE).toInt();
+    if(size >0){
+        auto f = qApp->font();
+        f.setPointSize(size);
+        qApp->setFont(f);
+    }
+
+
+   task_set->setFileWatch(settings.value(SETTINGS_AUTOREFRESH).toBool(),(QObject*) this);
+
+	updateTitle();
+//- autosave?
+
+}
+
 
 void MainWindow::dataInModelChanged(QModelIndex i1,QModelIndex i2)
 /* dataInModelChanged informs us that data has changed.
@@ -279,17 +311,12 @@ void MainWindow::on_tableView_customContextMenuRequested(const QPoint &pos)
 	ui->rClickMenu->popup(ui->tableView->viewport()->mapToGlobal(pos));
 }
 
-/* Activate the filewatching. when enabled, subsystem should monitor the file and keep the display up to date.
-*/
-void MainWindow::setFileWatch()
+void MainWindow::on_ideaView_customContextMenuRequested(const QPoint &pos)
 /*
 */{
-QSettings settings;
-//    model->clearFileWatch();
-//    if(! settings.value(SETTINGS_AUTOREFRESH).toBool())
-//           return;
-   task_set->setFileWatch(settings.value(SETTINGS_AUTOREFRESH).toBool(),(QObject*) this);
+	ui->ideaMenu->popup(ui->ideaView->viewport()->mapToGlobal(pos));
 }
+
 
 void MainWindow::setHotkey(){
 	//COMMENTED TO PREVENT SEGFAULT IN WAYLAND
@@ -400,7 +427,6 @@ void MainWindow::on_actionSortInactive()
 */{
 	QSettings settings;
 	settings.setValue(SETTINGS_SEPARATE_INACTIVES,ui->sortInactiveAction->isChecked());
-//	qDebug()<<"setting value = "<<settings.value(SETTINGS_SEPARATE_INACTIVES,DEFAULT_SEPARATE_INACTIVES).toBool()<<endline;
 	updateSort();
 	
 }
@@ -410,19 +436,18 @@ void MainWindow::updateSort()
 */{
 	proxyModel->invalidate();
 	if(ui->sortAzAction->isChecked()){
-	qDebug()<<"updateSort case 1"<<endline;
 		proxyModel->setSortRole(Qt::UserRole);
 		proxyModel->sort(1,Qt::AscendingOrder);
 	}
 	else if(ui->sortDateAction->isChecked()){
-		qDebug()<<"updateSort case 2"<<endline;
 		proxyModel->setSortRole(Qt::UserRole+1);
 		proxyModel->sort(1,Qt::DescendingOrder);
 	}
 }
 
 void MainWindow::on_actionCopy()
-/* Copy the selected tasks to clipboard*/{
+/* Copy the selected tasks to clipboard
+*/{
     QModelIndexList indexes = ui->tableView->selectionModel()->selection().indexes();
     if (!indexes.isEmpty()){
     	QString text = "";
@@ -464,19 +489,8 @@ void MainWindow::on_actionSettings_triggered()
     d.show();
     d.exec();
 
+	this->updateSettings();
 	model->refresh();
-	updateTitle();
-}
-
-void MainWindow::setFontSize()
-/* */{
-	QSettings settings;
-    int size = settings.value(SETTINGS_FONT_SIZE).toInt();
-    if(size >0){
-        auto f = qApp->font();
-        f.setPointSize(size);
-        qApp->setFont(f);
-    }
 }
 
 void MainWindow::stayOnTop()
@@ -587,6 +601,7 @@ void MainWindow::on_archiveButton_clicked()
 /* // Archive action.
 */{
 //TODO: refresh the view
+
 	task_set->archive();
     _undoStack->clear(); //no undo possible anymore.
 	
@@ -605,13 +620,13 @@ void MainWindow:: on_syncButton_clicked()
 /* This is the sync button. It should initiate a sync, according to QSettings + eventually ask a password
 TODO: this is currently only used for testing the second task window.
 */{
-	if (ui->ideaView->isVisible()){
-		ui->ideaView->setVisible(false);
-		ui->cb_threshold_inactive->setVisible(true);}
-	else {
-		ui->ideaView->setVisible(true	);
-		ui->cb_threshold_inactive->setVisible(false);}
-//	ui->actionSync->trigger();
+//	if (ui->ideaView->isVisible()){
+//		ui->ideaView->setVisible(false);
+//		ui->cb_threshold_inactive->setVisible(true);}
+//	else {
+//		ui->ideaView->setVisible(true	);
+//		ui->cb_threshold_inactive->setVisible(false);}
+	ui->actionSync->trigger();
 	}
 
 
@@ -744,9 +759,33 @@ void MainWindow::on_actionDelete()
 		
 		_undoStack->endMacro();    
 		model->refresh();
+//		ideas->refresh();
+    	updateTitle();
+    }
+}
+
+
+void MainWindow::on_actionIdeaDelete()
+/*User clicked on "Delete" in the idea window. We remove the selected items
+*/{
+    QModelIndexList indexes = ideaProxyModel->mapSelectionToSource(ui->ideaView->selectionModel()->selection()).indexes();
+    QList<QUuid> tuidL;
+	if (!indexes.isEmpty()){
+		for (QList<QModelIndex>::iterator i=indexes.begin(); i!=indexes.end();++i){
+		    tuidL.push_back(model->getTask(*i)->getTuid());
+		}
+
+		_undoStack->beginMacro("deletion");			
+		for (QList<QUuid>::iterator j=tuidL.begin();j!=tuidL.end();++j){
+			task_set->safeDelete(*j);
+		}
+		
+		_undoStack->endMacro();    
+//		model->refresh();
 		ideas->refresh();
     	updateTitle();
     }
+
 }
 
 
@@ -779,7 +818,6 @@ void MainWindow::on_actionDuplicate()
 		model->refresh(); 
 		ideas->refresh();
 		updateTitle();
-
 	}
  }
 
@@ -850,6 +888,7 @@ void MainWindow::on_actionSync_triggered()
 	- we added a TUID to the tasks, but there is no timestamp...  :-(
   */
 {
-
+//Why a function from a function ???
+	task_set->synchronize();
 }
 

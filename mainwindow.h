@@ -34,15 +34,32 @@ public slots:
     void updateTitle();
     
 private slots:
+    void updateSettings();
+
+
     void on_lineEditFilter_textEdited(const QString &arg1);
+
     void on_actionSettings_triggered();
     void on_actionAbout_triggered();
+    void on_actionPrint_triggered();
+    void on_actionSave_triggered();
+	 void on_actionSync_triggered();
+    inline void on_actionCheck_for_updates_triggered() {Version->onlineCheck(true);}
+    inline void on_actionManual_triggered()
+    		{QDesktopServices::openUrl(QUrl("https://sverrirvalgeirsson.github.io/Todour"));};    
+    inline void on_actionQuit_triggered(){cleanup();}
+
+
     void on_addButton_clicked();
-    inline void on_lineEditNew_returnPressed() {on_addButton_clicked();}
     void on_archiveButton_clicked();
     void on_refreshButton_clicked();
     void on_syncButton_clicked();
+    void on_pb_closeVersionBar_clicked();
+
+
+    inline void on_lineEditNew_returnPressed() {on_addButton_clicked();}
     void on_lineEditFilter_returnPressed();
+
     void on_hotkey();
     void on_context_lock_toggled(bool checked);
 
@@ -51,33 +68,28 @@ private slots:
     void iconActivated(QSystemTrayIcon::ActivationReason reason);
     void cleanup(); // Need to have a quit slot of my own to save settings and so on.
 
-    void on_pb_closeVersionBar_clicked();
-    inline void on_actionCheck_for_updates_triggered() {Version->onlineCheck(true);}
     		
     void on_tableView_customContextMenuRequested(const QPoint &pos);
-    inline void on_actionQuit_triggered(){cleanup();}
+    void on_ideaView_customContextMenuRequested(const QPoint &pos);
     		
     void on_actionShow_All_changed();
     void on_actionStay_On_Top_changed();
-    inline void on_actionManual_triggered()
-    		{QDesktopServices::openUrl(QUrl("https://sverrirvalgeirsson.github.io/Todour"));};    
     		
-    void on_actionPrint_triggered();
-    void on_actionSave_triggered();
-	void on_actionSync_triggered();
-	void dataInModelChanged(QModelIndex,QModelIndex);
+	 void dataInModelChanged(QModelIndex,QModelIndex);
     
-//Gaetandc 4/1/24
    void on_actionEdit();
    void on_actionComplete();
    void on_actionDelete();
    void on_actionPostpone();
    void on_actionDuplicate();
    void on_actionPriority(QChar p);
+	void on_actionIdeaDelete();
+	
    inline void on_actionPriorityA(){on_actionPriority('A');}
    inline void on_actionPriorityB(){on_actionPriority('B');}
    inline void on_actionPriorityC(){on_actionPriority('C');}
    inline void on_actionPriorityD(){on_actionPriority('D');}
+  
   
    void on_actionSortAZ();
    void on_actionSortDate();
@@ -93,7 +105,6 @@ private:
     QSortFilterProxyModel *proxyModel;
     QSortFilterProxyModel *ideaProxyModel;
 
-    void setFileWatch();
     void setTray();
 //    void clearFileWatch();
     void closeEvent(QCloseEvent *ev);
@@ -101,9 +112,8 @@ private:
     void saveTableSelection();
     void resetTableSelection();
     void updateSearchResults();
-	void updateSort();
+	 void updateSort();
 
-    void setFontSize();
     void stayOnTop();
 
 //    UGlobalHotkeys *hotkey;   // Commented out for Wayland transition. Can be reintroduced if we can identify platform.

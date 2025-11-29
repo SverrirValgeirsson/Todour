@@ -56,6 +56,7 @@ QVariant IdeaTableModel::headerData(int section, Qt::Orientation orientation, in
 /*
 */{
     Q_UNUSED(orientation);
+    Q_UNUSED(section);
     if(role == Qt::DisplayRole)
        return "Idea";
   return QVariant::Invalid;

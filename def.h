@@ -46,7 +46,7 @@
 #define DEFAULT_BUSINESS_DAYS_LAST 5
 #define DEFAULT_DUE_AS_THRESHOLD false
 #define DEFAULT_DEFAULT_PRIORITY "B"
-
+#define DEFAULT_SPLIT_MODE true
 
 // Names of settings in QSettings
 #define SETTINGS_DUE "due"
@@ -90,6 +90,7 @@
 #define SETTINGS_BUSINESS_DAYS "business_days"
 #define SETTINGS_DUE_AS_THRESHOLD "due_as_threshold"
 #define SETTINGS_DEFAULT_PRIORITY "default_priority"
+#define SETTINGS_SPLIT_MODE "split_mode"
 
 #define SETTINGS_BACKEND "backend"
 #define SETTINGS_CALDAV_URL "caldav_url"

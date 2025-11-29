@@ -57,7 +57,7 @@
          <string>Sync now</string>
         </property>
         <property name="text">
-         <string>S</string>
+         <string>Sync</string>
         </property>
        </widget>
       </item>
@@ -365,15 +365,18 @@ border-radius: 5px;
     <addaction name="duplicateAction"/>
     <addaction name="priorityMenu"/>
 
-  <widget class="QMenu" name="priorityMenu">
+ 	 <widget class="QMenu" name="priorityMenu">
      <property name="title">
      <string>Priority: </string>
     </property>
     <addaction name="ApriorAction"/>
-	<addaction name="BpriorAction"/>
+	 <addaction name="BpriorAction"/>
     <addaction name="CpriorAction"/>
     <addaction name="DpriorAction"/>
-  </widget>
+ 	 </widget>
+   </widget>
+   <widget class="QMenu" name="ideaMenu">
+   	<addaction name="deleteIdeaAction"/>
    </widget>
   </widget>
   <action name="actionSave">
@@ -500,6 +503,11 @@ border-radius: 5px;
    <string>(D) priority</string>
   </property>
  </action> 
+ <action name="deleteIdeaAction">
+  <property name="text">
+   <string>Delete</string>
+  </property>
+ </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <tabstops>

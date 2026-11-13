@@ -19,7 +19,7 @@ todotxt::todotxt(QObject *parent) :
     _TodoFilePath = dir + TODOFILE;
     _DoneFilePath = dir + DONEFILE;
     _DeleteFilePath = dir + DELETEDFILE;
-
+	watcher = NULL;
 }
 
 todotxt::~todotxt()
@@ -41,8 +41,6 @@ bool todotxt::isReady()
 void todotxt::reloadRequest()
 /* */
 {
-//		qDebug()<<"todotxt::reloadRequest started "<<endline;
-
     _TodoFile->open(QIODevice::ReadOnly | QIODevice::Text);
 
     if (!_TodoFile->isOpen()){
@@ -50,9 +48,7 @@ void todotxt::reloadRequest()
 		emit ReadError(tr("Todotxt: unable to open file"));
     	return;
     }
-//	qDebug()<<"todotxt::reloadRequest emit DataAvailable "<<endline;
 	emit DataAvailable();
-//	qDebug()<<"todotxt::reloadRequest finished "<<endline;
 
 }
 
@@ -62,8 +58,6 @@ void todotxt::getAllTask(vector<task*> &output)
 */
 {
     QSettings settings;
-//	qDebug()<<"todotxt::getAllTask start "<<endline;
-
     QTextStream in(_TodoFile);
     in.setEncoding(QStringConverter::Utf8);
     while (!in.atEnd()) {
@@ -157,6 +151,10 @@ void todotxt::setMonitoring(bool b, QObject *parent)
 {
 	Q_UNUSED(parent);
 	if (b) {
+    	if (! _TodoFile->isOpen()){
+    		emit FileSystemWatcherError();
+    		return;
+    		}
     	watcher = new QFileSystemWatcher();
     	watcher->removePaths(watcher->files()); // Make sure this is empty. Should only be this file we're using in this program, and only one instance
     	watcher->addPath(_TodoFilePath);

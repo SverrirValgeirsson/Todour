@@ -17,7 +17,7 @@
 #include <QCloseEvent>
 #include <QtAwesome.h>	//used for fonts and icons
 #include <QPalette>
-#include <QDir>
+
 #include <QSystemTrayIcon>
 #include <QUuid>
 #include <QPrinter> //used for printing
@@ -34,13 +34,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
 	qDebug()<<"Start mainwindow creation..."<<endline;
-    ui->setupUi(this);
-    QString title=this->windowTitle();
 
     QCoreApplication::setOrganizationName("Nerdur");
     QCoreApplication::setOrganizationDomain("nerdur.com");
     QCoreApplication::setApplicationName("Todour");
-
+    QString title=this->windowTitle();
+	 baseTitle=title;
 
 #ifdef QT_NO_DEBUG
 //    QCoreApplication::setOrganizationName("Nerdur");
@@ -51,32 +50,21 @@ MainWindow::MainWindow(QWidget *parent) :
 //    QCoreApplication::setOrganizationName("Nerdur-debug");
 //    QCoreApplication::setOrganizationDomain("nerdur-debug.com");
 //    QCoreApplication::setApplicationName("Todour-Debug");
-    title.append("-DEBUG-");
+   title.append("-DEBUG-");
+  	qDebug()<<"Hello, debug mode."<<endline;
+
 #endif
 	QSettings settings;
 	
-    title.append(todour_version::get_version());
-    baseTitle=title;
-    this->setWindowTitle(title);
-
-
-    // Check if we're supposed to have the settings from .ini file or not
-    if(QCoreApplication::arguments().contains("-portable")){
-        QSettings::setDefaultFormat(QSettings::IniFormat);
-        QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,QDir::currentPath());
-        qDebug()<<"Setting ini file path to: "<<QDir::currentPath()<<endline;
-    }
+	// Let's open the todo.txt file first, parse it and show it.
 
 	if (QGuiApplication::platformName() == "xcb"){
 		// only try to make hotkey on x11
  	//	 hotkey = new UGlobalHotkeys();
  	//	  setHotkey();
 	}
-    
-    if(QCoreApplication::arguments().contains("--quickAdd") | QCoreApplication::arguments().contains("-a")){
-    	// add a always working function. If todour is launched with -a flag, only show the "taskadd" and close.
-    	this->on_hotkey();
-    }
+    ui->setupUi(this);
+
 
     // Restore the position of the window
     restoreGeometry(settings.value( SETTINGS_GEOMETRY, saveGeometry() ).toByteArray());
@@ -108,20 +96,20 @@ MainWindow::MainWindow(QWidget *parent) :
  
 //	 options.insert("color-disabled" , QApplication::palette().color(QPalette::Normal, QPalette::Text));
 	
-    ui->btn_Alphabetical->setIcon(awesome->icon(fa::fa_solid, fa::fa_arrow_down_a_z ));
-    ui->btn_Filter->setIcon(awesome->icon(fa::fa_solid, fa::fa_filter));
-    ui->btn_Filter->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
-    ui->archiveButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_right_from_bracket));
-    ui->refreshButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_arrows_rotate ));
-    ui->addButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_plus ));
-    ui->context_lock->setIcon(awesome->icon(fa::fa_solid, fa::fa_lock, options));
-    ui->pb_closeVersionBar->setIcon(awesome->icon(fa::fa_solid, fa::fa_xmark));
-	 ui->deleteAction->setIcon(awesome->icon(fa::fa_solid, fa::fa_trash));
-	 ui->editAction->setIcon(awesome->icon(fa::fa_solid, fa::fa_pencil));
-	 ui->completeAction->setIcon(awesome->icon(fa::fa_solid, fa::fa_check));
-	 ui->duplicateAction->setIcon(awesome->icon(fa::fa_solid, fa::fa_clone));
-	 ui->postponeAction->setIcon(awesome->icon(fa::fa_solid, fa::fa_forward));
-	 ui->dueTodayAction->setIcon(awesome->icon(fa::fa_solid, fa::fa_plane));
+	ui->btn_Alphabetical->setIcon(awesome->icon(fa::fa_solid, fa::fa_arrow_down_a_z ));
+   ui->btn_Filter->setIcon(awesome->icon(fa::fa_solid, fa::fa_filter));
+   ui->btn_Filter->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
+   ui->archiveButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_right_from_bracket));
+   ui->refreshButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_arrows_rotate ));
+   ui->addButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_plus ));
+   ui->context_lock->setIcon(awesome->icon(fa::fa_solid, fa::fa_lock, options));
+   ui->pb_closeVersionBar->setIcon(awesome->icon(fa::fa_solid, fa::fa_xmark));
+	ui->deleteAction->setIcon(awesome->icon(fa::fa_solid, fa::fa_trash));
+	ui->editAction->setIcon(awesome->icon(fa::fa_solid, fa::fa_pencil));
+	ui->completeAction->setIcon(awesome->icon(fa::fa_solid, fa::fa_check));
+	ui->duplicateAction->setIcon(awesome->icon(fa::fa_solid, fa::fa_clone));
+	ui->postponeAction->setIcon(awesome->icon(fa::fa_solid, fa::fa_forward));
+	ui->dueTodayAction->setIcon(awesome->icon(fa::fa_solid, fa::fa_plane));
 
 	ui->actionSave->setShortcuts(QKeySequence::Save);
 	ui->actionQuit->setShortcuts(QKeySequence::Quit);
@@ -144,60 +132,65 @@ MainWindow::MainWindow(QWidget *parent) :
     auto switchshortcut = new QShortcut(QKeySequence(tr("F6")),this);
     QObject::connect(switchshortcut,SIGNAL(activated()),this, SLOT(toggleFocus()));
 
-		connect(ui->editAction, SIGNAL(triggered()), this, SLOT(on_actionEdit()));
-		connect(ui->completeAction, SIGNAL(triggered()), this, SLOT(on_actionComplete()));   
-		connect(ui->duplicateAction, SIGNAL(triggered()), this, SLOT(on_actionDuplicate()));
-		connect(ui->deleteAction, SIGNAL(triggered()), this, SLOT(on_actionDelete()));
-		connect(ui->postponeAction, SIGNAL(triggered()), this, SLOT(on_actionPostpone()));
-		connect(ui->dueTodayAction, SIGNAL(triggered()), this, SLOT(on_dueTodayAction_triggered()));		
-		connect(ui->ApriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityA()));
-		connect(ui->BpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityB()));
-		connect(ui->CpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityC()));
-		connect(ui->DpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityD()));
-	   connect(ui->copyAction,SIGNAL(triggered()),this,SLOT(on_actionCopy()));
+	connect(ui->editAction, SIGNAL(triggered()), this, SLOT(on_actionEdit()));
+	connect(ui->completeAction, SIGNAL(triggered()), this, SLOT(on_actionComplete()));   
+	connect(ui->duplicateAction, SIGNAL(triggered()), this, SLOT(on_actionDuplicate()));
+	connect(ui->deleteAction, SIGNAL(triggered()), this, SLOT(on_actionDelete()));
+	connect(ui->postponeAction, SIGNAL(triggered()), this, SLOT(on_actionPostpone()));
+	connect(ui->dueTodayAction, SIGNAL(triggered()), this, SLOT(on_dueTodayAction_triggered()));		
+	connect(ui->ApriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityA()));
+	connect(ui->BpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityB()));
+	connect(ui->CpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityC()));
+	connect(ui->DpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityD()));
+   connect(ui->copyAction,SIGNAL(triggered()),this,SLOT(on_actionCopy()));
+	task_set = new taskset(this);
+   model = new TodoTableModel(task_set,_undoStack, this);
+   proxyModel = new todoProxyModel(this);
+   proxyModel->setSourceModel(model);
+
 	//undo
 	_undoStack = new QUndoStack(this);
-		ui->undoAction->setEnabled(_undoStack->canUndo());				
-    	ui->undoAction->setShortcuts(QKeySequence::Undo);
-		connect(_undoStack, SIGNAL(canUndoChanged(bool)), ui->undoAction, SLOT(setEnabled(bool)));
-		connect(ui->undoAction, SIGNAL(triggered()), this, SLOT(on_actionUndo()));
+	
+	ui->undoAction->setEnabled(_undoStack->canUndo());				
+ 	ui->undoAction->setShortcuts(QKeySequence::Undo);
+	connect(_undoStack, SIGNAL(canUndoChanged(bool)), ui->undoAction, SLOT(setEnabled(bool)));
+	connect(ui->undoAction, SIGNAL(triggered()), this, SLOT(on_actionUndo()));
 		
-		ui->redoAction->setEnabled(_undoStack->canRedo());				
-    	ui->redoAction->setShortcuts(QKeySequence::Redo);
-		connect(_undoStack, SIGNAL(canRedoChanged(bool)), ui->redoAction, SLOT(setEnabled(bool)));
-		connect(ui->redoAction, SIGNAL(triggered()), this, SLOT(on_actionRedo()));
+	ui->redoAction->setEnabled(_undoStack->canRedo());				
+  	ui->redoAction->setShortcuts(QKeySequence::Redo);
+	connect(_undoStack, SIGNAL(canRedoChanged(bool)), ui->redoAction, SLOT(setEnabled(bool)));
+	connect(ui->redoAction, SIGNAL(triggered()), this, SLOT(on_actionRedo()));
 	    	
-    	connect(ui->sortAzAction, SIGNAL(triggered()), this, SLOT(updateSort()));
-    	connect(ui->sortDateAction, SIGNAL(triggered()), this, SLOT(updateSort()));
-    	connect(ui->sortInactiveAction, SIGNAL(triggered()), this, SLOT(updateSort()));    	
+   connect(ui->sortAzAction, SIGNAL(triggered()), this, SLOT(updateSort()));
+   connect(ui->sortDateAction, SIGNAL(triggered()), this, SLOT(updateSort()));
+   connect(ui->sortInactiveAction, SIGNAL(triggered()), this, SLOT(updateSort()));    	
 		
-		QActionGroup* sortActionGroup = new QActionGroup(ui->btn_Alphabetical);
-		ui->sortAzAction->setActionGroup(sortActionGroup);
-		ui->sortDateAction->setActionGroup(sortActionGroup);
+	QActionGroup* sortActionGroup = new QActionGroup(ui->btn_Alphabetical);
+	ui->sortAzAction->setActionGroup(sortActionGroup);
+	ui->sortDateAction->setActionGroup(sortActionGroup);
     	
-    	connect(ui->defaultViewAction, SIGNAL(triggered()), this, SLOT(updateFilter()));    	
-   	connect(ui->todaysViewAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
-   	connect(ui->projectViewAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
-   	connect(ui->showAllAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
-    	connect(ui->respectThresholdDateAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
-		connect(ui->respectThresholdContextAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
-   	connect(ui->thresholdDueAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
-   	connect(ui->hideInactiveAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
+   connect(ui->defaultViewAction, SIGNAL(triggered()), this, SLOT(updateFilter()));    	
+   connect(ui->todaysViewAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
+   connect(ui->projectViewAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
+   connect(ui->showAllAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
+   connect(ui->respectThresholdDateAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
+	connect(ui->respectThresholdContextAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
+   connect(ui->thresholdDueAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
+   connect(ui->hideInactiveAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
     	
-    	QActionGroup* viewActionGroup = new QActionGroup(ui->btn_Filter);
-		ui->defaultViewAction->setActionGroup(viewActionGroup);
-		ui->todaysViewAction->setActionGroup(viewActionGroup);
-		ui->projectViewAction->setActionGroup(viewActionGroup);
-		ui->showAllAction->setActionGroup(viewActionGroup);
- 
-    	connect(ui->lineEditFilter, SIGNAL(currentTextChanged(QString)),this, SLOT(updateFilterText(QString)));
- 		connect(ui->lineEditNew, SIGNAL(returnPressed()),this, SLOT(on_addButton_clicked()));
+   QActionGroup* viewActionGroup = new QActionGroup(ui->btn_Filter);
+	ui->defaultViewAction->setActionGroup(viewActionGroup);
+	ui->todaysViewAction->setActionGroup(viewActionGroup);
+	ui->projectViewAction->setActionGroup(viewActionGroup);
+	ui->showAllAction->setActionGroup(viewActionGroup);
+   
+   connect(ui->lineEditFilter, SIGNAL(currentTextChanged(QString)),this, SLOT(updateFilterText(QString)));
+ 	connect(ui->lineEditNew, SIGNAL(returnPressed()),this, SLOT(on_addButton_clicked()));
     	    	
-    	ui->btn_Alphabetical->setMenu(ui->sortMenu);
-    	ui->btn_Alphabetical->setPopupMode( QToolButton::InstantPopup);
-    	ui->btn_Filter->setMenu(ui->filterMenu);
-    	ui->btn_Filter->setPopupMode( QToolButton::InstantPopup);
-    	
+   ui->btn_Alphabetical->setMenu(ui->sortMenu);
+   ui->btn_Alphabetical->setPopupMode( QToolButton::InstantPopup);
+   ui->btn_Filter->setMenu(ui->filterMenu);
+   ui->btn_Filter->setPopupMode( QToolButton::InstantPopup);
 	
     // Version check
     Version = new todour_version();
@@ -205,25 +198,21 @@ MainWindow::MainWindow(QWidget *parent) :
 	Version->onlineCheck(false);
 	versionTimer = new QTimer(this);
 	connect(versionTimer,SIGNAL(timeout()),this,SLOT(on_pb_closeVersionBar_clicked()));
-//	qDebug()<<"MainWindow init step 0"<<endline;
 
-    // Started. Lets open the todo.txt file, parse it and show it.
-   task_set = new taskset(this);
-//	qDebug()<<"MainWindow init step 0.01"<<endline;
-   model = new TodoTableModel(task_set,_undoStack, this);
-// 	qDebug()<<"MainWindow init step 0.02"<<endline;
-   proxyModel = new todoProxyModel(this);
-   proxyModel->setSourceModel(model);
+    title.append(todour_version::get_version());
+    
+    this->setWindowTitle(title);
+
+
    ui->tableView->setModel(proxyModel);
    ui->tableView->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
    ui->tableView->resizeColumnToContents(0); // Checkboxes kept small
-//	qDebug()<<"MainWindow init step 0.1"<<endline;
 	connect(model,SIGNAL(dataChanged(QModelIndex, QModelIndex)),proxyModel,SLOT(invalidate()));
+	
 	note_set = new noteset(this);
 	connect(note_set,SIGNAL(updateText(QString)),this,SLOT(handleNoteUpdate(QString)));
 	note_set->reLoad();	
 	
-//	qDebug()<<"MainWindow init step 1"<<endline;
 	ui->context_lock->setChecked(settings.value(SETTINGS_CONTEXT_LOCK,DEFAULT_CONTEXT_LOCK).toBool());
 	ui->sortAzAction->setChecked(settings.value(SETTINGS_SORT_AZ,DEFAULT_SORT_AZ).toBool());
 	ui->sortDateAction->setChecked(settings.value(SETTINGS_SORT_IDATE,DEFAULT_SORT_IDATE).toBool());
@@ -237,10 +226,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->todaysViewAction->setChecked(settings.value(SETTINGS_TODAYS_VIEW,DEFAULT_TODAYS_VIEW).toBool());
 	ui->projectViewAction->setChecked(settings.value(SETTINGS_PROJECT_VIEW,DEFAULT_PROJECT_VIEW).toBool());
 	ui->showAllAction->setChecked(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool());
-//	qDebug()<<"MainWindow init step 2"<<endline;
 
     ui->newVersionView->hide(); // This defaults to not being shown
-
     // Do this late as it triggers action using data
     QObject::connect(model,SIGNAL(dataChanged (const QModelIndex , const QModelIndex )), this, 
     		SLOT(dataInModelChanged(QModelIndex,QModelIndex)));
@@ -249,7 +236,6 @@ MainWindow::MainWindow(QWidget *parent) :
     		proxyModel, SIGNAL(dataChanged (const QModelIndex , const QModelIndex )));
 
 	QObject::connect(ui->actionSync,SIGNAL(triggered()),this,SLOT(on_actionSync_triggered()));
-
 	autoSaver = new QTimer(this);
 	QObject::connect(autoSaver,SIGNAL(timeout()),this,SLOT(on_actionSave_triggered()));
 	// #TODO put this as a setting: autosave on/off?
@@ -260,9 +246,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	spaceDone->setContext(Qt::WidgetShortcut);
 	QObject::connect(spaceDone,SIGNAL(activated()),this,SLOT(on_actionSpace()));
 
-
 	this->updateSettings();
-	this->updateFilter(true);
+
 	qDebug()<<"mainwindow initialised"<<endline;	
 }
 
@@ -285,7 +270,6 @@ It should be safe to run it at any time.
     ui->actionStay_On_Top->setChecked(settings.value(SETTINGS_STAY_ON_TOP,DEFAULT_STAY_ON_TOP).toBool());
     setTray();
     stayOnTop();
-   
 	//set font size
 //    auto f = qApp->font();
 //    f.setPointSize(settings.value(SETTINGS_FONT_SIZE,DEFAULT_FONT_SIZE).toInt());
@@ -298,17 +282,14 @@ It should be safe to run it at any time.
 		ui->projectViewAction->setVisible(false);
 		}
 
-   
-   
    task_set->setFileWatch(settings.value(SETTINGS_AUTOREFRESH).toBool(),(QObject*) this);
 
 	ui->sortInactiveAction->setChecked(settings.value(SETTINGS_SEPARATE_INACTIVES,DEFAULT_SEPARATE_INACTIVES).toBool());
 	ui->split->restoreState(settings.value(SETTING_SPLITTER_SIZE).toByteArray());
 	
 	updateSort();
-	
+   updateFilter(true);
 	this->dataInModelChanged(QModelIndex(),QModelIndex());
-	qDebug()<<"Mainwindow: finished update settings"<<endline;
 	}
 
 
@@ -346,16 +327,7 @@ We need to update the title + recalculate the tasks active.
 
 MainWindow::~MainWindow()
 /*
-*/{
-    delete ui;
-    delete model;
-    delete autoSaver;
-    delete task_set;
-    delete proxyModel;
-    delete note_set;
-    delete trayicon;
-    
-	}
+*/{}
 
 void MainWindow::toggleFocus()
 /* */
@@ -522,7 +494,7 @@ void MainWindow::on_hotkey()
     dlg->show();
     dlg->exec();
     if(dlg->accepted){
-        this->addTodo(dlg->text,"");
+    	task_set->addTask(new task(dlg->text));
     }
 }
 
@@ -701,14 +673,14 @@ void MainWindow::cleanup()
    settings.setValue( SETTINGS_MAXIMIZED, isMaximized() );
   	settings.setValue(SETTING_SPLITTER_SIZE, ui->split->saveState());
 
-    settings.setValue(SETTINGS_CONTEXT_LOCK,ui->context_lock->isChecked());
-    
+   settings.setValue(SETTINGS_CONTEXT_LOCK,ui->context_lock->isChecked());
+   
    if(trayicon!=NULL){
    	delete trayicon;
    	trayicon = NULL;
    	}
     
-    qApp->quit();
+    QCoreApplication::quit();
 }
 
 void MainWindow::closeEvent(QCloseEvent *ev)

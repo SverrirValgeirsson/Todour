@@ -12,15 +12,11 @@ taskset::taskset(QObject *parent)
 	Q_UNUSED(parent);
 
    todo = new todotxt();
-//	qDebug()<<"taskset::taskset todotxt created "<<endline;
 	QObject::connect(todo,SIGNAL(DataChanged()),this,SLOT(backendDataLoaded()));//REM
 	QObject::connect(todo,SIGNAL(DataAvailable()),this,SLOT(backendDataLoaded()));//REM
 	QObject::connect(todo,SIGNAL(DataSaved()),this,SIGNAL(dataSavedOK()));//REM
-//	qDebug()<<"taskset::taskset todotxt connected "<<endline;
 	if (todo->isReady()) todo->reloadRequest();
-//	qDebug()<<"taskset::taskset todotxt requested "<<endline;
-	recalculate();
-//		qDebug()<<"taskset::taskset done "<<endline;
+
 }
     
 taskset::~taskset()
@@ -43,7 +39,6 @@ task* taskset::getTask(QUuid tuid)
 	for (vector<task*>::iterator i=content.begin();i!=content.end();++i){
 		if ((*i)->getTuid() == tuid){
 			ret= *i;
-//			qDebug()<<"taskset::getTask found: "<<ret->getDisplayText()<<endline;
 			return ret;
 		}
 	}
@@ -56,10 +51,9 @@ void taskset::removeTask(QUuid tuid)
 */{
 	for (vector<task*>::iterator i=content.begin();i!=content.end();++i){
 		if ((*i)->getTuid() == tuid){
-//		   	qDebug()<<"taskset::removeTask found: "<<(*i)->getDisplayText()<<endline;
-				content.erase(i);
-				return;
-				}
+			content.erase(i);
+			return;
+		}
 	}
 }
 
@@ -88,38 +82,23 @@ void taskset::backendDataLoaded()
 /* Called when the backend is ready to supply data.
 */{
   	todo->getAllTask(content);  
-//  		qDebug()<<"void taskset::backendDataLoaded() - all tasks loaded"<<endline;
+	recalculate();
 }
-
-void taskset::toggleDone(int position)
-/* 
-*/{
-Q_UNUSED(position);
-	//TODO: URGENT: update the undo framework for work with taskset and not model.
-  
-    }
-
 
 void taskset::archive()
 /* Remove all the "finished" tasks and move them to the "done" file.
 */{
-//	QAbstractItemModel::beginResetModel();
-
     vector<task*> done_set;
-	qDebug()<<"TodoTableModel::archive content.size="<<content.size()<<endline;
     for(vector<task*>::const_iterator iter=content.begin();iter!=content.end();){
         if((*iter)->isComplete()){
-        	qDebug()<<"TodoTableModel::archive move task "<<(*iter)->getEditText()<<endline;
             done_set.push_back((*iter));
             iter=content.erase(iter);
-        } else {
-            // No change
-            iter++;
         }
+        else // No change
+        		iter++;
      }
 	this->flush();
     todo->writeRequest(done_set,typeDone,true); // append=true
-//    QAbstractItemModel::endResetModel();
 }
 
 
@@ -163,7 +142,6 @@ noteset::noteset(QObject* parent)
 	connect(notes,SIGNAL(DataSaved()),this, SIGNAL(dataSavedOK()));
 	connect(notes,SIGNAL(DataAvailable()),this, SLOT(backendDataLoaded()));
 	connect(notes,SIGNAL(DataChanged()),this, SLOT(backendDataLoaded()));
-//	qDebug()<<"noteset::noteset created"<<endline;
 }
 
 void noteset::reLoad()
@@ -203,11 +181,8 @@ void noteset::handleTextChanged(QString newtext)
 void noteset::backendDataLoaded()
 /*
 */{
-//	qDebug()<<"noteset::backendDataLoaded start"<<endline;
-
 	notes->getAllText(&content);
 	emit updateText(content);
-
 }
 
 

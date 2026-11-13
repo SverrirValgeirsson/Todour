@@ -44,6 +44,7 @@ signals:
 	void ReadError(QString err);
 	void DataSaved();
 	void DataChanged();  //What's the difference with DataAvailable???
+	void FileSystemWatcherError();
 };
 
 #endif // NOTETXT_H

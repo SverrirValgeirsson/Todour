@@ -52,7 +52,6 @@ signals:
 	
 public slots:
     void backendDataLoaded();
-    void toggleDone(int tuid);
     void recalculate();
     
 private:

@@ -15,6 +15,7 @@ notetxt::notetxt(QObject *parent)
    QString dir = settings.value(SETTINGS_DIRECTORY).toString();
 	_NoteFile = new QFile(dir + NOTEFILE);
    _NoteFilePath = dir + NOTEFILE;
+   watcher = NULL;
 }
 
 notetxt::~notetxt()
@@ -84,7 +85,10 @@ void notetxt::setMonitoring(bool b, QObject *parent)
 {
 	Q_UNUSED(parent);
 	if (b) {
-		qDebug()<<"Filesystemwtcher activated"<<endline;
+	    	if (! _NoteFile->isOpen()){
+    		emit FileSystemWatcherError();
+    		return;
+    		}
     	watcher = new QFileSystemWatcher();
     	watcher->removePaths(watcher->files()); // Make sure this is empty. Should only be this file we're using in this program, and only one instance
     	watcher->addPath(_NoteFilePath);

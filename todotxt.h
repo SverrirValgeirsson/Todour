@@ -56,6 +56,9 @@ private:
     
 public slots:
 //	void fileModified(QString str);
+
+signals:
+	void FileSystemWatcherError();
 };
 
 #endif // TODOTXT_H

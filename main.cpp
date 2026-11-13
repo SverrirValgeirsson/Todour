@@ -2,22 +2,52 @@
 #include <iostream>
 //debug:
 #include <QDebug>
+#include <QDir>
 #include "def.h"
 #include "task.h"
 #include "mainwindow.h"
+#include "taskset.h"
+#include "quickadddialog.h"
 
 void testTasks();
 
 int main(int argc, char *argv[])
-{
-	qDebug()<<"Hello, debug mode."<<endline;
-//	testTasks(); return -1;
-
- 	
+{ 	
     QApplication appl(argc, argv);
     if(QCoreApplication::arguments().contains("--help")){
-        cout<<"Help command"<<endl;
+        cout<<"Todour is a personnal offline task management system based on todo.txt"<<endl;
+        cout<<" --help : show this help screen"<<endl;
+	     cout<<" --portable / -portable : use a local (in folder) config file"<<endl;
+	     cout<<" --quickAdd / -a : open task quickadd dialog"<<endl;
+	     cout<<" --testRun : run a test sequence"<<endl;
         return 0;
+    }
+    
+    if(QCoreApplication::arguments().contains("--testRun")){
+    		testTasks();
+    		return -1;
+    		}
+   
+    if(QCoreApplication::arguments().contains("-portable") || QCoreApplication::arguments().contains("--portable")){
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat,QSettings::UserScope,QDir::currentPath());
+        qDebug()<<"Setting ini file path to: "<<QDir::currentPath()<<endline;
+    }
+
+
+
+    if(QCoreApplication::arguments().contains("--quickAdd") | QCoreApplication::arguments().contains("-a")){
+    	// add a always working function. If todour is launched with -a flag, only show the "taskadd" and close.
+  		taskset* task_set = new taskset(NULL);
+      auto dlg = new QuickAddDialog();
+      dlg->setModal(true);
+      dlg->show();
+      dlg->exec();
+      if(dlg->accepted){
+      	task_set->addTask(new task(dlg->text));
+      }
+      task_set->flush();
+    	exit(0);
     }
 
     MainWindow w;

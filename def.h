@@ -177,6 +177,12 @@
 #define SETTINGS_HIDE_INACTIVE "hideinactive"
 #define DEFAULT_HIDE_INACTIVE false
 
+#define SETTINGS_TODAYS_VIEW "todaysview"
+#define DEFAULT_TODAYS_VIEW false
+
+#define SETTINGS_PROJECT_VIEW "projectview"
+#define DEFAULT_PROJECT_VIEW false
+
 
 
 //*********** SORTING *****************

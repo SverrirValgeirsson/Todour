@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT += network
+ QT += network
 # QT += statemachine
 
 QT       += core gui widgets printsupport
@@ -19,7 +19,7 @@ CONFIG += c++11
 CONFIG+=sdk_no_version_check
 CONFIG+=qt console
 #CONFIG+=debug
-CONFIG+=fontAwesomeFree
+CONFIG+=fontAwesomeFree 
 
 macx{
 ICON = icon.icns

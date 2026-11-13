@@ -12,12 +12,15 @@ taskset::taskset(QObject *parent)
 	Q_UNUSED(parent);
 
    todo = new todotxt();
+//	qDebug()<<"taskset::taskset todotxt created "<<endline;
 	QObject::connect(todo,SIGNAL(DataChanged()),this,SLOT(backendDataLoaded()));//REM
 	QObject::connect(todo,SIGNAL(DataAvailable()),this,SLOT(backendDataLoaded()));//REM
 	QObject::connect(todo,SIGNAL(DataSaved()),this,SIGNAL(dataSavedOK()));//REM
+//	qDebug()<<"taskset::taskset todotxt connected "<<endline;
 	if (todo->isReady()) todo->reloadRequest();
-
+//	qDebug()<<"taskset::taskset todotxt requested "<<endline;
 	recalculate();
+//		qDebug()<<"taskset::taskset done "<<endline;
 }
     
 taskset::~taskset()

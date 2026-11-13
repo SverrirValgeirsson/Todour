@@ -12,7 +12,6 @@ static QRegularExpression regex_reldate("(?<rdate>"+RDATE_PAT+")(?:\\s*|$)");
 static QRegularExpression regex_url("(?:\\s+)[a-zA-Z0-9_]+:\\/\\/([-a-zA-Z0-9@:%_\\+.~#?&\\/=\\(\\)\\{\\}\\\\]*)");
 static QRegularExpression regex_color("(?:\\s+)color:([a-z]*)");
 //static QRegularExpression regex_threshold_project("(?:\\s+)t:(\\+[^\\s]+)(?#\\s+|$)");
-static QRegularExpression regex_threshold_context("(?:\\s+)t:((\\@[^\\s]+)|(\\+[^\\s]+))(?#\\s+|$)");
 static QRegularExpression regex_threshold_date("(?:\\s+)(t:" + DATE_PAT + ")(?#\\s+|$)");
 static QRegularExpression regex_threshold_date_r("(?:\\s+)(t:" + RDATE_PAT + ")(?#\\s+|$)");
 
@@ -30,8 +29,6 @@ static QRegularExpression regex_inputdate("^((?:x\\s)|(?:x\\s+"+DATE_PAT+"\\s))?
 //^((?:x\s)|(?:x\s+\d\d\d\d-\d\d-\d\d\s))?\s*(?:[(][A-Z,a-z][)]\s)?\s*(?<idate>\d\d\d\d-\d\d-\d\d)
 
 static QRegularExpression regex_todo_line("((^(?:x )+("+DATE_PAT+"(?:\\s+|$))?)+(?<donedate>"+DATE_PAT+"(?:\\s*|$))?)?(?<priority>"+regex_priority.pattern()+")?(?<inputdate>"+DATE_PAT+"(?:\\s*|$))?(.*)");
-
-static QRegularExpression regex_context("(?:\\s+|^)((\\@[^\\s]+)|(\\+[^\\s]+))(?#\\s+|$)");
 
 static QRegularExpression regex_progress("\\s+(?:\\#(?<p>\\d\\d)\\%)(?#\\s+|$)");
 
@@ -121,6 +118,27 @@ task::task(task* copy)
 	setInputDate(QDateTime::currentDateTime());
 }
 
+/*task::task(const task& in)
+
+{
+_raw = in._raw;
+	displayText=in.displayText;
+//	QString description;
+//	QUuid _tuid;
+//	QDateTime _ttag;
+//	QDateTime _complete_date;
+//	QChar priority;
+//	QColor color;
+//	QDateTime inputD;
+//	QDateTime dueD;
+//	QDateTime thrD;
+//	Qt::CheckState complete ;
+//	bool active;
+//	QStringList contexts;
+//	QStringList thr_contexts;
+//	int progress;
+}*/
+
 task::~task()
 /*  nothing to do */
 {}
@@ -142,6 +160,7 @@ void task::parse(QString s,bool strict)
 		if (tmp.size() > 0)
 				dueD = QDateTime::fromString(tmp.remove(0,4),"yyyy-MM-dd");
 	}
+//	qDebug()<<"task::parse step 1"<<endline;
 
 	matches = regex_due_date_r.globalMatch(s);
 	while (matches.hasNext())
@@ -153,7 +172,7 @@ void task::parse(QString s,bool strict)
 			dueD=td;
 		}
 	}
-
+//	qDebug()<<"task::parse step 2"<<endline;
 	matches = regex_threshold_date.globalMatch(s);
 	while (matches.hasNext())
 	{
@@ -161,7 +180,8 @@ void task::parse(QString s,bool strict)
 		if (tmp.size() >0)
 			thrD = QDateTime::fromString(tmp.remove(0,2),"yyyy-MM-dd");
 	}
-
+	
+//	qDebug()<<"task::parse step 3"<<endline;
 	matches = regex_threshold_date_r.globalMatch(s);
 	while (matches.hasNext())
 	{
@@ -174,7 +194,7 @@ void task::parse(QString s,bool strict)
 		}
 	}
 
-
+//	qDebug()<<"task::parse step 4"<<endline;
 	matches = regex_preamble.globalMatch(_raw);
 	if (matches.hasNext()){
 		auto nn=matches.next();
@@ -195,6 +215,7 @@ void task::parse(QString s,bool strict)
 			priority = QChar::Null;
 	}
 
+//	qDebug()<<"task::parse step 5"<<endline;
 	matches = regex_inputdate.globalMatch(_raw);
 	if (matches.hasNext()){
 		auto nnn=matches.next();
@@ -206,6 +227,7 @@ void task::parse(QString s,bool strict)
 			inputD=QDateTime();
 	}
 
+//	qDebug()<<"task::parse step 6"<<endline;
 	matches = regex_progress.globalMatch(_raw);
 	if (matches.hasNext()){
 		auto nnn=matches.next();
@@ -215,6 +237,8 @@ void task::parse(QString s,bool strict)
 
 	
 	QString c;
+//	qDebug()<<"task::parse step 7"<<endline;
+
 	matches = regex_color.globalMatch(_raw);
 	if (matches.hasNext()){
 		c = matches.next().captured(1);
@@ -225,13 +249,19 @@ void task::parse(QString s,bool strict)
 	else
 		color=QColor::fromString("White");
 
+//	qDebug()<<"task::parse step 8"<<endline;
 
 	this->updateDisplayText();
+//		qDebug()<<"task::parse step 9"<<endline;
+
 	this->updateDescription();
+//	qDebug()<<"task::parse step 10"<<endline;
+
 	this->updateContexts();
+//	qDebug()<<"task::parse step 11"<<endline;
 	
 	_ttag=QDateTime::currentDateTime();
-
+//	qDebug()<<"task::parse Task parsed: "<<this->toString()<<endline;
 }
 
 void task::updateDisplayText()
@@ -267,20 +297,30 @@ void task::updateDescription()
 void task::updateContexts()
 /*
 */{
+//	qDebug()<<"task::updateContexts step 1"<<endline;
+
 	contexts.clear();
 	thr_contexts.clear();
 
 	if (complete == Qt::Checked)	return;
-
+//	qDebug()<<"task::updateContexts step 2"<<endline;
+ 	
+ 	QRegularExpression regex_context("(?:\\s+|^)((\\@[^\\s]+)|(\\+[^\\s]+))(?#\\s+|$)");
 	QRegularExpressionMatchIterator matcher = regex_context.globalMatch(_raw);
 	while (matcher.hasNext()) {
- 	   contexts << matcher.next().captured(1); //we don't care about duplicates...
+ 	   QString cont = matcher.next().captured(1);
+ 	   if (!cont.isNull() && !cont.isEmpty())
+		 	   contexts << cont; //we don't care about duplicates...
  	   }
- 	   
-	matcher = regex_threshold_context.globalMatch(_raw);
-	while (matcher.hasNext()) 
- 	   thr_contexts << matcher.next().captured(1); //we don't care about duplicates...
+//	qDebug()<<"task::updateContexts step 2"<<endline;
 
+	QRegularExpression regex_threshold_context("(?:\\s+)t:((\\@[^\\s]+)|(\\+[^\\s]+))(?#\\s+|$)");  
+	matcher = regex_threshold_context.globalMatch(_raw);
+	while (matcher.hasNext()) {
+		QString cont = matcher.next().captured(1);
+ 	   if (!cont.isNull() && !cont.isEmpty())
+ 	   		thr_contexts << cont; //we don't care about duplicates...
+	}
 
 // 	qDebug()<<"task::updateContexts. raw<"<<_raw<<endline;
 // 	qDebug()<<"        contexts= "<<contexts<<endline;

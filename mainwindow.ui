@@ -71,8 +71,11 @@
          <string>Sorting menu</string>
         </property>
         <property name="text">
-         <string/>
+         <string>Sort</string>
         </property>
+        <property name="toolButtonStyle">
+          <enum>Qt::ToolButtonTextBesideIcon</enum>
+  		  </property>
         <property name="checkable">
          <bool>false</bool>
         </property>
@@ -116,29 +119,59 @@
          <string>Filter Menu</string>
         </property>
         <property name="text">
-         <string/>
+         <string>Filter / View</string>
         </property>
+        <property name="toolButtonStyle">
+          <enum>Qt::ToolButtonTextBesideIcon</enum>
+  		  </property>
+        	
         <property name="checkable">
          <bool>false</bool>
         </property>
         <widget class="QMenu" name="filterMenu">
+        	<addaction name="defaultViewAction"/>
         	<addaction name="todaysViewAction"/>
+        	<addaction name="projectViewAction"/>
+        	<addaction name="showAllAction"/>
         	<addaction name="respectThresholdDateAction"/>
         	<addaction name="respectThresholdContextAction"/>
         	<addaction name="thresholdDueAction"/>
         	<addaction name="hideInactiveAction"/>
-        	<addaction name="showAllAction"/>
         </widget>
-         <action name="todaysViewAction">
+         <action name="defaultViewAction">
    		 <property name="text">
-    	  <string>Today's view</string>
+      	  <string>Default view</string>
    		 </property>
    		 <property name="checkable">
    		  <bool>true</bool>
    		 </property>
-  		</action>
+   		</action>
+         <action name="todaysViewAction">
+   		 <property name="text">
+      	  <string>Today's view</string>
+   		 </property>
+   		 <property name="checkable">
+   		  <bool>true</bool>
+   		 </property>
+   		</action>
+         <action name="projectViewAction">
+   		 <property name="text">
+      	  <string>Project view</string>
+   		 </property>
+   		 <property name="checkable">
+   		  <bool>true</bool>
+   		 </property>
+   		</action>
+        <action name="showAllAction">
+   		 <property name="text">
+       	  <string>Show all tasks</string>
+   		 </property>
+   		 <property name="checkable">
+   		  <bool>true</bool>
+   		 </property>
+   		</action> 		
 
-        <action name="respectThresholdDateAction">
+         <action name="respectThresholdDateAction">
    		 <property name="text">
     	  <string>Hide threshold dates</string>
    		 </property>
@@ -166,14 +199,6 @@
         <action name="hideInactiveAction">
    		 <property name="text">
     	  <string>Hide Inactive</string>
-   		 </property>
-   		 <property name="checkable">
-   		  <bool>true</bool>
-   		 </property>
-  		</action> 		
-        <action name="showAllAction">
-   		 <property name="text">
-    	  <string>Show all tasks</string>
    		 </property>
    		 <property name="checkable">
    		  <bool>true</bool>

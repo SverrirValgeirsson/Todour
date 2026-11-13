@@ -34,19 +34,26 @@ todotxt::~todotxt()
 bool todotxt::isReady()
 /* if true, can receive readRequest and writeRequest */
 {
+//	qDebug()<<"todotxt::isReady "<<_TodoFile->exists()<<endline;
 	return _TodoFile->exists();
 }
 
 void todotxt::reloadRequest()
 /* */
 {
+//		qDebug()<<"todotxt::reloadRequest started "<<endline;
+
     _TodoFile->open(QIODevice::ReadOnly | QIODevice::Text);
 
     if (!_TodoFile->isOpen()){
+		qDebug()<<"todotxt::reloadRequest not open "<<endline;
 		emit ReadError(tr("Todotxt: unable to open file"));
     	return;
     }
+//	qDebug()<<"todotxt::reloadRequest emit DataAvailable "<<endline;
 	emit DataAvailable();
+//	qDebug()<<"todotxt::reloadRequest finished "<<endline;
+
 }
 
 void todotxt::getAllTask(vector<task*> &output)
@@ -55,6 +62,7 @@ void todotxt::getAllTask(vector<task*> &output)
 */
 {
     QSettings settings;
+//	qDebug()<<"todotxt::getAllTask start "<<endline;
 
     QTextStream in(_TodoFile);
     in.setEncoding(QStringConverter::Utf8);

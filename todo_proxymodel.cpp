@@ -78,7 +78,7 @@ We filter based on
 					if (!(t_dueDate.isValid() && t_dueDate < dueWarningDate))	return false;
 
 			// Threshold date.
-	if (actual_filter.testFlag(todoProxyModel::HideThresholdDate) && 
+	if ((actual_filter.testFlag(todoProxyModel::HideThresholdDate) ||actual_filter.testFlag(todoProxyModel::TodaysView)) && 
 			sourceModel()->data(source_index,Qt::UserRole+3).toDateTime().isValid() &&
 			sourceModel()->data(source_index,Qt::UserRole+3).toDateTime()>QDateTime::currentDateTime())
 					if (!(t_dueDate.isValid() && t_dueDate < dueWarningDate))	return false;

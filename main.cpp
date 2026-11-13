@@ -1,5 +1,5 @@
 #include <QApplication>
-
+#include <iostream>
 //debug:
 #include <QDebug>
 #include "def.h"
@@ -15,6 +15,11 @@ int main(int argc, char *argv[])
 
  	
     QApplication appl(argc, argv);
+    if(QCoreApplication::arguments().contains("--help")){
+        cout<<"Help command"<<endl;
+        return 0;
+    }
+
     MainWindow w;
     appl.setWindowIcon(QIcon(":/icons/todour.png"));
     w.show();

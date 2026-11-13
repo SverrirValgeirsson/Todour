@@ -59,6 +59,7 @@ MainWindow::MainWindow(QWidget *parent) :
     baseTitle=title;
     this->setWindowTitle(title);
 
+
     // Check if we're supposed to have the settings from .ini file or not
     if(QCoreApplication::arguments().contains("-portable")){
         QSettings::setDefaultFormat(QSettings::IniFormat);
@@ -98,22 +99,18 @@ MainWindow::MainWindow(QWidget *parent) :
 //	 options.insert("color-active" , "#FF0000");
 //	 options.insert("color-selected-off" , "#FF0000");
 
-options.insert("color","red");
-options.insert("color-disabled","red");
-options.insert("color-active","red");
-options.insert("color-off",QApplication::palette().color(QPalette::Normal, QPalette::Text));
-options.insert("color-active-off",QApplication::palette().color(QPalette::Normal, QPalette::Text));
-
-
-
-
-
+	options.insert("color","red");
+	options.insert("color-disabled","red");
+	options.insert("color-active","red");
+	options.insert("color-off",QApplication::palette().color(QPalette::Normal, QPalette::Text));
+	options.insert("color-active-off",QApplication::palette().color(QPalette::Normal, QPalette::Text));
 
  
 //	 options.insert("color-disabled" , QApplication::palette().color(QPalette::Normal, QPalette::Text));
 	
     ui->btn_Alphabetical->setIcon(awesome->icon(fa::fa_solid, fa::fa_arrow_down_a_z ));
     ui->btn_Filter->setIcon(awesome->icon(fa::fa_solid, fa::fa_filter));
+    ui->btn_Filter->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
     ui->archiveButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_right_from_bracket));
     ui->refreshButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_arrows_rotate ));
     ui->addButton->setIcon(awesome->icon(fa::fa_solid, fa::fa_plus ));
@@ -178,13 +175,22 @@ options.insert("color-active-off",QApplication::palette().color(QPalette::Normal
 		ui->sortAzAction->setActionGroup(sortActionGroup);
 		ui->sortDateAction->setActionGroup(sortActionGroup);
     	
-    	connect(ui->todaysViewAction, SIGNAL(triggered()), this, SLOT(updateFilter()));    	
+    	connect(ui->defaultViewAction, SIGNAL(triggered()), this, SLOT(updateFilter()));    	
+   	connect(ui->todaysViewAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
+   	connect(ui->projectViewAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
+   	connect(ui->showAllAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
     	connect(ui->respectThresholdDateAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
 		connect(ui->respectThresholdContextAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
    	connect(ui->thresholdDueAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
    	connect(ui->hideInactiveAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
-   	connect(ui->showAllAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
-   	connect(ui->lineEditFilter, SIGNAL(currentTextChanged(QString)),this, SLOT(updateFilterText(QString)));
+    	
+    	QActionGroup* viewActionGroup = new QActionGroup(ui->btn_Filter);
+		ui->defaultViewAction->setActionGroup(viewActionGroup);
+		ui->todaysViewAction->setActionGroup(viewActionGroup);
+		ui->projectViewAction->setActionGroup(viewActionGroup);
+		ui->showAllAction->setActionGroup(viewActionGroup);
+ 
+    	connect(ui->lineEditFilter, SIGNAL(currentTextChanged(QString)),this, SLOT(updateFilterText(QString)));
  		connect(ui->lineEditNew, SIGNAL(returnPressed()),this, SLOT(on_addButton_clicked()));
     	    	
     	ui->btn_Alphabetical->setMenu(ui->sortMenu);
@@ -199,31 +205,39 @@ options.insert("color-active-off",QApplication::palette().color(QPalette::Normal
 	Version->onlineCheck(false);
 	versionTimer = new QTimer(this);
 	connect(versionTimer,SIGNAL(timeout()),this,SLOT(on_pb_closeVersionBar_clicked()));
-
+//	qDebug()<<"MainWindow init step 0"<<endline;
 
     // Started. Lets open the todo.txt file, parse it and show it.
    task_set = new taskset(this);
+//	qDebug()<<"MainWindow init step 0.01"<<endline;
    model = new TodoTableModel(task_set,_undoStack, this);
- 
+// 	qDebug()<<"MainWindow init step 0.02"<<endline;
    proxyModel = new todoProxyModel(this);
    proxyModel->setSourceModel(model);
    ui->tableView->setModel(proxyModel);
    ui->tableView->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
    ui->tableView->resizeColumnToContents(0); // Checkboxes kept small
-
+//	qDebug()<<"MainWindow init step 0.1"<<endline;
 	connect(model,SIGNAL(dataChanged(QModelIndex, QModelIndex)),proxyModel,SLOT(invalidate()));
 	note_set = new noteset(this);
 	connect(note_set,SIGNAL(updateText(QString)),this,SLOT(handleNoteUpdate(QString)));
 	note_set->reLoad();	
-
+	
+//	qDebug()<<"MainWindow init step 1"<<endline;
 	ui->context_lock->setChecked(settings.value(SETTINGS_CONTEXT_LOCK,DEFAULT_CONTEXT_LOCK).toBool());
 	ui->sortAzAction->setChecked(settings.value(SETTINGS_SORT_AZ,DEFAULT_SORT_AZ).toBool());
 	ui->sortDateAction->setChecked(settings.value(SETTINGS_SORT_IDATE,DEFAULT_SORT_IDATE).toBool());
+	
 	ui->respectThresholdDateAction->setChecked(settings.value(SETTINGS_THRESHOLD_DATES,DEFAULT_THRESHOLD_DATES).toBool());
 	ui->respectThresholdContextAction->setChecked(settings.value(SETTINGS_THRESHOLD_LABELS,DEFAULT_THRESHOLD_LABELS).toBool());
 	ui->thresholdDueAction->setChecked(settings.value(	SETTINGS_DUE_AS_THRESHOLD,DEFAULT_DUE_AS_THRESHOLD).toBool());
 	ui->hideInactiveAction->setChecked(settings.value(	SETTINGS_HIDE_INACTIVE,DEFAULT_HIDE_INACTIVE).toBool());
+	
+	ui->defaultViewAction->setChecked(true);
+	ui->todaysViewAction->setChecked(settings.value(SETTINGS_TODAYS_VIEW,DEFAULT_TODAYS_VIEW).toBool());
+	ui->projectViewAction->setChecked(settings.value(SETTINGS_PROJECT_VIEW,DEFAULT_PROJECT_VIEW).toBool());
 	ui->showAllAction->setChecked(settings.value(SETTINGS_SHOW_ALL,DEFAULT_SHOW_ALL).toBool());
+//	qDebug()<<"MainWindow init step 2"<<endline;
 
     ui->newVersionView->hide(); // This defaults to not being shown
 
@@ -248,6 +262,7 @@ options.insert("color-active-off",QApplication::palette().color(QPalette::Normal
 
 
 	this->updateSettings();
+	this->updateFilter(true);
 	qDebug()<<"mainwindow initialised"<<endline;	
 }
 
@@ -275,16 +290,17 @@ It should be safe to run it at any time.
 //    auto f = qApp->font();
 //    f.setPointSize(settings.value(SETTINGS_FONT_SIZE,DEFAULT_FONT_SIZE).toInt());
 //    qApp->setFont(f);
-    
-   task_set->setFileWatch(settings.value(SETTINGS_AUTOREFRESH).toBool(),(QObject*) this);
+   
+  	if ( settings.value(SETTINGS_ENHANCED_PM,DEFAULT_ENHANCED_PM).toBool()){
+		ui->projectViewAction->setVisible(true);
+		}
+	else{
+		ui->projectViewAction->setVisible(false);
+		}
 
-	todoProxyModel::TodourFilterMode newfval=proxyModel->getFilterMode();
-	this->enhancedPMMode = settings.value(SETTINGS_ENHANCED_PM, DEFAULT_ENHANCED_PM).toBool();
-	if (this->enhancedPMMode) newfval |= todoProxyModel::EnhancedPM;
-	else newfval &= ~todoProxyModel::EnhancedPM;		
-	proxyModel->setFilterMode(newfval);
-	
-	updateFilter(true);
+   
+   
+   task_set->setFileWatch(settings.value(SETTINGS_AUTOREFRESH).toBool(),(QObject*) this);
 
 	ui->sortInactiveAction->setChecked(settings.value(SETTINGS_SEPARATE_INACTIVES,DEFAULT_SEPARATE_INACTIVES).toBool());
 	ui->split->restoreState(settings.value(SETTING_SPLITTER_SIZE).toByteArray());
@@ -333,6 +349,12 @@ MainWindow::~MainWindow()
 */{
     delete ui;
     delete model;
+    delete autoSaver;
+    delete task_set;
+    delete proxyModel;
+    delete note_set;
+    delete trayicon;
+    
 	}
 
 void MainWindow::toggleFocus()
@@ -386,24 +408,28 @@ void MainWindow::updateFilter(bool force)
 	todoProxyModel::TodourFilterMode currentMode = proxyModel->getFilterMode();
 	todoProxyModel::TodourFilterMode newval=proxyModel->getFilterMode();
 	
-	if (ui->todaysViewAction->isChecked()) {
-		newval |= todoProxyModel::TodaysView;
+	if (ui->todaysViewAction->isChecked() || ui->showAllAction->isChecked()) {
 		ui->respectThresholdDateAction->setEnabled(false);
 		ui->respectThresholdContextAction->setEnabled(false);
    	ui->thresholdDueAction->setEnabled(false);
    	ui->hideInactiveAction->setEnabled(false);
-   	ui->showAllAction->setEnabled(false);
 		}
 	else {
-		newval &=  ~todoProxyModel::TodaysView;
 		ui->respectThresholdDateAction->setEnabled(true);
-//		ui->respectThresholdContextAction->setEnabled( !this->enhancedPMMode);
 		ui->respectThresholdContextAction->setEnabled(true);
-
    	ui->thresholdDueAction->setEnabled(true);
    	ui->hideInactiveAction->setEnabled(true);
-   	ui->showAllAction->setEnabled(true);
 		}
+
+	if (ui->todaysViewAction->isChecked())
+			newval |= todoProxyModel::TodaysView;
+	else
+			newval &=  ~todoProxyModel::TodaysView;
+
+	if (ui->projectViewAction->isChecked())
+			newval |= todoProxyModel::EnhancedPM;
+	else
+			newval &= ~todoProxyModel::EnhancedPM;	
 
 	if (ui->respectThresholdDateAction->isChecked())
 			newval |= todoProxyModel::HideThresholdDate;
@@ -424,24 +450,6 @@ void MainWindow::updateFilter(bool force)
 		newval |= todoProxyModel::HideInactive;
 	else
 		newval &= ~todoProxyModel::HideInactive;
-
-	if (ui->showAllAction->isChecked()) {
-		newval |= todoProxyModel::ShowAll;
-		ui->respectThresholdDateAction->setEnabled(false);
-		ui->respectThresholdContextAction->setEnabled(false);
-   	ui->thresholdDueAction->setEnabled(false);
-   	ui->hideInactiveAction->setEnabled(false);
-   	ui->todaysViewAction->setEnabled(false);
-   	}
-	else {
-		newval &= ~todoProxyModel::ShowAll;
-		ui->respectThresholdDateAction->setEnabled(true);
-//		ui->respectThresholdContextAction->setEnabled(! this->enhancedPMMode);
-		ui->respectThresholdContextAction->setEnabled(true);
-   	ui->thresholdDueAction->setEnabled(true);
-   	ui->hideInactiveAction->setEnabled(true);
-   	ui->todaysViewAction->setEnabled(true);
-   	}
 
 	if (force || newval != currentMode)
 			proxyModel->setFilterMode(newval);

@@ -23,6 +23,19 @@ qmake Todour.pro
 make
 ```
 
+For Qt 5.15.2 on macOS SDKs without the obsolete AGL framework, use
+`qmake Todour.pro -after 'QMAKE_LIBS_OPENGL = -framework OpenGL'` instead.
+
+## Continuous integration
+
+GitHub Actions builds the application and runs the core tests on Linux x64,
+Windows x64, and macOS Intel on pushes, pull requests, and manual runs. The
+workflow uses Qt 5.15.2 and checks out the pinned submodules and Git tags.
+These are build checks, not signed or packaged releases. The macOS Intel build
+can run on Apple Silicon through Rosetta; it is not a native Apple Silicon build.
+
+See [tests/README.md](tests/README.md) for running the tests locally.
+
 # Documentation Generation
 The project uses [MkDocs](https://www.mkdocs.org/) to generate static documentation from Markdown files. The documentation source is located in the `documentation/` directory and is automatically deployed to GitHub Pages.
 

@@ -7,13 +7,19 @@
 
 void TestTodoTxt::initTestCase()
 {
-    // Create temporary directory for test files
+    QCoreApplication::setOrganizationName("TodourTests");
+    QCoreApplication::setApplicationName("TodourCoreTests");
+    QSettings::setDefaultFormat(QSettings::IniFormat);
+}
+
+void TestTodoTxt::init()
+{
     tempDir = new QTemporaryDir();
     QVERIFY(tempDir->isValid());
-    
+
     testDataDir = tempDir->path() + "/";
-    
-    // Set up test settings with all features enabled for testing
+    QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, tempDir->path());
+
     QSettings settings;
     settings.setValue(SETTINGS_DIRECTORY, testDataDir);
     settings.setValue(SETTINGS_THRESHOLD, true);  // Enable threshold functionality
@@ -21,15 +27,6 @@ void TestTodoTxt::initTestCase()
     settings.setValue(SETTINGS_THRESHOLD_INACTIVE, true);  // Enable threshold inactive
     settings.setValue(SETTINGS_SHOW_ALL, false);
     settings.setValue(SETTINGS_DUE, true);  // Enable due date functionality
-}
-
-void TestTodoTxt::cleanupTestCase()
-{
-    delete tempDir;
-}
-
-void TestTodoTxt::init()
-{
     todo = new todotxt();
     QString dir = testDataDir;
     todo->setdirectory(dir);
@@ -38,6 +35,9 @@ void TestTodoTxt::init()
 void TestTodoTxt::cleanup()
 {
     delete todo;
+    todo = nullptr;
+    delete tempDir;
+    tempDir = nullptr;
 }
 
 void TestTodoTxt::setupTestTodoFile(const QString &content)
@@ -342,6 +342,7 @@ void TestTodoTxt::testThresholdDates()
 {
     QSettings settings;
     settings.setValue(SETTINGS_THRESHOLD, true);
+    settings.setValue(SETTINGS_INACTIVE, "LATER:;WAIT:");
     
     QDate tomorrow = QDate::currentDate().addDays(1);
     QString tomorrowStr = tomorrow.toString("yyyy-MM-dd");
@@ -546,6 +547,7 @@ void TestTodoTxt::testProjectContextFiltering()
 {
     QSettings settings;
     settings.setValue(SETTINGS_THRESHOLD_LABELS, true);
+    settings.setValue(SETTINGS_INACTIVE, "LATER:;WAIT:");
     
     setupTestTodoFile("Active project +work\nActive context @home\nThreshold project t:+work\nThreshold context t:@home");
     todo->parse();

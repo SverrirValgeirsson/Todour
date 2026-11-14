@@ -1,0 +1,91 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x64
+            os: ubuntu-24.04
+            archives: qtbase icu
+          - name: Windows x64
+            os: windows-2022
+            archives: qtbase
+          - name: macOS Intel
+            os: macos-15-intel
+            archives: qtbase
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out source and submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install Linux build dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxcb-keysyms1-dev
+
+      - name: Set up MSVC
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
+
+      - name: Install Qt 5
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '5.15.2'
+          archives: ${{ matrix.archives }}
+          cache: true
+
+      - name: Build application
+        run: |
+          mkdir -p "$RUNNER_TEMP/todour-build"
+          cd "$RUNNER_TEMP/todour-build"
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            qmake "$GITHUB_WORKSPACE/Todour.pro" CONFIG+=release -after 'QMAKE_LIBS_OPENGL = -framework OpenGL'
+          else
+            qmake "$GITHUB_WORKSPACE/Todour.pro" CONFIG+=release
+          fi
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            nmake
+          else
+            make -j2
+          fi
+
+      - name: Build and run core tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          mkdir -p "$RUNNER_TEMP/todour-tests"
+          cd "$RUNNER_TEMP/todour-tests"
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            qmake "$GITHUB_WORKSPACE/tests/tests_simple.pro" CONFIG+=release -after 'QMAKE_LIBS_OPENGL = -framework OpenGL'
+          else
+            qmake "$GITHUB_WORKSPACE/tests/tests_simple.pro" CONFIG+=release
+          fi
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            nmake
+            ./release/todour_core_tests.exe
+          else
+            make -j2
+            ./todour_core_tests
+          fi

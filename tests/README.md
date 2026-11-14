@@ -48,14 +48,6 @@ Tests the core `todotxt` class functionality with 49 comprehensive tests:
 - Large datasets (1000+ tasks)
 - Empty files and boundary conditions
 
-## Test Results
-
-Current test status:
-- **49 total tests** in the `TestTodoTxt` class
-- **45 passing tests** (91.8% success rate)
-- **4 failing tests** under investigation
-- All 9 new relative time and repeat functionality tests passing
-
 ### Recent Additions
 
 The test suite was recently enhanced with 9 new tests covering:
@@ -70,8 +62,8 @@ The test suite was recently enhanced with 9 new tests covering:
 ### Prerequisites
 
 - Qt 5.15.2 or later with development tools
-- MinGW compiler (Windows) or GCC (Linux/macOS)
-- Make or MinGW32-make
+- A compatible C++ compiler (MinGW or MSVC on Windows, GCC on Linux, or Clang on macOS)
+- Make, MinGW32-make, or NMake as appropriate for the compiler
 
 ### Quick Start
 
@@ -84,9 +76,15 @@ run_tests.bat
 #### Linux/macOS
 ```bash
 cd tests
-chmod +x run_tests.sh
-./run_tests.sh
+qmake tests_simple.pro CONFIG+=release
+make
+QT_QPA_PLATFORM=offscreen ./todour_core_tests
 ```
+
+Some macOS SDKs no longer include the AGL framework required by the Qt 5.15.2
+qmake defaults. With those SDKs, use
+`qmake tests_simple.pro CONFIG+=release -after 'QMAKE_LIBS_OPENGL = -framework OpenGL'`
+instead.
 
 ### Quick Start (Automated)
 
@@ -115,25 +113,20 @@ The automated scripts handle building and running the simplified test suite.
 
 2. **Run the tests:**
    ```cmd
-   .\debug\todour_tests_simple.exe
+   .\debug\todour_core_tests.exe
    ```
 
 ### Configuration
 
-The test suite uses temporary directories and files, so it won't interfere with your actual Todour data. Test settings are isolated from your normal application settings.
+Each test uses its own temporary directory and settings, so it won't interfere with your actual Todour data or depend on earlier tests.
 
 ## Test Data
 
 Test data is generated dynamically within the test methods for maximum reliability and isolation. The tests create temporary files and clean up after themselves.
 
 
-For CI setup, run:
-```bash
-cd tests
-qmake tests.pro CONFIG+=debug
-make
-xvfb-run -a ./todour_tests  # Linux with virtual display
-```
+GitHub Actions builds the application and runs this suite on Linux, Windows,
+and macOS using the offscreen Qt platform.
 
 ## License
 

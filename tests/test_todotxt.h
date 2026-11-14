@@ -13,7 +13,6 @@ class TestTodoTxt : public QObject
 
 private slots:
     void initTestCase();
-    void cleanupTestCase();
     void init();
     void cleanup();
     
@@ -83,8 +82,8 @@ private slots:
     void testBoundaryDates();
 
 private:
-    QTemporaryDir *tempDir;
-    todotxt *todo;
+    QTemporaryDir *tempDir = nullptr;
+    todotxt *todo = nullptr;
     QString testDataDir;
     
     void setupTestTodoFile(const QString &content);

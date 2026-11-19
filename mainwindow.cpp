@@ -144,12 +144,13 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(ui->DpriorAction,SIGNAL(triggered()),this,SLOT(on_actionPriorityD()));
    connect(ui->copyAction,SIGNAL(triggered()),this,SLOT(on_actionCopy()));
 	task_set = new taskset(this);
+	_undoStack = new QUndoStack(this);
+
    model = new TodoTableModel(task_set,_undoStack, this);
    proxyModel = new todoProxyModel(this);
    proxyModel->setSourceModel(model);
 
 	//undo
-	_undoStack = new QUndoStack(this);
 	
 	ui->undoAction->setEnabled(_undoStack->canUndo());				
  	ui->undoAction->setShortcuts(QKeySequence::Undo);
@@ -178,7 +179,7 @@ MainWindow::MainWindow(QWidget *parent) :
    connect(ui->thresholdDueAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
    connect(ui->hideInactiveAction, SIGNAL(triggered()), this, SLOT(updateFilter()));
     	
-   QActionGroup* viewActionGroup = new QActionGroup(ui->btn_Filter);
+   viewActionGroup = new QActionGroup(ui->btn_Filter);
 	ui->defaultViewAction->setActionGroup(viewActionGroup);
 	ui->todaysViewAction->setActionGroup(viewActionGroup);
 	ui->projectViewAction->setActionGroup(viewActionGroup);
@@ -261,7 +262,7 @@ It should be safe to run it at any time.
       // Set some defaults if they dont exist
     if(!settings.contains(SETTINGS_LIVE_SEARCH))
         	settings.setValue(SETTINGS_LIVE_SEARCH,DEFAULT_LIVE_SEARCH);
-    
+   
 	if (settings.value(SETTINGS_NOTE_ENABLE,DEFAULT_NOTE_ENABLE).toBool())
 			ui->noteView->setVisible(true);
 	else 
@@ -280,6 +281,16 @@ It should be safe to run it at any time.
 		}
 	else{
 		ui->projectViewAction->setVisible(false);
+		}
+
+	QString savedFilter=settings.value(SETTINGS_LAST_FILTER, DEFAULT_LAST_FILTER).toString();
+	if (!savedFilter.isEmpty()){
+		for (QAction *a : viewActionGroup->actions()){
+			if (a->objectName() == savedFilter){
+				a->setChecked(true);
+				break;
+				}
+			}
 		}
 
    task_set->setFileWatch(settings.value(SETTINGS_AUTOREFRESH).toBool(),(QObject*) this);
@@ -668,12 +679,15 @@ void MainWindow::cleanup()
 	settings.setValue(SETTINGS_SORT_IDATE,false);
 	settings.setValue(SETTINGS_SEPARATE_INACTIVES,ui->sortInactiveAction->isChecked());
 
-   settings.setValue( SETTINGS_GEOMETRY, saveGeometry() );
-   settings.setValue( SETTINGS_SAVESTATE, saveState() );
-   settings.setValue( SETTINGS_MAXIMIZED, isMaximized() );
+   settings.setValue(SETTINGS_GEOMETRY, saveGeometry() );
+   settings.setValue(SETTINGS_SAVESTATE, saveState() );
+   settings.setValue(SETTINGS_MAXIMIZED, isMaximized() );
   	settings.setValue(SETTING_SPLITTER_SIZE, ui->split->saveState());
 
    settings.setValue(SETTINGS_CONTEXT_LOCK,ui->context_lock->isChecked());
+   
+   if (QAction *a = viewActionGroup->checkedAction())
+	   	settings.setValue(SETTINGS_LAST_FILTER, a->objectName());
    
    if(trayicon!=NULL){
    	delete trayicon;

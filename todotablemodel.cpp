@@ -205,6 +205,7 @@ void TodoTableModel::safeAdd(task* _t)
 void TodoTableModel::safeAdd(QString s, QString c)
 /* Safely add a task, creating an undo command
 */{
+	qDebug()<<"TodoTableModel::safeAdd"<<endline;
 	undoS->push(new AddCommand(tasklist,s, c));
   	}
 

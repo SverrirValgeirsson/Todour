@@ -183,7 +183,8 @@
 #define SETTINGS_PROJECT_VIEW "projectview"
 #define DEFAULT_PROJECT_VIEW false
 
-
+#define SETTINGS_LAST_FILTER "filter_value"
+#define DEFAULT_LAST_FILTER "void"
 
 //*********** SORTING *****************
 // activate the alphabetical sorting

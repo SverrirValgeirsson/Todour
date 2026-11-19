@@ -116,7 +116,7 @@ private:
     QAction *maximizeAction;
     QAction *restoreAction;
     QAction *quitAction;
-    
+    QActionGroup* viewActionGroup;
 	todour_version *Version;
 	
 	taskset* task_set;
